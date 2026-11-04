@@ -5,6 +5,8 @@ parse the vibrational frequency data, and visualize the molecular structure
 and normal mode displacement vectors interactively in 3D using Plotly.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 import sys
 import tempfile

@@ -5,6 +5,8 @@ and generate a publication-ready or interactive visualization.
 All 13 plot types from plottle.plotting are accessible here.
 """
 
+from __future__ import annotations
+
 import traceback
 from pathlib import Path
 import sys
