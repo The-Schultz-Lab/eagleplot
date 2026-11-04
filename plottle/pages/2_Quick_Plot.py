@@ -1123,12 +1123,12 @@ def _render_annotation_panel() -> None:
             if c_del.button("✕", key=f"ann_del_{i}", help="Remove"):
                 st.session_state.qp_ann_overlays.pop(i)
                 _regen_with_overlays()
-                st.rerun()
+                st.rerun(scope="fragment")
 
         if st.button("Clear all annotations", key="ann_clear_all"):
             st.session_state.qp_ann_overlays = []
             _regen_with_overlays()
-            st.rerun()
+            st.rerun(scope="fragment")
 
         st.markdown("---")
 
@@ -1150,7 +1150,7 @@ def _render_annotation_panel() -> None:
         if st.button("Add annotation", type="primary", key="ann_add_btn"):
             st.session_state.qp_ann_overlays.append(new_overlay)
             _regen_with_overlays()
-            st.rerun()
+            st.rerun(scope="fragment")
 
 
 # ── Page layout ──────────────────────────────────────────────────────────────
@@ -1360,141 +1360,137 @@ _DESCRIPTIONS = {
 }
 st.caption(_DESCRIPTIONS.get(plot_type, ""))
 
-# ── Configuration widgets ─────────────────────────────────────────────────────
-st.markdown("---")
-st.markdown("## 3. Configuration")
+# ── Plot workspace ───────────────────────────────────────────────────────────
+# PROTOTYPE (speed comparison). Everything from "3. Configuration" down runs as one
+# st.fragment: changing a setting reruns only this part of the page, not the preset,
+# dataset and plot-type sections above it. Exports encode on demand instead of on
+# every rerun, and the plot redraws live as settings change.
 
-config = get_plot_config_widgets(plot_type, data)
+_EXPORT_FORMATS = {
+    "PNG (150 dpi)": ("png", 150, "image/png", "plot.png"),
+    "PNG (300 dpi)": ("png", 300, "image/png", "plot_300dpi.png"),
+    "PNG (600 dpi)": ("png", 600, "image/png", "plot_600dpi.png"),
+    "SVG (vector)": ("svg", None, "image/svg+xml", "plot.svg"),
+    "PDF (vector)": ("pdf", None, "application/pdf", "plot.pdf"),
+}
 
-# ── Generate ──────────────────────────────────────────────────────────────────
-st.markdown("---")
 
-if not config:
-    st.info("Adjust the configuration above to enable plot generation.")
-else:
-    _btn_col, _clear_col = st.columns([3, 1])
-    with _btn_col:
-        _do_generate = st.button(
-            "Generate Plot",
-            type="primary",
-            key="qp_generate",
-        )
-    with _clear_col:
-        if st.session_state.qp_is_plotly and st.session_state.qp_annotations:
-            if st.button("Clear markers", key="qp_clear_ann"):
-                st.session_state.qp_annotations = []
-                st.rerun()
-
-    if _do_generate:
-        try:
-            with st.spinner("Generating…"):
-                fig, is_plotly = _generate_plot(plot_type, data, config)
-                if is_plotly:
-                    _apply_plotly_style(fig, config)
-                    st.session_state.qp_fig_dict = fig.to_dict()
-                    st.session_state.qp_mpl_fig = None
-                else:
-                    _apply_mpl_style(fig, config)
-                    # Re-apply any existing overlays to the fresh figure
-                    _overlays = st.session_state.get("qp_ann_overlays", [])
-                    if _overlays and fig.axes:
-                        from plottle.annotations import apply_annotations
-
-                        apply_annotations(fig.axes[0], _overlays)
-                    st.session_state.qp_fig_dict = None
-                    st.session_state.qp_mpl_fig = fig
-                    st.session_state.qp_mpl_png = _fig_to_png_bytes(fig)
-                st.session_state.qp_is_plotly = is_plotly
-                st.session_state.qp_config = config
-                st.session_state.qp_current_plot_type = plot_type  # M16
-                st.session_state.qp_annotations = []  # reset Plotly click markers
-                st.session_state.qp_show_plotly_version = False  # reset conversion
-                st.session_state.qp_zoom_xlim = None  # reset zoom on new plot
-                st.session_state.qp_zoom_ylim = None
-
-            add_plot_to_history(
-                {
-                    "type": plot_type,
-                    "dataset": dataset_name,
-                    "config": {k: str(v) for k, v in config.items()},
-                    "figure": fig if not is_plotly else None,
-                }
-            )
-            st.success(f"Saved to plot history (total: {len(st.session_state.plot_history)})")
-
-        except Exception as exc:
-            st.error(f"Error generating plot: {exc}")
-            with st.expander("Error details"):
-                st.code(traceback.format_exc())
-
-# ── Persistent plot display with click-to-annotate ────────────────────────────
-if st.session_state.qp_is_plotly and st.session_state.qp_fig_dict:
-    import plotly.graph_objects as go
-
-    _fig = go.Figure(st.session_state.qp_fig_dict)
-
-    # Overlay annotation markers from session state
-    if st.session_state.qp_annotations:
-        _ax = [a["x"] for a in st.session_state.qp_annotations]
-        _ay = [a["y"] for a in st.session_state.qp_annotations]
-        _al = [format_marker_label(a["x"], a["y"]) for a in st.session_state.qp_annotations]
-        _fig.add_trace(
-            go.Scatter(
-                x=_ax,
-                y=_ay,
-                mode="markers+text",
-                text=_al,
-                textposition="top center",
-                marker=dict(symbol="x-open", size=14, color="red", line=dict(width=2)),
-                name="Markers",
-                showlegend=True,
-            )
-        )
-
-    st.markdown("### Plot")
-    st.caption(
-        "Click any data point to mark it.  Use **Clear markers** above to remove all marks."
-        if not st.session_state.qp_annotations
-        else f"{len(st.session_state.qp_annotations)} point(s) marked."
-    )
-
+def _streamlit_supports_lazy_download() -> bool:
+    # st.download_button(data=callable) arrived in Streamlit 1.52.
     try:
-        _event = st.plotly_chart(
-            _fig,
-            width="stretch",
-            on_select="rerun",
-            selection_mode="points",
-            key="qp_chart",
-        )
-        # Handle newly selected points (Streamlit returns each point as a dict)
-        for _ann in selected_points(_event):
-            if _ann not in st.session_state.qp_annotations:
-                st.session_state.qp_annotations.append(_ann)
-    except TypeError:
-        # on_select not supported in this Streamlit version
-        st.plotly_chart(_fig, width="stretch")
-        st.info(
-            "Upgrade Streamlit (≥ 1.33) to enable click-to-annotate.",
-        )
+        major, minor = (int(x) for x in st.__version__.split(".")[:2])
+    except ValueError:
+        return False
+    return (major, minor) >= (1, 52)
 
-    # Marked-points table
-    if st.session_state.qp_annotations:
-        with st.expander(f"Marked points ({len(st.session_state.qp_annotations)})"):
-            _ann_df = pd.DataFrame(st.session_state.qp_annotations)
-            st.dataframe(_ann_df, width="stretch")
 
-    # ── Download / export ────────────────────────────────────────────────
+_LAZY_DOWNLOAD = _streamlit_supports_lazy_download()
+
+
+def _savefig_bytes(fig, fmt: str, dpi) -> bytes:
+    import io as _io
+
+    buf = _io.BytesIO()
+    if dpi is None:
+        fig.savefig(buf, format=fmt, bbox_inches="tight")
+    else:
+        fig.savefig(buf, format=fmt, dpi=dpi, bbox_inches="tight")
+    return buf.getvalue()
+
+
+def _cached_for_figure(key: str, make):
+    """Compute *make()* once per displayed figure (keyed by qp_fig_version)."""
+    cache = st.session_state.setdefault("qp_export_cache", {})
+    version = st.session_state.get("qp_fig_version", 0)
+    if cache.get("_version") != version:
+        cache.clear()
+        cache["_version"] = version
+    if key not in cache:
+        cache[key] = make()
+    return cache[key]
+
+
+def _dataset_csv(data, dataset_name: str) -> str:
+    cache = st.session_state.setdefault("qp_csv_cache", {})
+    key = (dataset_name, id(data))
+    if cache.get("key") != key:
+        cache.clear()
+        cache["key"] = key
+        cache["csv"] = data.to_csv(index=False)
+    return cache["csv"]
+
+
+def _close_if_unreferenced(fig) -> None:
+    """Close a replaced matplotlib figure unless plot history still holds it."""
+    if fig is None:
+        return
+    if any(h.get("figure") is fig for h in st.session_state.get("plot_history", [])):
+        return
+    import matplotlib.pyplot as plt
+
+    plt.close(fig)
+
+
+def _store_figure(fig, is_plotly: bool, config: dict, plot_type: str, *, new_plot: bool):
+    """Make *fig* the displayed figure.
+
+    ``new_plot`` (a different dataset or plot type, or an explicit Generate) resets the
+    click markers, zoom and Plotly conversion; a live restyle keeps them.
+    """
+    old = st.session_state.get("qp_mpl_fig")
+    if is_plotly:
+        _apply_plotly_style(fig, config)
+        st.session_state.qp_fig_dict = fig.to_dict()
+        st.session_state.qp_mpl_fig = None
+    else:
+        _apply_mpl_style(fig, config)
+        overlays = st.session_state.get("qp_ann_overlays", [])
+        if overlays and fig.axes:
+            from plottle.annotations import apply_annotations
+
+            apply_annotations(fig.axes[0], overlays)
+        if not new_plot and fig.axes and st.session_state.get("qp_zoom_xlim"):
+            fig.axes[0].set_xlim(*st.session_state.qp_zoom_xlim)
+            fig.axes[0].set_ylim(*st.session_state.qp_zoom_ylim)
+        st.session_state.qp_fig_dict = None
+        st.session_state.qp_mpl_fig = fig
+        st.session_state.qp_mpl_png = _fig_to_png_bytes(fig)
+    if old is not None and old is not fig:
+        _close_if_unreferenced(old)
+    st.session_state.qp_is_plotly = is_plotly
+    st.session_state.qp_config = config
+    st.session_state.qp_current_plot_type = plot_type  # M16
+    st.session_state.qp_fig_version = st.session_state.get("qp_fig_version", 0) + 1
+    if new_plot:
+        st.session_state.qp_annotations = []
+        st.session_state.qp_show_plotly_version = False
+        st.session_state.qp_zoom_xlim = None
+        st.session_state.qp_zoom_ylim = None
+
+
+def _same_config(a, b) -> bool:
+    try:
+        return bool(a == b)
+    except Exception:  # e.g. array-valued entries
+        return False
+
+
+def _export_panel_plotly(fig, data, dataset_name: str) -> None:
     with st.expander("Export plot & data"):
-        import io as _io
-
         _ec1, _ec2 = st.columns(2)
         with _ec1:
             st.markdown("**Interactive plot (HTML)**")
             try:
-                _html_bytes = _fig.to_html(include_plotlyjs="cdn").encode("utf-8")
+                html = (
+                    (lambda: fig.to_html(include_plotlyjs="cdn").encode("utf-8"))
+                    if _LAZY_DOWNLOAD
+                    else _cached_for_figure(
+                        "html", lambda: fig.to_html(include_plotlyjs="cdn").encode("utf-8")
+                    )
+                )
                 st.download_button(
                     "Download HTML",
-                    data=_html_bytes,
+                    data=html,
                     file_name="plot.html",
                     mime="text/html",
                     key="qp_dl_html",
@@ -1504,190 +1500,303 @@ if st.session_state.qp_is_plotly and st.session_state.qp_fig_dict:
         with _ec2:
             if isinstance(data, pd.DataFrame):
                 st.markdown("**Dataset (CSV)**")
-                _csv_buf = _io.StringIO()
-                data.to_csv(_csv_buf, index=False)
                 st.download_button(
                     "Download CSV",
-                    data=_csv_buf.getvalue(),
+                    data=_dataset_csv(data, dataset_name),
                     file_name=f"{dataset_name}.csv",
                     mime="text/csv",
                     key="qp_dl_csv_plotly",
                 )
 
-elif st.session_state.qp_mpl_fig is not None:
-    st.markdown("### Plot")
 
-    # ── Convert to Plotly (zoom/pan) toggle ───────────────────────────────
-    _ctp_col1, _ctp_col2 = st.columns([3, 1])
-    with _ctp_col1:
-        if not st.session_state.qp_show_plotly_version:
-            if st.button(
-                "Convert to Plotly (zoom/pan)",
-                key="qp_convert_to_plotly",
-                help=(
-                    "Convert the current matplotlib figure to an interactive "
-                    "Plotly figure for zooming and panning."
-                ),
-            ):
-                st.session_state.qp_show_plotly_version = True
-                st.rerun()
-        else:
-            if st.button(
-                "Back to static",
-                key="qp_back_to_static",
-            ):
-                st.session_state.qp_show_plotly_version = False
-                st.rerun()
-
-    if st.session_state.qp_show_plotly_version:
-        try:
-            import plotly.tools as _ply_tools
-
-            _mpl_fig_for_conv = st.session_state.qp_mpl_fig
-            _ply_fig = _ply_tools.mpl_to_plotly(_mpl_fig_for_conv)
-            _apply_plotly_style(_ply_fig, st.session_state.qp_config)
-            st.info(
-                "Interactive Plotly version — use mouse to zoom and pan. "
-                "Note: mpl_to_plotly is a best-effort conversion; "
-                "some styling may differ."
-            )
-            st.plotly_chart(_ply_fig, width="stretch", key="qp_plotly_converted")
-        except Exception as _conv_err:
-            st.warning(
-                f"Could not convert figure to Plotly: {_conv_err}. Showing static version instead."
-            )
-            st.image(st.session_state.qp_mpl_png, width="stretch")
-    else:
-        st.image(st.session_state.qp_mpl_png, width="stretch")
-
-    # ── Zoom / Axis Range ─────────────────────────────────────────────────
-    if not st.session_state.qp_show_plotly_version:
-        _zoom_fig = st.session_state.qp_mpl_fig
-        if _zoom_fig is not None and _zoom_fig.axes:
-            _zoom_ax = _zoom_fig.axes[0]
-            _zxlim = _zoom_ax.get_xlim()
-            _zylim = _zoom_ax.get_ylim()
-            with st.expander("Zoom / Axis Range"):
-                _zc1, _zc2, _zc3, _zc4 = st.columns(4)
-                with _zc1:
-                    _zxmin = st.number_input(
-                        "X min", value=float(_zxlim[0]), key="qp_zoom_xmin", format="%g"
-                    )
-                with _zc2:
-                    _zxmax = st.number_input(
-                        "X max", value=float(_zxlim[1]), key="qp_zoom_xmax", format="%g"
-                    )
-                with _zc3:
-                    _zymin = st.number_input(
-                        "Y min", value=float(_zylim[0]), key="qp_zoom_ymin", format="%g"
-                    )
-                with _zc4:
-                    _zymax = st.number_input(
-                        "Y max", value=float(_zylim[1]), key="qp_zoom_ymax", format="%g"
-                    )
-                _zbtn1, _zbtn2 = st.columns(2)
-                with _zbtn1:
-                    if st.button("Apply zoom", key="qp_apply_zoom"):
-                        if _zxmin < _zxmax and _zymin < _zymax:
-                            _zoom_ax.set_xlim(_zxmin, _zxmax)
-                            _zoom_ax.set_ylim(_zymin, _zymax)
-                            st.session_state.qp_zoom_xlim = (_zxmin, _zxmax)
-                            st.session_state.qp_zoom_ylim = (_zymin, _zymax)
-                            st.session_state.qp_mpl_png = _fig_to_png_bytes(_zoom_fig)
-                            st.rerun()
-                        else:
-                            st.error("Min must be less than max for both axes.")
-                with _zbtn2:
-                    if st.button("Reset zoom", key="qp_reset_zoom"):
-                        st.session_state.qp_zoom_xlim = None
-                        st.session_state.qp_zoom_ylim = None
-                        _regen_with_overlays()
-                        st.rerun()
-
-    # ── M16: Annotations panel ────────────────────────────────────────────
-    _ann_label = (
-        f"Annotations ({len(st.session_state.qp_ann_overlays)} active)"
-        if st.session_state.qp_ann_overlays
-        else "Annotations"
-    )
-    with st.expander(_ann_label, expanded=bool(st.session_state.qp_ann_overlays)):
-        _render_annotation_panel()
-
-    # ── Download / export ────────────────────────────────────────────────
+def _export_panel_mpl(data, dataset_name: str) -> None:
     with st.expander("Export plot & data"):
-        import io as _io
-
-        _mfig = st.session_state.qp_mpl_fig
-        _dl_col1, _dl_col2, _dl_col3, _dl_col4, _dl_col5 = st.columns(5)
-
-        with _dl_col1:
-            _png_buf = _io.BytesIO()
-            _mfig.savefig(_png_buf, format="png", dpi=150, bbox_inches="tight")
-            _png_buf.seek(0)
-            st.download_button(
-                "PNG (150 dpi)",
-                data=_png_buf,
-                file_name="plot.png",
-                mime="image/png",
-                key="qp_dl_png",
+        fig = st.session_state.qp_mpl_fig
+        _c1, _c2 = st.columns([3, 1])
+        with _c1:
+            label = st.selectbox(
+                "Format", list(_EXPORT_FORMATS), key="qp_export_fmt", label_visibility="collapsed"
             )
-
-        with _dl_col2:
-            _png300_buf = _io.BytesIO()
-            _mfig.savefig(_png300_buf, format="png", dpi=300, bbox_inches="tight")
-            _png300_buf.seek(0)
+        fmt, dpi, mime, fname = _EXPORT_FORMATS[label]
+        if fmt == "png" and dpi == 150:
+            payload = st.session_state.qp_mpl_png  # already rendered for display
+        elif _LAZY_DOWNLOAD:
+            payload = lambda: _savefig_bytes(fig, fmt, dpi)  # noqa: E731 -- encoded on click
+        else:
+            payload = _cached_for_figure(label, lambda: _savefig_bytes(fig, fmt, dpi))
+        with _c2:
             st.download_button(
-                "PNG (300 dpi)",
-                data=_png300_buf,
-                file_name="plot_300dpi.png",
-                mime="image/png",
-                key="qp_dl_png300",
+                "Download",
+                data=payload,
+                file_name=fname,
+                mime=mime,
+                type="primary",
+                key="qp_dl_plot",
+                width="stretch",
             )
-
-        with _dl_col3:
-            _png600_buf = _io.BytesIO()
-            _mfig.savefig(_png600_buf, format="png", dpi=600, bbox_inches="tight")
-            _png600_buf.seek(0)
-            st.download_button(
-                "PNG (600 dpi)",
-                data=_png600_buf,
-                file_name="plot_600dpi.png",
-                mime="image/png",
-                key="qp_dl_png600",
-            )
-
-        with _dl_col4:
-            _svg_buf = _io.BytesIO()
-            _mfig.savefig(_svg_buf, format="svg", bbox_inches="tight")
-            _svg_buf.seek(0)
-            st.download_button(
-                "SVG (vector)",
-                data=_svg_buf,
-                file_name="plot.svg",
-                mime="image/svg+xml",
-                key="qp_dl_svg",
-            )
-
-        with _dl_col5:
-            _pdf_buf = _io.BytesIO()
-            _mfig.savefig(_pdf_buf, format="pdf", bbox_inches="tight")
-            _pdf_buf.seek(0)
-            st.download_button(
-                "PDF (vector)",
-                data=_pdf_buf,
-                file_name="plot.pdf",
-                mime="application/pdf",
-                key="qp_dl_pdf",
-            )
-
         if isinstance(data, pd.DataFrame):
-            st.markdown("---")
-            _csv_buf2 = _io.StringIO()
-            data.to_csv(_csv_buf2, index=False)
             st.download_button(
                 "Download dataset as CSV",
-                data=_csv_buf2.getvalue(),
+                data=_dataset_csv(data, dataset_name),
                 file_name=f"{dataset_name}.csv",
                 mime="text/csv",
                 key="qp_dl_csv_mpl",
             )
+
+
+# Keep the plot column in view while the (long) settings column scrolls.
+st.markdown(
+    """
+    <style>
+    div[data-testid="stColumn"]:has(> div > div > .st-key-qp_plot_panel),
+    div[data-testid="stColumn"]:has(.st-key-qp_plot_panel) {
+        position: sticky;
+        top: 4rem;
+        align-self: flex-start;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+@st.fragment
+def _plot_workspace(plot_type: str, data, dataset_name: str) -> None:
+    st.markdown("---")
+    # Settings on the left, plot on the right: every change is visible without
+    # scrolling. The plot column stays in view while the settings scroll.
+    cfg_col, plot_col = st.columns([2, 3], gap="large")
+    with cfg_col:
+        st.markdown("## 3. Configuration")
+
+        config = get_plot_config_widgets(plot_type, data)
+
+        st.markdown("---")
+
+        if not config:
+            st.info("Adjust the configuration above to enable plot generation.")
+        else:
+            live = st.toggle(
+                "Live preview",
+                value=True,
+                key="qp_live",
+                help="Redraw the plot as you change settings. "
+                "Generate Plot also saves it to the plot history.",
+            )
+            _btn_col, _clear_col = st.columns([3, 2])
+            with _btn_col:
+                _do_generate = st.button(
+                    "Generate Plot", type="primary", key="qp_generate", width="stretch"
+                )
+            with _clear_col:
+                if st.session_state.qp_is_plotly and st.session_state.qp_annotations:
+                    if st.button("Clear markers", key="qp_clear_ann", width="stretch"):
+                        st.session_state.qp_annotations = []
+                        st.rerun(scope="fragment")
+
+            _target = (dataset_name, plot_type)
+            _prev = st.session_state.get("qp_preview_for")
+            _same_plot = _prev is not None and _prev[0] == _target
+            _needs_preview = live and not (_same_plot and _same_config(_prev[1], config))
+
+            if _do_generate:
+                try:
+                    with st.spinner("Generating…"):
+                        fig, is_plotly = _generate_plot(plot_type, data, config)
+                        _store_figure(fig, is_plotly, config, plot_type, new_plot=True)
+                        st.session_state.qp_preview_for = (_target, config)
+                    add_plot_to_history(
+                        {
+                            "type": plot_type,
+                            "dataset": dataset_name,
+                            "config": {k: str(v) for k, v in config.items()},
+                            "figure": fig if not is_plotly else None,
+                        }
+                    )
+                    st.success(
+                        f"Saved to plot history (total: {len(st.session_state.plot_history)})"
+                    )
+                except Exception as exc:
+                    st.error(f"Error generating plot: {exc}")
+                    with st.expander("Error details"):
+                        st.code(traceback.format_exc())
+            elif _needs_preview:
+                try:
+                    fig, is_plotly = _generate_plot(plot_type, data, config)
+                    _store_figure(fig, is_plotly, config, plot_type, new_plot=not _same_plot)
+                except Exception as exc:
+                    st.warning(f"Preview not updated: {exc}")
+                # Record the attempt either way, so a failing config isn't retried every rerun.
+                st.session_state.qp_preview_for = (_target, config)
+
+    with plot_col, st.container(key="qp_plot_panel"):
+        # ── Persistent plot display with click-to-annotate ────────────────────────────
+        if st.session_state.qp_is_plotly and st.session_state.qp_fig_dict:
+            import plotly.graph_objects as go
+
+            _fig = go.Figure(st.session_state.qp_fig_dict)
+
+            # Overlay annotation markers from session state
+            if st.session_state.qp_annotations:
+                _ax = [a["x"] for a in st.session_state.qp_annotations]
+                _ay = [a["y"] for a in st.session_state.qp_annotations]
+                _al = [format_marker_label(a["x"], a["y"]) for a in st.session_state.qp_annotations]
+                _fig.add_trace(
+                    go.Scatter(
+                        x=_ax,
+                        y=_ay,
+                        mode="markers+text",
+                        text=_al,
+                        textposition="top center",
+                        marker=dict(symbol="x-open", size=14, color="red", line=dict(width=2)),
+                        name="Markers",
+                        showlegend=True,
+                    )
+                )
+
+            st.markdown("### Plot")
+            st.caption(
+                "Click any data point to mark it.  Use **Clear markers** above to remove all marks."
+                if not st.session_state.qp_annotations
+                else f"{len(st.session_state.qp_annotations)} point(s) marked."
+            )
+
+            try:
+                _event = st.plotly_chart(
+                    _fig,
+                    width="stretch",
+                    on_select="rerun",
+                    selection_mode="points",
+                    key="qp_chart",
+                )
+                # Handle newly selected points (Streamlit returns each point as a dict)
+                _added = False
+                for _ann in selected_points(_event):
+                    if _ann not in st.session_state.qp_annotations:
+                        st.session_state.qp_annotations.append(_ann)
+                        _added = True
+                if _added:
+                    # The chart above was drawn before this click was read; redraw the
+                    # plot area so the new marker shows now, not on the next interaction.
+                    st.rerun(scope="fragment")
+            except TypeError:
+                # on_select not supported in this Streamlit version
+                st.plotly_chart(_fig, width="stretch")
+                st.info(
+                    "Upgrade Streamlit (≥ 1.33) to enable click-to-annotate.",
+                )
+
+            # Marked-points table
+            if st.session_state.qp_annotations:
+                with st.expander(f"Marked points ({len(st.session_state.qp_annotations)})"):
+                    _ann_df = pd.DataFrame(st.session_state.qp_annotations)
+                    st.dataframe(_ann_df, width="stretch")
+
+            _export_panel_plotly(_fig, data, dataset_name)
+
+        elif st.session_state.qp_mpl_fig is not None:
+            st.markdown("### Plot")
+
+            # ── Convert to Plotly (zoom/pan) toggle ───────────────────────────────
+            _ctp_col1, _ctp_col2 = st.columns([3, 1])
+            with _ctp_col1:
+                if not st.session_state.qp_show_plotly_version:
+                    if st.button(
+                        "Convert to Plotly (zoom/pan)",
+                        key="qp_convert_to_plotly",
+                        help=(
+                            "Convert the current matplotlib figure to an interactive "
+                            "Plotly figure for zooming and panning."
+                        ),
+                    ):
+                        st.session_state.qp_show_plotly_version = True
+                        st.rerun(scope="fragment")
+                else:
+                    if st.button(
+                        "Back to static",
+                        key="qp_back_to_static",
+                    ):
+                        st.session_state.qp_show_plotly_version = False
+                        st.rerun(scope="fragment")
+
+            if st.session_state.qp_show_plotly_version:
+                try:
+                    import plotly.tools as _ply_tools
+
+                    _mpl_fig_for_conv = st.session_state.qp_mpl_fig
+                    _ply_fig = _ply_tools.mpl_to_plotly(_mpl_fig_for_conv)
+                    _apply_plotly_style(_ply_fig, st.session_state.qp_config)
+                    st.info(
+                        "Interactive Plotly version — use mouse to zoom and pan. "
+                        "Note: mpl_to_plotly is a best-effort conversion; "
+                        "some styling may differ."
+                    )
+                    st.plotly_chart(_ply_fig, width="stretch", key="qp_plotly_converted")
+                except Exception as _conv_err:
+                    st.warning(
+                        f"Could not convert figure to Plotly: {_conv_err}. "
+                        "Showing static version instead."
+                    )
+                    st.image(st.session_state.qp_mpl_png, width="stretch")
+            else:
+                st.image(st.session_state.qp_mpl_png, width="stretch")
+
+            # ── Zoom / Axis Range ─────────────────────────────────────────────────
+            if not st.session_state.qp_show_plotly_version:
+                _zoom_fig = st.session_state.qp_mpl_fig
+                if _zoom_fig is not None and _zoom_fig.axes:
+                    _zoom_ax = _zoom_fig.axes[0]
+                    _zxlim = _zoom_ax.get_xlim()
+                    _zylim = _zoom_ax.get_ylim()
+                    with st.expander("Zoom / Axis Range"):
+                        _zc1, _zc2, _zc3, _zc4 = st.columns(4)
+                        with _zc1:
+                            _zxmin = st.number_input(
+                                "X min", value=float(_zxlim[0]), key="qp_zoom_xmin", format="%g"
+                            )
+                        with _zc2:
+                            _zxmax = st.number_input(
+                                "X max", value=float(_zxlim[1]), key="qp_zoom_xmax", format="%g"
+                            )
+                        with _zc3:
+                            _zymin = st.number_input(
+                                "Y min", value=float(_zylim[0]), key="qp_zoom_ymin", format="%g"
+                            )
+                        with _zc4:
+                            _zymax = st.number_input(
+                                "Y max", value=float(_zylim[1]), key="qp_zoom_ymax", format="%g"
+                            )
+                        _zbtn1, _zbtn2 = st.columns(2)
+                        with _zbtn1:
+                            if st.button("Apply zoom", key="qp_apply_zoom"):
+                                if _zxmin < _zxmax and _zymin < _zymax:
+                                    _zoom_ax.set_xlim(_zxmin, _zxmax)
+                                    _zoom_ax.set_ylim(_zymin, _zymax)
+                                    st.session_state.qp_zoom_xlim = (_zxmin, _zxmax)
+                                    st.session_state.qp_zoom_ylim = (_zymin, _zymax)
+                                    st.session_state.qp_mpl_png = _fig_to_png_bytes(_zoom_fig)
+                                    st.rerun(scope="fragment")
+                                else:
+                                    st.error("Min must be less than max for both axes.")
+                        with _zbtn2:
+                            if st.button("Reset zoom", key="qp_reset_zoom"):
+                                st.session_state.qp_zoom_xlim = None
+                                st.session_state.qp_zoom_ylim = None
+                                _regen_with_overlays()
+                                st.rerun(scope="fragment")
+
+            # ── M16: Annotations panel ────────────────────────────────────────────
+            _ann_label = (
+                f"Annotations ({len(st.session_state.qp_ann_overlays)} active)"
+                if st.session_state.qp_ann_overlays
+                else "Annotations"
+            )
+            with st.expander(_ann_label, expanded=bool(st.session_state.qp_ann_overlays)):
+                _render_annotation_panel()
+
+            _export_panel_mpl(data, dataset_name)
+        else:
+            st.info("The plot appears here as soon as the configuration is valid.")
+
+
+_plot_workspace(plot_type, data, dataset_name)
