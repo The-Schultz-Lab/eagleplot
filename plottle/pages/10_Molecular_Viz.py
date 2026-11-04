@@ -1,4 +1,4 @@
-"""Molecular Visualization — Page 11.
+"""Molecular Visualization page.
 
 Upload a Gaussian (.log), ORCA (.out), or Molden (.molden) output file,
 parse the vibrational frequency data, and visualize the molecular structure

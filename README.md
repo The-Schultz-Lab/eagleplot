@@ -202,7 +202,7 @@ plottle/                            ← repository root
 │   ├── report.py                   ← PDF report generation
 │   ├── plugin_loader.py            ← plugin discovery and loading
 │   ├── molecular/                  ← CPK atom data + vibrational parsers
-│   ├── pages/                      ← 13 Streamlit pages (1_*.py – 14_*.py)
+│   ├── pages/                      ← 13 Streamlit pages (1_*.py – 13_*.py)
 │   ├── utils/                      ← session state, plot config, user settings
 │   ├── assets/                     ← logo + NCCU branding (shipped in the wheel)
 │   ├── gallery/                    ← pre-rendered gallery PNGs + manifest.json

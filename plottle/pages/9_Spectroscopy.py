@@ -1,4 +1,4 @@
-"""Spectroscopy Analysis — Page 10.
+"""Spectroscopy Analysis page.
 
 Four-tab spectroscopy analysis page: IR/Raman, NMR, UV-Vis, and Mass Spec.
 All operations are non-destructive and save results as new named datasets.
