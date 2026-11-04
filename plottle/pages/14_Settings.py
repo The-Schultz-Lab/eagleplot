@@ -248,9 +248,16 @@ if submitted:
     st.success("Defaults saved to config.json.")
 
 # ── Reset button (outside the form) ──────────────────────────────────────────
-if st.button("Reset defaults to factory settings"):
+# Each destructive action on this page is disabled until its own confirmation
+# box is ticked. They used to fire on a single click. See audit A-33.
+_confirm_reset = st.checkbox(
+    "I understand resetting clears my saved defaults",
+    key="confirm_reset_defaults",
+)
+if st.button("Reset defaults to factory settings", disabled=not _confirm_reset):
     save_defaults({})
     st.session_state.pop("user_defaults_loaded", None)
+    st.session_state.pop("confirm_reset_defaults", None)  # re-arm for next time
     st.success("Defaults cleared.")
     st.rerun()
 
@@ -320,9 +327,19 @@ with tab_delete:
             presets,
             key="preset_del_sel",
         )
-        if st.button("Delete preset", type="primary", key="preset_del_btn"):
+        _confirm_del = st.checkbox(
+            f"I understand **{preset_name_del}** will be deleted permanently",
+            key="confirm_preset_del",
+        )
+        if st.button(
+            "Delete preset",
+            type="primary",
+            key="preset_del_btn",
+            disabled=not _confirm_del,
+        ):
             removed = delete_preset(preset_name_del)
             if removed:
+                st.session_state.pop("confirm_preset_del", None)
                 st.success(f"Preset **{preset_name_del}** deleted.")
                 st.rerun()
             else:
@@ -349,8 +366,22 @@ if cfg_path.exists():
         except Exception as exc:
             st.error(f"Could not read config.json: {exc}")
 
-    if st.button("Delete config.json (reset everything)"):
-        cfg_path.unlink()
+    st.download_button(
+        "Download a backup of config.json",
+        data=cfg_path.read_bytes(),
+        file_name="plottle_config_backup.json",
+        mime="application/json",
+        key="dl_config_backup",
+    )
+    _confirm_wipe = st.checkbox(
+        "I understand this deletes all my defaults **and** presets",
+        key="confirm_config_delete",
+    )
+    if st.button("Delete config.json (reset everything)", disabled=not _confirm_wipe):
+        # missing_ok: the file can vanish between the exists() check above and
+        # here, which used to surface a raw FileNotFoundError.
+        cfg_path.unlink(missing_ok=True)
+        st.session_state.pop("confirm_config_delete", None)
         st.success("config.json deleted.  All defaults and presets cleared.")
         st.rerun()
 else:

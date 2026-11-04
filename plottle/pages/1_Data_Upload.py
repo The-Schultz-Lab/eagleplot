@@ -6,7 +6,6 @@ session state and available throughout the app.
 
 Supported Formats
 -----------------
-- Pickle (.pkl)
 - NumPy arrays (.npy, .npz)
 - CSV (.csv)
 - Excel (.xlsx, .xls)
@@ -97,6 +96,7 @@ from plottle.utils import (  # noqa: E402
 )
 from plottle.batch import scan_directory, batch_load_files  # noqa: E402
 from plottle.io import downsample_for_preview  # noqa: E402
+from plottle.utils.access import folder_loading_allowed_here  # noqa: E402
 
 _LARGE_FILE_BYTES = 50 * 1024 * 1024  # 50 MB — warn above this
 _PREVIEW_MAX_ROWS = 10_000  # downsample preview above this
@@ -155,17 +155,20 @@ with tab1:
     if uploaded_file is not None:
         try:
             with st.spinner(f"Loading {uploaded_file.name}..."):
-                # Save uploaded file to temp location
-                temp_dir = Path(tempfile.gettempdir()) / "plottle"
-                temp_dir.mkdir(exist_ok=True)
-                temp_path = temp_dir / uploaded_file.name
-
-                # Write file
-                with open(temp_path, "wb") as f:
-                    f.write(uploaded_file.getvalue())
-
-                # Load using io.load_data()
-                data = load_data(str(temp_path))
+                # Each upload gets its own temp directory, removed as soon as the
+                # file is parsed. A shared $TMP/plottle/ let two sessions uploading
+                # the same filename overwrite each other's data, and nothing was
+                # ever deleted. The browser-supplied name is reduced to its
+                # basename before it touches the filesystem. See audit A-14.
+                with tempfile.TemporaryDirectory(prefix="plottle-upload-") as temp_dir:
+                    temp_path = Path(temp_dir) / Path(uploaded_file.name).name
+                    temp_path.write_bytes(uploaded_file.getvalue())
+                    data = load_data(str(temp_path))
+                    # np.load() returns a lazy NpzFile that keeps the file open;
+                    # read every array now, before the directory is removed.
+                    if isinstance(data, np.lib.npyio.NpzFile):
+                        with data:
+                            data = {key: data[key] for key in data.files}
 
                 # Large-file warning: show a note and offer a downsampled preview
                 _is_large = isinstance(data, pd.DataFrame) and (
@@ -274,115 +277,127 @@ with tab2:
                                 st.error(f"Error: {_ex_err}")
 
 with tab3:
-    st.markdown(
-        "Load all matching files from a local directory at once. "
-        "Each file becomes a separate dataset."
-    )
-    _batch_folder = st.text_input(
-        "Folder path",
-        placeholder="C:/Users/you/data",
-        key="batch_folder_path",
-        help="Absolute path to the directory containing your data files.",
-    )
-    # `pkl` is deliberately absent here too — see the note on the uploader above.
-    _all_exts = [
-        "csv",
-        "xlsx",
-        "xls",
-        "tsv",
-        "json",
-        "parquet",
-        "npy",
-        "npz",
-        "jdx",
-        "dx",
-        "h5",
-        "hdf5",
-        "nc",
-        "cdf",
-        "spc",
-        "asc",
-    ]
-    _batch_exts = st.multiselect(
-        "File extensions to include",
-        options=_all_exts,
-        default=["csv", "xlsx", "tsv"],
-        key="batch_extensions",
-        help="Leave blank to include all supported formats.",
-    )
-    _batch_pattern = st.text_input(
-        "Filename pattern (optional)",
-        placeholder="sample_*.csv",
-        key="batch_filename_pattern",
-        help="fnmatch-style pattern, e.g. 'sample_*.csv'. Leave blank to match all.",
-    )
+    # Reading a typed folder path is the point when Plottle runs on your own
+    # machine, and a way to read the server's disk on a shared deployment.
+    # See audit A-15 and plottle/utils/access.py.
+    if not folder_loading_allowed_here():
+        st.info(
+            "Batch import from a folder is turned off on this server, because "
+            "the path would be read on the server, not your computer. Upload files "
+            "individually on the **Upload File** tab instead. To enable it, start "
+            "Plottle with the environment variable `PLOTTLE_ALLOW_FOLDER_LOAD=1`."
+        )
+    else:
+        st.markdown(
+            "Load all matching files from a local directory at once. "
+            "Each file becomes a separate dataset."
+        )
+        _batch_folder = st.text_input(
+            "Folder path",
+            placeholder="C:/Users/you/data",
+            key="batch_folder_path",
+            help="Absolute path to the directory containing your data files.",
+        )
+        # `pkl` is deliberately absent here too — see the note on the uploader above.
+        _all_exts = [
+            "csv",
+            "xlsx",
+            "xls",
+            "tsv",
+            "json",
+            "parquet",
+            "npy",
+            "npz",
+            "jdx",
+            "dx",
+            "h5",
+            "hdf5",
+            "nc",
+            "cdf",
+            "spc",
+            "asc",
+        ]
+        _batch_exts = st.multiselect(
+            "File extensions to include",
+            options=_all_exts,
+            default=["csv", "xlsx", "tsv"],
+            key="batch_extensions",
+            help="Leave blank to include all supported formats.",
+        )
+        _batch_pattern = st.text_input(
+            "Filename pattern (optional)",
+            placeholder="sample_*.csv",
+            key="batch_filename_pattern",
+            help="fnmatch-style pattern, e.g. 'sample_*.csv'. Leave blank to match all.",
+        )
 
-    _scan_col, _load_col = st.columns(2)
-    with _scan_col:
-        _do_scan = st.button("Scan Directory", key="batch_scan_btn", width="stretch")
-    with _load_col:
-        _do_load = st.button("Load All Files", key="batch_load_btn", width="stretch")
+        _scan_col, _load_col = st.columns(2)
+        with _scan_col:
+            _do_scan = st.button("Scan Directory", key="batch_scan_btn", width="stretch")
+        with _load_col:
+            _do_load = st.button("Load All Files", key="batch_load_btn", width="stretch")
 
-    if _do_scan or _do_load:
-        if not _batch_folder:
-            st.warning("Please enter a folder path.")
-        else:
-            try:
-                _exts = _batch_exts if _batch_exts else None
-                _pat = _batch_pattern.strip() if _batch_pattern.strip() else None
-                _found = scan_directory(_batch_folder, extensions=_exts, pattern=_pat)
+        if _do_scan or _do_load:
+            if not _batch_folder:
+                st.warning("Please enter a folder path.")
+            else:
+                try:
+                    _exts = _batch_exts if _batch_exts else None
+                    _pat = _batch_pattern.strip() if _batch_pattern.strip() else None
+                    _found = scan_directory(_batch_folder, extensions=_exts, pattern=_pat)
 
-                if not _found:
-                    st.info("No matching files found in that directory.")
-                else:
-                    # Always show metadata table
-                    _meta_rows = []
-                    for _fp in _found:
-                        _size = _fp.stat().st_size
-                        _meta_rows.append(
-                            {
-                                "Filename": _fp.name,
-                                "Extension": _fp.suffix,
-                                "Size (KB)": f"{_size / 1024:.1f}",
-                            }
-                        )
-                    st.markdown(f"**{len(_found)} file(s) found:**")
-                    st.dataframe(pd.DataFrame(_meta_rows), hide_index=True)
-
-                    if _do_load:
-                        with st.spinner(f"Loading {len(_found)} file(s)..."):
-                            _result = batch_load_files(_found, on_error="skip")
-
-                        _loaded = _result["datasets"]
-                        _errors = _result["errors"]
-                        _bmeta = _result["metadata"]
-
-                        for _name, _data in _loaded.items():
-                            add_dataset(
-                                _name,
-                                _data,
-                                metadata={
-                                    "source": "batch_import",
-                                    "file_type": Path(_bmeta[_name]["source"]).suffix,
-                                    "size_bytes": _bmeta[_name]["size_bytes"],
-                                },
+                    if not _found:
+                        st.info("No matching files found in that directory.")
+                    else:
+                        # Always show metadata table
+                        _meta_rows = []
+                        for _fp in _found:
+                            _size = _fp.stat().st_size
+                            _meta_rows.append(
+                                {
+                                    "Filename": _fp.name,
+                                    "Extension": _fp.suffix,
+                                    "Size (KB)": f"{_size / 1024:.1f}",
+                                }
                             )
+                        st.markdown(f"**{len(_found)} file(s) found:**")
+                        st.dataframe(pd.DataFrame(_meta_rows), hide_index=True)
 
-                        if _loaded:
-                            st.success(
-                                f"Loaded {len(_loaded)} dataset(s): "
-                                + ", ".join(f"**{n}**" for n in _loaded)
-                            )
-                            st.rerun()
-                        if _errors:
-                            with st.expander(f"{len(_errors)} file(s) failed to load"):
-                                for _ename, _emsg in _errors.items():
-                                    st.error(f"`{_ename}`: {_emsg}")
+                        if _do_load:
+                            with st.spinner(f"Loading {len(_found)} file(s)..."):
+                                _result = batch_load_files(_found, on_error="skip")
 
-            except NotADirectoryError as _e:
-                st.error(f"Not a valid directory: {_e}")
-            except Exception as _e:
-                st.error(f"Batch import error: {_e}")
+                            _loaded = _result["datasets"]
+                            _errors = _result["errors"]
+                            _bmeta = _result["metadata"]
+
+                            for _name, _data in _loaded.items():
+                                add_dataset(
+                                    _name,
+                                    _data,
+                                    metadata={
+                                        "source": "batch_import",
+                                        "file_type": Path(_bmeta[_name]["source"]).suffix,
+                                        "size_bytes": _bmeta[_name]["size_bytes"],
+                                    },
+                                )
+
+                            if _loaded:
+                                st.success(
+                                    f"Loaded {len(_loaded)} dataset(s): "
+                                    + ", ".join(f"**{n}**" for n in _loaded)
+                                )
+                                st.rerun()
+                            if _errors:
+                                with st.expander(f"{len(_errors)} file(s) failed to load"):
+                                    for _ename, _emsg in _errors.items():
+                                        st.error(f"`{_ename}`: {_emsg}")
+
+                except NotADirectoryError as _e:
+                    st.error(f"Not a valid directory: {_e}")
+                except Exception as _e:
+                    st.error(f"Batch import error: {_e}")
+
 
 # Dataset management section
 st.markdown("---")
