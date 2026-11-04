@@ -17,6 +17,16 @@ if ! command -v python3 &>/dev/null; then
     exit 1
 fi
 
+# ── Check the Python version (pyproject.toml: >=3.9, !=3.9.7) ─────────────────
+if ! python3 -c 'import sys; v = sys.version_info[:3]; sys.exit(0 if v >= (3, 9) and v != (3, 9, 7) else 1)'; then
+    echo "ERROR: Plottle needs Python 3.9 or later (but not 3.9.7)."
+    echo "Found: $(python3 --version 2>&1)"
+    echo "Install a newer Python from https://www.python.org/downloads/"
+    echo
+    read -r -p "Press Enter to close..."
+    exit 1
+fi
+
 # ── Create virtual environment (skip if already exists) ──────────────────────
 if [ -d ".venv" ]; then
     echo "Virtual environment already exists -- skipping creation."
@@ -37,7 +47,12 @@ echo
 echo "Installing dependencies (this may take a few minutes on first run)..."
 echo
 
-source .venv/bin/activate
+if ! source .venv/bin/activate; then
+    echo "ERROR: Could not activate .venv. Delete the .venv folder and run setup again."
+    echo
+    read -r -p "Press Enter to close..."
+    exit 1
+fi
 pip install -e ".[formats,nist]"
 
 if [ $? -ne 0 ]; then

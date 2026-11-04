@@ -1,2 +1,27 @@
-# Auto detect text files and perform LF normalization
+# Normalise line endings for anything git detects as text.
 * text=auto
+
+# Shell scripts must keep LF even on a Windows checkout, or bash fails on "\r".
+*.command text eol=lf
+*.sh      text eol=lf
+
+# cmd.exe needs CRLF for labels and multi-line blocks to parse reliably.
+*.bat     text eol=crlf
+
+# Binary formats: never run newline conversion or text diffs on these. Without
+# explicit rules a file whose first bytes look like text could be corrupted.
+*.png     binary
+*.jpg     binary
+*.ico     binary
+*.pdf     binary
+*.npy     binary
+*.npz     binary
+*.pkl     binary
+*.xlsx    binary
+*.xls     binary
+*.parquet binary
+*.h5      binary
+*.hdf5    binary
+*.nc      binary
+*.cdf     binary
+*.spc     binary
