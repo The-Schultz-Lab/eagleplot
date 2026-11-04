@@ -17,16 +17,21 @@ import pytest
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use('Agg')   # must be set before any other matplotlib import
+
+matplotlib.use("Agg")  # must be set before any other matplotlib import
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from plottle.io import (
-    save_pickle, load_pickle,
-    save_numpy, load_numpy,
-    save_dataframe, load_dataframe,
-    save_data, load_data,
+    save_pickle,
+    load_pickle,
+    save_numpy,
+    load_numpy,
+    save_dataframe,
+    load_dataframe,
+    save_data,
+    load_data,
 )
 from plottle.math import (
     calculate_statistics,
@@ -45,6 +50,7 @@ from plottle.plotting import (
 # ============================================================================
 # Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def tmp(tmp_path):
@@ -65,16 +71,19 @@ def linear_data():
 def sample_df():
     """Small deterministic DataFrame with two numeric columns."""
     rng = np.random.default_rng(1)
-    return pd.DataFrame({
-        'time': np.linspace(0, 5, 30),
-        'signal': np.sin(np.linspace(0, 2 * np.pi, 30)) + rng.normal(0, 0.1, 30),
-        'noise': rng.normal(0, 1, 30),
-    })
+    return pd.DataFrame(
+        {
+            "time": np.linspace(0, 5, 30),
+            "signal": np.sin(np.linspace(0, 2 * np.pi, 30)) + rng.normal(0, 0.1, 30),
+            "noise": rng.normal(0, 1, 30),
+        }
+    )
 
 
 # ============================================================================
 # Pipeline 1 — IO → Math
 # ============================================================================
+
 
 @pytest.mark.integration
 class TestIOMathPipeline:
@@ -84,11 +93,11 @@ class TestIOMathPipeline:
         save_dataframe(sample_df, path)
         loaded = load_dataframe(path)
 
-        stats = calculate_statistics(loaded['signal'].values)
+        stats = calculate_statistics(loaded["signal"].values)
 
-        assert set(stats.keys()) >= {'mean', 'std', 'min', 'max', 'q1', 'q3'}
-        assert stats['min'] <= stats['mean'] <= stats['max']
-        assert stats['std'] > 0
+        assert set(stats.keys()) >= {"mean", "std", "min", "max", "q1", "q3"}
+        assert stats["min"] <= stats["mean"] <= stats["max"]
+        assert stats["std"] > 0
 
     def test_numpy_roundtrip_then_statistics(self, tmp, linear_data):
         """Save 1-D numpy array, reload it, verify statistics are consistent."""
@@ -100,8 +109,8 @@ class TestIOMathPipeline:
         stats_orig = calculate_statistics(y)
         stats_loaded = calculate_statistics(loaded_y)
 
-        assert abs(stats_orig['mean'] - stats_loaded['mean']) < 1e-10
-        assert abs(stats_orig['std'] - stats_loaded['std']) < 1e-10
+        assert abs(stats_orig["mean"] - stats_loaded["mean"]) < 1e-10
+        assert abs(stats_orig["std"] - stats_loaded["std"]) < 1e-10
 
     def test_pickle_roundtrip_then_statistics(self, tmp, sample_df):
         """Save DataFrame as pickle, reload it, verify statistics are preserved."""
@@ -109,30 +118,31 @@ class TestIOMathPipeline:
         save_pickle(sample_df, path)
         loaded = load_pickle(path)
 
-        original_mean = calculate_statistics(sample_df['time'].values)['mean']
-        loaded_mean = calculate_statistics(loaded['time'].values)['mean']
+        original_mean = calculate_statistics(sample_df["time"].values)["mean"]
+        loaded_mean = calculate_statistics(loaded["time"].values)["mean"]
 
         assert abs(original_mean - loaded_mean) < 1e-10
 
     def test_universal_loader_csv_then_fit(self, tmp, linear_data):
         """Use the universal load_data / save_data interface, then fit a line."""
         x, y = linear_data
-        df = pd.DataFrame({'x': x, 'y': y})
+        df = pd.DataFrame({"x": x, "y": y})
         path = tmp / "linear.csv"
         save_data(df, path)
         loaded = load_data(path)
 
-        result = fit_linear(loaded['x'].values, loaded['y'].values)
+        result = fit_linear(loaded["x"].values, loaded["y"].values)
 
-        assert 'slope' in result
-        assert 'intercept' in result
+        assert "slope" in result
+        assert "intercept" in result
         # True slope ≈ 3.0 — allow generous tolerance for small noisy sample
-        assert abs(result['slope'] - 3.0) < 0.3
+        assert abs(result["slope"] - 3.0) < 0.3
 
 
 # ============================================================================
 # Pipeline 2 — IO → Plotting
 # ============================================================================
+
 
 @pytest.mark.integration
 @pytest.mark.plotting
@@ -144,7 +154,7 @@ class TestIOPlottingPipeline:
         save_dataframe(sample_df, csv_path)
 
         loaded = load_dataframe(csv_path)
-        fig, ax, info = histogram(loaded['noise'].values, bins=10, title='Noise')
+        fig, ax, info = histogram(loaded["noise"].values, bins=10, title="Noise")
         save_figure(fig, png_path, dpi=72)
         plt.close(fig)
 
@@ -160,7 +170,7 @@ class TestIOPlottingPipeline:
         save_numpy(arr, npy_path)
 
         loaded = load_numpy(npy_path)
-        fig, ax = line_plot(loaded[:, 0], [loaded[:, 1]], xlabel='x', ylabel='y')
+        fig, ax = line_plot(loaded[:, 0], [loaded[:, 1]], xlabel="x", ylabel="y")
         save_figure(fig, svg_path)
         plt.close(fig)
 
@@ -174,8 +184,9 @@ class TestIOPlottingPipeline:
         save_dataframe(sample_df, csv_path)
 
         loaded = load_dataframe(csv_path)
-        fig, ax = scatter_plot(loaded['time'].values, loaded['signal'].values,
-                               xlabel='Time (s)', ylabel='Signal')
+        fig, ax = scatter_plot(
+            loaded["time"].values, loaded["signal"].values, xlabel="Time (s)", ylabel="Signal"
+        )
         save_figure(fig, pdf_path)
         plt.close(fig)
 
@@ -187,6 +198,7 @@ class TestIOPlottingPipeline:
 # Pipeline 3 — Math → Plotting
 # ============================================================================
 
+
 @pytest.mark.integration
 @pytest.mark.plotting
 class TestMathPlottingPipeline:
@@ -194,57 +206,56 @@ class TestMathPlottingPipeline:
         """Fit a line to data, overlay fit on scatter plot."""
         x, y = linear_data
         result = fit_linear(x, y)
-        y_fit = result['slope'] * x + result['intercept']
+        y_fit = result["slope"] * x + result["intercept"]
 
-        fig, ax = scatter_plot(x, y, title='Data + Linear Fit')
-        ax.plot(x, y_fit, color='red', linewidth=1.5, label='Fit')
+        fig, ax = scatter_plot(x, y, title="Data + Linear Fit")
+        ax.plot(x, y_fit, color="red", linewidth=1.5, label="Fit")
         ax.legend()
         plt.close(fig)
 
-        assert result['r_squared'] > 0.95
+        assert result["r_squared"] > 0.95
 
     def test_polynomial_fit_then_line_plot(self, linear_data):
         """Fit a degree-2 polynomial, plot original and fitted curves."""
         x, y = linear_data
         result = fit_polynomial(x, y, degree=2)
-        y_fit = result['predict'](x)
+        y_fit = result["predict"](x)
 
         fig, ax = line_plot(
             x,
             [y, y_fit],
-            labels=['Data', 'Poly Fit (deg 2)'],
-            xlabel='x', ylabel='y',
-            title='Polynomial Fit',
+            labels=["Data", "Poly Fit (deg 2)"],
+            xlabel="x",
+            ylabel="y",
+            title="Polynomial Fit",
         )
         plt.close(fig)
 
-        assert result['r_squared'] > 0.90
+        assert result["r_squared"] > 0.90
 
     def test_statistics_annotations_on_histogram(self, linear_data):
         """Compute stats, then annotate a histogram with mean and std lines."""
         _, y = linear_data
         stats = calculate_statistics(y)
 
-        fig, ax, info = histogram(y, bins=15, xlabel='Value')
-        ax.axvline(stats['mean'], color='red', linestyle='--', label='Mean')
-        ax.axvline(stats['mean'] + stats['std'], color='orange',
-                   linestyle=':', label='+1 SD')
-        ax.axvline(stats['mean'] - stats['std'], color='orange',
-                   linestyle=':', label='-1 SD')
+        fig, ax, info = histogram(y, bins=15, xlabel="Value")
+        ax.axvline(stats["mean"], color="red", linestyle="--", label="Mean")
+        ax.axvline(stats["mean"] + stats["std"], color="orange", linestyle=":", label="+1 SD")
+        ax.axvline(stats["mean"] - stats["std"], color="orange", linestyle=":", label="-1 SD")
         ax.legend()
         plt.close(fig)
 
-        assert stats['mean'] > 0          # y = 3x + 2, so mean >> 0
-        assert stats['std'] > 0
+        assert stats["mean"] > 0  # y = 3x + 2, so mean >> 0
+        assert stats["std"] > 0
 
     def test_heatmap_from_computed_matrix(self):
         """Build a correlation-style matrix and render as heatmap."""
         rng = np.random.default_rng(2)
         data = rng.normal(size=(20, 4))
-        df = pd.DataFrame(data, columns=['A', 'B', 'C', 'D'])
-        corr = df.corr().values   # 4×4 correlation matrix
+        df = pd.DataFrame(data, columns=["A", "B", "C", "D"])
+        corr = df.corr().values  # 4×4 correlation matrix
 
-        fig, ax = heatmap(corr, title='Correlation Matrix')
+        fig, ax = heatmap(corr, title="Correlation Matrix")
         plt.close(fig)
 
         assert corr.shape == (4, 4)
@@ -256,13 +267,14 @@ class TestMathPlottingPipeline:
 # Pipeline 4 — Full pipeline: IO → Math → Plotting → Save
 # ============================================================================
 
+
 @pytest.mark.integration
 @pytest.mark.plotting
 class TestFullPipeline:
     def test_csv_analyse_fit_plot_save(self, tmp, linear_data):
         """Complete workflow: save CSV → load → analyse → fit → plot → save PNG."""
         x, y = linear_data
-        df = pd.DataFrame({'time': x, 'response': y})
+        df = pd.DataFrame({"time": x, "response": y})
 
         # 1. Persist data
         csv_path = tmp / "experiment.csv"
@@ -270,29 +282,34 @@ class TestFullPipeline:
 
         # 2. Load
         loaded = load_dataframe(csv_path)
-        x_l = loaded['time'].values
-        y_l = loaded['response'].values
+        x_l = loaded["time"].values
+        y_l = loaded["response"].values
 
         # 3. Analyse
         stats = calculate_statistics(y_l)
-        assert stats['std'] > 0
+        assert stats["std"] > 0
 
         # 4. Fit
         fit = fit_linear(x_l, y_l)
-        assert fit['r_squared'] > 0.90
+        assert fit["r_squared"] > 0.90
 
         # 5. Plot: data + fit + mean line
-        y_fit = fit['slope'] * x_l + fit['intercept']
+        y_fit = fit["slope"] * x_l + fit["intercept"]
         fig, ax = line_plot(
             x_l,
             [y_l, y_fit],
-            labels=['Measured', 'Linear fit'],
-            xlabel='Time (s)',
-            ylabel='Response',
-            title='Full Pipeline Test',
+            labels=["Measured", "Linear fit"],
+            xlabel="Time (s)",
+            ylabel="Response",
+            title="Full Pipeline Test",
         )
-        ax.axhline(stats['mean'], color='gray', linestyle='--', alpha=0.6,
-                   label=f"Mean = {stats['mean']:.2f}")
+        ax.axhline(
+            stats["mean"],
+            color="gray",
+            linestyle="--",
+            alpha=0.6,
+            label=f"Mean = {stats['mean']:.2f}",
+        )
         ax.legend()
 
         # 6. Save
@@ -301,7 +318,7 @@ class TestFullPipeline:
         plt.close(fig)
 
         assert png_path.exists()
-        assert png_path.stat().st_size > 1000   # non-trivial file
+        assert png_path.stat().st_size > 1000  # non-trivial file
 
     def test_numpy_analyse_fit_plot_save_pdf(self, tmp):
         """Save / load ndarray, fit a quadratic, produce a PDF figure."""
@@ -316,10 +333,10 @@ class TestFullPipeline:
         x_l, y_l = arr[:, 0], arr[:, 1]
 
         result = fit_polynomial(x_l, y_l, degree=2)
-        y_fit = result['predict'](x_l)
+        y_fit = result["predict"](x_l)
 
-        fig, ax = scatter_plot(x_l, y_l, title='Quadratic Fit', xlabel='x', ylabel='y')
-        ax.plot(x_l, y_fit, color='crimson', linewidth=2, label='Degree-2 fit')
+        fig, ax = scatter_plot(x_l, y_l, title="Quadratic Fit", xlabel="x", ylabel="y")
+        ax.plot(x_l, y_fit, color="crimson", linewidth=2, label="Degree-2 fit")
         ax.legend()
 
         pdf_path = tmp / "quadratic.pdf"
@@ -327,15 +344,14 @@ class TestFullPipeline:
         plt.close(fig)
 
         assert pdf_path.exists()
-        assert result['r_squared'] > 0.95
+        assert result["r_squared"] > 0.95
 
     def test_multi_format_export(self, tmp, linear_data):
         """Generate one figure and export it to PNG, SVG, and PDF."""
         x, y = linear_data
-        fig, ax = scatter_plot(x, y, xlabel='x', ylabel='y',
-                               title='Multi-Format Export Test')
+        fig, ax = scatter_plot(x, y, xlabel="x", ylabel="y", title="Multi-Format Export Test")
 
-        for fmt in ('png', 'svg', 'pdf'):
+        for fmt in ("png", "svg", "pdf"):
             out = tmp / f"plot.{fmt}"
             save_figure(fig, out, dpi=72)
             assert out.exists(), f"{fmt} file was not created"

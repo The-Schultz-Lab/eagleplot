@@ -21,27 +21,41 @@ import shutil
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from plottle.plotting import (
     # Figure management
-    create_figure, configure_axes, save_figure,
+    create_figure,
+    configure_axes,
+    save_figure,
     # Core plots
-    histogram, line_plot, scatter_plot,
+    histogram,
+    line_plot,
+    scatter_plot,
     # Advanced plots
-    heatmap, contour_plot,
+    heatmap,
+    contour_plot,
     # M14 extended plot types
-    bar_chart, waterfall_plot, dual_axis_plot,
+    bar_chart,
+    waterfall_plot,
+    dual_axis_plot,
     # M21 new plot types
-    z_colored_scatter, bubble_chart, polar_plot, histogram_2d,
+    z_colored_scatter,
+    bubble_chart,
+    polar_plot,
+    histogram_2d,
     # Backlog new plot types
-    scatter_with_regression, residual_plot,
+    scatter_with_regression,
+    residual_plot,
     # Specialty plot types
     inset_plot,
     # Styling
-    set_style, get_color_palette, apply_publication_style
+    set_style,
+    get_color_palette,
+    apply_publication_style,
 )
 
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def temp_dir():
@@ -50,7 +64,7 @@ def temp_dir():
     yield Path(temp_path)
     shutil.rmtree(temp_path)
     # Close all matplotlib figures
-    plt.close('all')
+    plt.close("all")
 
 
 @pytest.fixture
@@ -90,12 +104,13 @@ def sample_meshgrid():
 def cleanup_plots():
     """Cleanup matplotlib plots after each test."""
     yield
-    plt.close('all')
+    plt.close("all")
 
 
 # ============================================================================
 # Figure Management Tests
 # ============================================================================
+
 
 class TestFigureManagement:
     """Tests for figure management functions."""
@@ -120,11 +135,11 @@ class TestFigureManagement:
     def test_configure_axes_labels(self):
         """Test configuring axes with labels."""
         fig, ax = create_figure()
-        configure_axes(ax, xlabel='X Label', ylabel='Y Label', title='Title')
+        configure_axes(ax, xlabel="X Label", ylabel="Y Label", title="Title")
 
-        assert ax.get_xlabel() == 'X Label'
-        assert ax.get_ylabel() == 'Y Label'
-        assert ax.get_title() == 'Title'
+        assert ax.get_xlabel() == "X Label"
+        assert ax.get_ylabel() == "Y Label"
+        assert ax.get_title() == "Title"
 
     def test_configure_axes_limits(self):
         """Test configuring axes limits."""
@@ -145,7 +160,7 @@ class TestFigureManagement:
     def test_configure_axes_extra_kwargs(self):
         """Test configure_axes passes unrecognised kwargs via set_<key>."""
         fig, ax = create_figure()
-        configure_axes(ax, facecolor='lightgrey')
+        configure_axes(ax, facecolor="lightgrey")
 
         # set_facecolor goes through the kwargs loop (lines 129-130)
         assert ax.get_facecolor() is not None
@@ -155,19 +170,19 @@ class TestFigureManagement:
         fig, ax = create_figure()
         ax.plot([1, 2, 3], [1, 4, 9])
 
-        filepath = temp_dir / 'test.png'
+        filepath = temp_dir / "test.png"
         save_figure(fig, filepath)
 
         assert filepath.exists()
-        assert filepath.suffix == '.png'
+        assert filepath.suffix == ".png"
 
     def test_save_figure_pdf(self, temp_dir):
         """Test saving figure as PDF."""
         fig, ax = create_figure()
         ax.plot([1, 2, 3], [1, 4, 9])
 
-        filepath = temp_dir / 'test.pdf'
-        save_figure(fig, filepath, format='pdf')
+        filepath = temp_dir / "test.pdf"
+        save_figure(fig, filepath, format="pdf")
 
         assert filepath.exists()
 
@@ -176,7 +191,7 @@ class TestFigureManagement:
         fig, ax = create_figure()
         ax.plot([1, 2, 3], [1, 4, 9])
 
-        filepath = temp_dir / 'subdir' / 'nested' / 'test.png'
+        filepath = temp_dir / "subdir" / "nested" / "test.png"
         save_figure(fig, filepath)
 
         assert filepath.exists()
@@ -185,6 +200,7 @@ class TestFigureManagement:
 # ============================================================================
 # Core Plotting Tests
 # ============================================================================
+
 
 class TestHistogram:
     """Tests for histogram function."""
@@ -196,45 +212,42 @@ class TestHistogram:
         assert isinstance(fig, Figure)
         assert isinstance(ax, Axes)
         assert isinstance(info, dict)
-        assert 'counts' in info
-        assert 'bins' in info
-        assert 'mean' in info
-        assert 'std' in info
+        assert "counts" in info
+        assert "bins" in info
+        assert "mean" in info
+        assert "std" in info
 
     def test_histogram_statistics(self, sample_data):
         """Test histogram statistics."""
         fig, ax, info = histogram(sample_data)
 
         # Check statistics are reasonable
-        assert np.isclose(info['mean'], np.mean(sample_data))
-        assert np.isclose(info['std'], np.std(sample_data))
+        assert np.isclose(info["mean"], np.mean(sample_data))
+        assert np.isclose(info["std"], np.std(sample_data))
 
     def test_histogram_custom_bins(self, sample_data):
         """Test histogram with custom bins."""
         fig, ax, info = histogram(sample_data, bins=20)
 
         # Should have 20 bins
-        assert len(info['counts']) == 20
+        assert len(info["counts"]) == 20
 
     def test_histogram_with_labels(self, sample_data):
         """Test histogram with labels."""
         fig, ax, info = histogram(
-            sample_data,
-            xlabel='Value',
-            ylabel='Count',
-            title='Test Histogram'
+            sample_data, xlabel="Value", ylabel="Count", title="Test Histogram"
         )
 
-        assert ax.get_xlabel() == 'Value'
-        assert ax.get_ylabel() == 'Count'
-        assert ax.get_title() == 'Test Histogram'
+        assert ax.get_xlabel() == "Value"
+        assert ax.get_ylabel() == "Count"
+        assert ax.get_title() == "Test Histogram"
 
     def test_histogram_density(self, sample_data):
         """Test histogram with density=True."""
         fig, ax, info = histogram(sample_data, density=True)
 
         # Y-label should change to Density
-        assert ax.get_ylabel() == 'Density'
+        assert ax.get_ylabel() == "Density"
 
 
 class TestLinePlot:
@@ -264,16 +277,12 @@ class TestLinePlot:
         y2 = y * 2
 
         fig, ax = line_plot(
-            x, [y, y2],
-            labels=['Line 1', 'Line 2'],
-            xlabel='X',
-            ylabel='Y',
-            title='Test Plot'
+            x, [y, y2], labels=["Line 1", "Line 2"], xlabel="X", ylabel="Y", title="Test Plot"
         )
 
-        assert ax.get_xlabel() == 'X'
-        assert ax.get_ylabel() == 'Y'
-        assert ax.get_title() == 'Test Plot'
+        assert ax.get_xlabel() == "X"
+        assert ax.get_ylabel() == "Y"
+        assert ax.get_title() == "Test Plot"
         assert ax.get_legend() is not None
 
     def test_line_plot_custom_colors(self, sample_xy_data):
@@ -281,10 +290,7 @@ class TestLinePlot:
         x, y = sample_xy_data
         y2 = y * 2
 
-        fig, ax = line_plot(
-            x, [y, y2],
-            colors=['red', 'blue']
-        )
+        fig, ax = line_plot(x, [y, y2], colors=["red", "blue"])
 
         assert len(ax.lines) == 2
 
@@ -292,10 +298,7 @@ class TestLinePlot:
         """Test line plot with markers."""
         x, y = sample_xy_data
 
-        fig, ax = line_plot(
-            x, y,
-            markers=['o']
-        )
+        fig, ax = line_plot(x, y, markers=["o"])
 
         assert len(ax.lines) == 1
 
@@ -330,16 +333,11 @@ class TestScatterPlot:
         x = np.random.rand(50)
         y = np.random.rand(50)
 
-        fig, ax = scatter_plot(
-            x, y,
-            xlabel='X Data',
-            ylabel='Y Data',
-            title='Scatter Test'
-        )
+        fig, ax = scatter_plot(x, y, xlabel="X Data", ylabel="Y Data", title="Scatter Test")
 
-        assert ax.get_xlabel() == 'X Data'
-        assert ax.get_ylabel() == 'Y Data'
-        assert ax.get_title() == 'Scatter Test'
+        assert ax.get_xlabel() == "X Data"
+        assert ax.get_ylabel() == "Y Data"
+        assert ax.get_title() == "Scatter Test"
 
     def test_scatter_plot_color_mapping(self):
         """Test scatter plot with color array."""
@@ -369,6 +367,7 @@ class TestScatterPlot:
 # Advanced Plotting Tests
 # ============================================================================
 
+
 class TestHeatmap:
     """Tests for heatmap function."""
 
@@ -382,33 +381,24 @@ class TestHeatmap:
 
     def test_heatmap_with_labels(self, sample_2d_data):
         """Test heatmap with labels."""
-        fig, ax = heatmap(
-            sample_2d_data,
-            xlabel='Columns',
-            ylabel='Rows',
-            title='Heatmap Test'
-        )
+        fig, ax = heatmap(sample_2d_data, xlabel="Columns", ylabel="Rows", title="Heatmap Test")
 
-        assert ax.get_xlabel() == 'Columns'
-        assert ax.get_ylabel() == 'Rows'
-        assert ax.get_title() == 'Heatmap Test'
+        assert ax.get_xlabel() == "Columns"
+        assert ax.get_ylabel() == "Rows"
+        assert ax.get_title() == "Heatmap Test"
 
     def test_heatmap_custom_colormap(self, sample_2d_data):
         """Test heatmap with custom colormap."""
-        fig, ax = heatmap(sample_2d_data, cmap='hot')
+        fig, ax = heatmap(sample_2d_data, cmap="hot")
 
         assert len(ax.images) > 0
 
     def test_heatmap_with_tick_labels(self, sample_2d_data):
         """Test heatmap with custom tick labels."""
-        xlabels = [f'C{i}' for i in range(10)]
-        ylabels = [f'R{i}' for i in range(10)]
+        xlabels = [f"C{i}" for i in range(10)]
+        ylabels = [f"R{i}" for i in range(10)]
 
-        fig, ax = heatmap(
-            sample_2d_data,
-            xticklabels=xlabels,
-            yticklabels=ylabels
-        )
+        fig, ax = heatmap(sample_2d_data, xticklabels=xlabels, yticklabels=ylabels)
 
         assert len(ax.get_xticklabels()) == 10
         assert len(ax.get_yticklabels()) == 10
@@ -443,16 +433,11 @@ class TestContourPlot:
     def test_contour_plot_with_labels(self, sample_meshgrid):
         """Test contour plot with labels."""
         X, Y, Z = sample_meshgrid
-        fig, ax = contour_plot(
-            X, Y, Z,
-            xlabel='X Axis',
-            ylabel='Y Axis',
-            title='Contour Test'
-        )
+        fig, ax = contour_plot(X, Y, Z, xlabel="X Axis", ylabel="Y Axis", title="Contour Test")
 
-        assert ax.get_xlabel() == 'X Axis'
-        assert ax.get_ylabel() == 'Y Axis'
-        assert ax.get_title() == 'Contour Test'
+        assert ax.get_xlabel() == "X Axis"
+        assert ax.get_ylabel() == "Y Axis"
+        assert ax.get_title() == "Contour Test"
 
     def test_contour_plot_custom_levels(self, sample_meshgrid):
         """Test contour plot with custom levels."""
@@ -476,18 +461,19 @@ class TestContourPlot:
 # Styling Utilities Tests
 # ============================================================================
 
+
 class TestStylingUtilities:
     """Tests for styling utility functions."""
 
     def test_set_style_default(self):
         """Test setting default style."""
-        set_style('default')
+        set_style("default")
         # Should not raise error
 
     def test_set_style_seaborn(self):
         """Test setting seaborn style (if available)."""
         try:
-            set_style('ggplot')
+            set_style("ggplot")
             # Should work if style is available
         except ValueError:
             # OK if style not available
@@ -496,7 +482,7 @@ class TestStylingUtilities:
     def test_set_style_invalid_raises_error(self):
         """Test that invalid style raises ValueError."""
         with pytest.raises(ValueError):
-            set_style('nonexistent_style_12345')
+            set_style("nonexistent_style_12345")
 
     def test_get_color_palette_default(self):
         """Test getting default color palette."""
@@ -505,21 +491,21 @@ class TestStylingUtilities:
         assert isinstance(colors, list)
         assert len(colors) == 10
         # Colors should be hex codes
-        assert all(c.startswith('#') for c in colors)
+        assert all(c.startswith("#") for c in colors)
 
     def test_get_color_palette_custom(self):
         """Test getting custom color palette."""
-        colors = get_color_palette('tab20', n_colors=5)
+        colors = get_color_palette("tab20", n_colors=5)
 
         assert len(colors) == 5
-        assert all(c.startswith('#') for c in colors)
+        assert all(c.startswith("#") for c in colors)
 
     def test_get_color_palette_continuous(self):
         """Test color palette with a continuous colormap (no .colors attribute)."""
-        colors = get_color_palette('hot', n_colors=6)
+        colors = get_color_palette("hot", n_colors=6)
 
         assert len(colors) == 6
-        assert all(c.startswith('#') for c in colors)
+        assert all(c.startswith("#") for c in colors)
 
     def test_apply_publication_style_single_ax(self, sample_xy_data):
         """Test applying publication style to single axes."""
@@ -545,20 +531,17 @@ class TestStylingUtilities:
 # Integration Tests
 # ============================================================================
 
+
 class TestIntegration:
     """Integration tests combining multiple functions."""
 
     def test_create_and_save_histogram(self, temp_dir, sample_data):
         """Test creating and saving a histogram."""
         fig, ax, info = histogram(
-            sample_data,
-            bins=30,
-            xlabel='Value',
-            ylabel='Frequency',
-            title='Test Histogram'
+            sample_data, bins=30, xlabel="Value", ylabel="Frequency", title="Test Histogram"
         )
 
-        filepath = temp_dir / 'histogram.png'
+        filepath = temp_dir / "histogram.png"
         save_figure(fig, filepath, dpi=150)
 
         assert filepath.exists()
@@ -567,17 +550,12 @@ class TestIntegration:
         """Test creating and saving a line plot."""
         x, y = sample_xy_data
 
-        fig, ax = line_plot(
-            x, y,
-            xlabel='X',
-            ylabel='Y',
-            title='Line Plot'
-        )
+        fig, ax = line_plot(x, y, xlabel="X", ylabel="Y", title="Line Plot")
 
         apply_publication_style(fig, ax)
 
-        filepath = temp_dir / 'lineplot.pdf'
-        save_figure(fig, filepath, format='pdf')
+        filepath = temp_dir / "lineplot.pdf"
+        save_figure(fig, filepath, format="pdf")
 
         assert filepath.exists()
 
@@ -590,10 +568,10 @@ class TestIntegration:
 
         # Use configure_axes on both
         ax1.plot(x, y)
-        configure_axes(ax1, xlabel='X', ylabel='Y', title='Plot 1')
+        configure_axes(ax1, xlabel="X", ylabel="Y", title="Plot 1")
 
         ax2.scatter(x, y)
-        configure_axes(ax2, xlabel='X', ylabel='Y', title='Plot 2')
+        configure_axes(ax2, xlabel="X", ylabel="Y", title="Plot 2")
 
         assert len(fig.axes) == 2
 
@@ -605,15 +583,10 @@ class TestIntegration:
         c = x + y
 
         fig, ax = scatter_plot(
-            x, y,
-            color=c,
-            colorbar=True,
-            xlabel='X',
-            ylabel='Y',
-            title='Colored Scatter'
+            x, y, color=c, colorbar=True, xlabel="X", ylabel="Y", title="Colored Scatter"
         )
 
-        filepath = temp_dir / 'scatter.png'
+        filepath = temp_dir / "scatter.png"
         save_figure(fig, filepath)
 
         assert filepath.exists()
@@ -622,6 +595,7 @@ class TestIntegration:
 # ============================================================================
 # Error Bar Tests (M14)
 # ============================================================================
+
 
 class TestErrorBars:
     """Tests for error bar support added in M14."""
@@ -678,22 +652,23 @@ class TestErrorBars:
 # Bar Chart Tests (M14)
 # ============================================================================
 
+
 class TestBarChart:
     """Tests for bar_chart function."""
 
     def test_simple_bar(self):
         """Simple bar chart returns (fig, ax, info)."""
-        cats = ['A', 'B', 'C', 'D']
+        cats = ["A", "B", "C", "D"]
         vals = np.array([3.0, 5.0, 2.0, 4.0])
         fig, ax, info = bar_chart(cats, vals)
         assert isinstance(fig, Figure)
         assert isinstance(ax, Axes)
-        assert info['kind'] == 'simple'
-        assert info['n_categories'] == 4
+        assert info["kind"] == "simple"
+        assert info["n_categories"] == 4
 
     def test_simple_bar_with_yerr(self):
         """Simple bar chart with Y error bars."""
-        cats = ['A', 'B', 'C']
+        cats = ["A", "B", "C"]
         vals = np.array([1.0, 2.0, 3.0])
         err = np.array([0.1, 0.2, 0.15])
         fig, ax, info = bar_chart(cats, vals, yerr=err)
@@ -701,44 +676,42 @@ class TestBarChart:
 
     def test_grouped_bar(self):
         """Grouped bar chart with hue."""
-        cats = ['Q1', 'Q2', 'Q3']
+        cats = ["Q1", "Q2", "Q3"]
         vals = np.array([[1.0, 2.0, 3.0], [4.0, 3.0, 2.0]])
-        hue = ['Group A', 'Group B']
-        fig, ax, info = bar_chart(cats, vals, hue=hue, kind='grouped')
+        hue = ["Group A", "Group B"]
+        fig, ax, info = bar_chart(cats, vals, hue=hue, kind="grouped")
         assert isinstance(fig, Figure)
-        assert info['kind'] == 'grouped'
-        assert info['n_groups'] == 2
+        assert info["kind"] == "grouped"
+        assert info["n_groups"] == 2
 
     def test_stacked_bar(self):
         """Stacked bar chart."""
-        cats = ['X', 'Y', 'Z']
+        cats = ["X", "Y", "Z"]
         vals = np.array([[1.0, 1.5, 2.0], [2.0, 1.0, 0.5]])
-        hue = ['Layer 1', 'Layer 2']
-        fig, ax, info = bar_chart(cats, vals, hue=hue, kind='stacked')
+        hue = ["Layer 1", "Layer 2"]
+        fig, ax, info = bar_chart(cats, vals, hue=hue, kind="stacked")
         assert isinstance(fig, Figure)
-        assert info['kind'] == 'stacked'
+        assert info["kind"] == "stacked"
 
     def test_bar_invalid_kind(self):
         """Invalid kind raises ValueError."""
         with pytest.raises(ValueError, match="Unknown bar chart kind"):
-            bar_chart(['A'], [1.0], kind='invalid')
+            bar_chart(["A"], [1.0], kind="invalid")
 
     def test_bar_with_labels(self):
         """Bar chart respects xlabel, ylabel, title."""
-        cats = ['a', 'b']
+        cats = ["a", "b"]
         vals = np.array([1.0, 2.0])
-        fig, ax, info = bar_chart(
-            cats, vals,
-            xlabel='Category', ylabel='Count', title='Test'
-        )
-        assert ax.get_xlabel() == 'Category'
-        assert ax.get_ylabel() == 'Count'
-        assert ax.get_title() == 'Test'
+        fig, ax, info = bar_chart(cats, vals, xlabel="Category", ylabel="Count", title="Test")
+        assert ax.get_xlabel() == "Category"
+        assert ax.get_ylabel() == "Count"
+        assert ax.get_title() == "Test"
 
 
 # ============================================================================
 # Waterfall Plot Tests (M14)
 # ============================================================================
+
 
 class TestWaterfallPlot:
     """Tests for waterfall_plot function."""
@@ -751,29 +724,29 @@ class TestWaterfallPlot:
         fig, ax, info = waterfall_plot(x, y_mat)
         assert isinstance(fig, Figure)
         assert isinstance(ax, Axes)
-        assert info['n_traces'] == 5
-        assert info['offset'] > 0
+        assert info["n_traces"] == 5
+        assert info["offset"] > 0
 
     def test_waterfall_auto_offset(self):
         """Auto offset falls back to 1.0 when all signals are flat."""
         x = np.linspace(0, 1, 50)
         # Each row is constant → ptp = 0 → fallback offset = 1.0
         y_mat = np.ones((3, 50)) * np.array([[1], [2], [3]])
-        fig, ax, info = waterfall_plot(x, y_mat, offset='auto')
-        assert info['offset'] == pytest.approx(1.0)
+        fig, ax, info = waterfall_plot(x, y_mat, offset="auto")
+        assert info["offset"] == pytest.approx(1.0)
 
     def test_waterfall_manual_offset(self):
         """Manual offset is respected."""
         x = np.linspace(0, 1, 50)
         y_mat = np.random.rand(4, 50)
         fig, ax, info = waterfall_plot(x, y_mat, offset=2.5)
-        assert info['offset'] == pytest.approx(2.5)
+        assert info["offset"] == pytest.approx(2.5)
 
     def test_waterfall_with_labels(self):
         """Labels are set when provided."""
         x = np.linspace(0, 1, 20)
         y_mat = np.random.rand(3, 20)
-        labels = ['t=0', 't=1', 't=2']
+        labels = ["t=0", "t=1", "t=2"]
         fig, ax, info = waterfall_plot(x, y_mat, labels=labels)
         assert isinstance(fig, Figure)
 
@@ -782,12 +755,13 @@ class TestWaterfallPlot:
         x = np.linspace(0, 1, 30)
         y = np.sin(x)
         fig, ax, info = waterfall_plot(x, y)
-        assert info['n_traces'] == 1
+        assert info["n_traces"] == 1
 
 
 # ============================================================================
 # Dual Axis Plot Tests (M14)
 # ============================================================================
+
 
 class TestDualAxisPlot:
     """Tests for dual_axis_plot function."""
@@ -799,30 +773,35 @@ class TestDualAxisPlot:
         fig, ax, info = dual_axis_plot(x, y, y2)
         assert isinstance(fig, Figure)
         assert isinstance(ax, Axes)
-        assert 'ax2' in info
-        assert info['ax2'] is not ax
+        assert "ax2" in info
+        assert info["ax2"] is not ax
 
     def test_dual_axis_with_labels(self, sample_xy_data):
         """Y-axis labels are applied to the correct axes."""
         x, y = sample_xy_data
-        y2 = y ** 2
+        y2 = y**2
         fig, ax, info = dual_axis_plot(
-            x, y, y2,
-            xlabel='Time',
-            ylabel1='Signal A',
-            ylabel2='Signal B',
-            title='Dual Axis',
+            x,
+            y,
+            y2,
+            xlabel="Time",
+            ylabel1="Signal A",
+            ylabel2="Signal B",
+            title="Dual Axis",
         )
-        assert ax.get_ylabel() == 'Signal A'
-        assert info['ax2'].get_ylabel() == 'Signal B'
-        assert ax.get_title() == 'Dual Axis'
+        assert ax.get_ylabel() == "Signal A"
+        assert info["ax2"].get_ylabel() == "Signal B"
+        assert ax.get_title() == "Dual Axis"
 
     def test_dual_axis_colors(self, sample_xy_data):
         """Custom colors are accepted without error."""
         x, y = sample_xy_data
         fig, ax, info = dual_axis_plot(
-            x, y, y * 2,
-            color1='navy', color2='darkred',
+            x,
+            y,
+            y * 2,
+            color1="navy",
+            color2="darkred",
         )
         assert isinstance(fig, Figure)
 
@@ -830,8 +809,11 @@ class TestDualAxisPlot:
         """Custom linestyles are accepted without error."""
         x, y = sample_xy_data
         fig, ax, info = dual_axis_plot(
-            x, y, y * 0.5,
-            linestyle1='--', linestyle2=':',
+            x,
+            y,
+            y * 0.5,
+            linestyle1="--",
+            linestyle2=":",
         )
         assert isinstance(fig, Figure)
 
@@ -855,9 +837,7 @@ class TestZColoredScatter:
         x = np.random.rand(20)
         y = np.random.rand(20)
         z = np.random.rand(20)
-        fig, ax, info = z_colored_scatter(
-            x, y, z, colorbar=False, title="Z-scatter"
-        )
+        fig, ax, info = z_colored_scatter(x, y, z, colorbar=False, title="Z-scatter")
         assert isinstance(fig, Figure)
         plt.close("all")
 
@@ -984,6 +964,7 @@ class TestHistogram2D:
 # Backlog Tests — scatter_with_regression, residual_plot
 # ============================================================================
 
+
 class TestScatterWithRegression:
     def test_basic(self):
         x = np.linspace(0, 10, 50)
@@ -1072,9 +1053,7 @@ class TestInsetPlot:
     def test_indicate_region(self):
         x = np.linspace(0, 10, 100)
         y = np.sin(x)
-        fig, ax, info = inset_plot(
-            x, y, x[20:40], y[20:40], indicate_region=(2.0, 4.0)
-        )
+        fig, ax, info = inset_plot(x, y, x[20:40], y[20:40], indicate_region=(2.0, 4.0))
         assert fig is not None
         plt.close("all")
 
@@ -1082,7 +1061,10 @@ class TestInsetPlot:
         x = np.linspace(0, 6, 60)
         y = np.cos(x)
         fig, ax, info = inset_plot(
-            x, y, x, y,
+            x,
+            y,
+            x,
+            y,
             title="Test",
             xlabel="X",
             ylabel="Y",
@@ -1095,7 +1077,7 @@ class TestInsetPlot:
 
     def test_returns_fig_and_axes(self):
         x = np.linspace(0, 4, 40)
-        y = x ** 2
+        y = x**2
         fig, ax, info = inset_plot(x, y, x[:20], y[:20])
         assert isinstance(fig, plt.Figure)
         assert isinstance(ax, plt.Axes)
@@ -1115,5 +1097,5 @@ class TestInsetPlot:
 # Run tests
 # ============================================================================
 
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -121,17 +121,17 @@ from plottle.plotting import line_plot, save_figure
 import numpy as np
 
 wavelength = np.linspace(400, 800, 200)
-absorbance = 0.8 * np.exp(-((wavelength - 520) ** 2) / (2 * 30 ** 2))
+absorbance = 0.8 * np.exp(-((wavelength - 520) ** 2) / (2 * 30**2))
 
 fig, ax, info = line_plot(
     wavelength,
     [absorbance],
-    xlabel='Wavelength (nm)',
-    ylabel='Absorbance',
-    title='UV-Vis Spectrum',
-    labels=['Sample A'],
+    xlabel="Wavelength (nm)",
+    ylabel="Absorbance",
+    title="UV-Vis Spectrum",
+    labels=["Sample A"],
 )
-save_figure(fig, 'spectrum.png', dpi=300)
+save_figure(fig, "spectrum.png", dpi=300)
 ```
 
 ### Key modules

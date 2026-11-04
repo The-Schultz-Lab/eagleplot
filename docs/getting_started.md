@@ -95,24 +95,25 @@ Open `http://localhost:8501` in your browser. Use the sidebar to navigate betwee
 ```python
 import numpy as np
 import sys
-sys.path.insert(0, 'path/to/plottle')
+
+sys.path.insert(0, "path/to/plottle")
 
 from plottle.plotting import line_plot, save_figure
 
 # Simulate absorbance vs. wavelength
 wavelength = np.linspace(400, 800, 200)
-absorbance = 0.8 * np.exp(-((wavelength - 520) ** 2) / (2 * 30 ** 2))
+absorbance = 0.8 * np.exp(-((wavelength - 520) ** 2) / (2 * 30**2))
 
 fig, ax = line_plot(
     wavelength,
     [absorbance],
-    xlabel='Wavelength (nm)',
-    ylabel='Absorbance',
-    title='UV-Vis Spectrum',
-    labels=['Sample A'],
+    xlabel="Wavelength (nm)",
+    ylabel="Absorbance",
+    title="UV-Vis Spectrum",
+    labels=["Sample A"],
 )
 
-save_figure(fig, 'spectrum.png', dpi=300)
+save_figure(fig, "spectrum.png", dpi=300)
 ```
 
 ---
@@ -125,9 +126,9 @@ The `plottle.io` module supports eight common formats.
 from plottle.io import load_data, save_data
 
 # Auto-detect format from extension
-df   = load_data('experiment.csv')     # → pandas DataFrame
-arr  = load_data('matrix.npy')         # → numpy array
-obj  = load_data('session.pkl')        # → any Python object
+df = load_data("experiment.csv")  # → pandas DataFrame
+arr = load_data("matrix.npy")  # → numpy array
+obj = load_data("session.pkl")  # → any Python object
 ```
 
 Supported extensions:
@@ -172,7 +173,7 @@ print(f"R²:           {result['r_squared']:.4f}")
 
 # Polynomial fit (degree 2)
 poly = fit_polynomial(x, y, degree=2)
-y_fit = poly['predict'](x)          # call the returned predict function
+y_fit = poly["predict"](x)  # call the returned predict function
 ```
 
 ---
@@ -202,9 +203,9 @@ y_fit = poly['predict'](x)          # call the returned predict function
 ```python
 from plottle.plotting import save_figure
 
-save_figure(fig, 'plot.png', dpi=300)     # high-res raster
-save_figure(fig, 'plot.svg')              # vector (no dpi needed)
-save_figure(fig, 'plot.pdf')              # vector, publication-ready
+save_figure(fig, "plot.png", dpi=300)  # high-res raster
+save_figure(fig, "plot.svg")  # vector (no dpi needed)
+save_figure(fig, "plot.pdf")  # vector, publication-ready
 ```
 
 ---
@@ -240,22 +241,22 @@ from plottle.math import fit_linear
 from plottle.plotting import scatter_plot, save_figure
 import numpy as np
 
-df = load_dataframe('calibration.csv')   # columns: concentration, absorbance
-result = fit_linear(df['concentration'].values, df['absorbance'].values)
+df = load_dataframe("calibration.csv")  # columns: concentration, absorbance
+result = fit_linear(df["concentration"].values, df["absorbance"].values)
 
-x_fit = np.linspace(df['concentration'].min(), df['concentration'].max(), 100)
-y_fit = result['slope'] * x_fit + result['intercept']
+x_fit = np.linspace(df["concentration"].min(), df["concentration"].max(), 100)
+y_fit = result["slope"] * x_fit + result["intercept"]
 
 fig, ax = scatter_plot(
-    df['concentration'].values,
-    df['absorbance'].values,
-    xlabel='Concentration (mM)',
-    ylabel='Absorbance (a.u.)',
+    df["concentration"].values,
+    df["absorbance"].values,
+    xlabel="Concentration (mM)",
+    ylabel="Absorbance (a.u.)",
     title=f"Beer-Lambert: R² = {result['r_squared']:.4f}",
 )
-ax.plot(x_fit, y_fit, 'r-', linewidth=2, label='Linear fit')
+ax.plot(x_fit, y_fit, "r-", linewidth=2, label="Linear fit")
 ax.legend()
-save_figure(fig, 'calibration.png', dpi=300)
+save_figure(fig, "calibration.png", dpi=300)
 ```
 
 ### Comparing multiple spectra
@@ -266,10 +267,10 @@ from plottle.plotting import line_plot
 fig, ax = line_plot(
     wavelength,
     [spectrum_A, spectrum_B, spectrum_C],
-    labels=['Sample A', 'Sample B', 'Sample C'],
-    xlabel='Wavelength (nm)',
-    ylabel='Absorbance',
-    title='UV-Vis Comparison',
+    labels=["Sample A", "Sample B", "Sample C"],
+    xlabel="Wavelength (nm)",
+    ylabel="Absorbance",
+    title="UV-Vis Comparison",
 )
 ```
 

@@ -55,9 +55,9 @@ def long_df():
     """Long-format DataFrame for pivot testing."""
     return pd.DataFrame(
         {
-            "id":    ["r1", "r1", "r2", "r2"],
-            "key":   ["A",  "B",  "A",  "B"],
-            "value": [10,   20,   30,   40],
+            "id": ["r1", "r1", "r2", "r2"],
+            "key": ["A", "B", "A", "B"],
+            "value": [10, 20, 30, 40],
         }
     )
 
@@ -68,8 +68,8 @@ def wide_df():
     return pd.DataFrame(
         {
             "sample": ["s1", "s2"],
-            "A":      [10,   30],
-            "B":      [20,   40],
+            "A": [10, 30],
+            "B": [20, 40],
         }
     )
 
@@ -130,7 +130,7 @@ class TestFormulaExpressionSandbox:
 
     # The exact escape that was reproduced against the old implementation.
     _CLASSIC_ESCAPE = (
-        '[c for c in ().__class__.__bases__[0].__subclasses__() '
+        "[c for c in ().__class__.__bases__[0].__subclasses__() "
         'if c.__name__=="BuiltinImporter"][0]().load_module("os").getcwd()'
     )
 
@@ -138,20 +138,20 @@ class TestFormulaExpressionSandbox:
         "expression",
         [
             _CLASSIC_ESCAPE,
-            '().__class__.__bases__[0].__subclasses__()',
-            'x.__class__',
-            'x.values',
+            "().__class__.__bases__[0].__subclasses__()",
+            "x.__class__",
+            "x.values",
             '__import__("os").system("id")',
             'open("/etc/passwd").read()',
             'eval("1+1")',
             'exec("import os")',
-            'globals()',
-            'locals()',
-            'lambda: 1',
-            '[i for i in range(3)]',
-            '{i: i for i in range(3)}',
-            '(i for i in range(3))',
-            'x.__class__.__mro__[1]',
+            "globals()",
+            "locals()",
+            "lambda: 1",
+            "[i for i in range(3)]",
+            "{i: i for i in range(3)}",
+            "(i for i in range(3))",
+            "x.__class__.__mro__[1]",
         ],
     )
     def test_escape_attempts_are_refused(self, simple_df, expression):
@@ -239,9 +239,7 @@ class TestFormulaExpressionSandbox:
 
     def test_constants_available(self, simple_df):
         result = add_formula_column(simple_df, "pi_col", "x * pi")
-        np.testing.assert_allclose(
-            result["pi_col"].values, simple_df["x"].values * math.pi
-        )
+        np.testing.assert_allclose(result["pi_col"].values, simple_df["x"].values * math.pi)
 
 
 # ─── normalize_column ─────────────────────────────────────────────────────────
@@ -548,9 +546,7 @@ class TestResampleDataframe:
         np.testing.assert_allclose(result["y"].iloc[mid_idx], 6.0, atol=0.1)
 
     def test_custom_x_range(self, simple_df):
-        result = resample_dataframe(
-            simple_df, "x", ["y"], n_points=5, x_min=2.0, x_max=4.0
-        )
+        result = resample_dataframe(simple_df, "x", ["y"], n_points=5, x_min=2.0, x_max=4.0)
         assert result["x"].min() == pytest.approx(2.0)
         assert result["x"].max() == pytest.approx(4.0)
 

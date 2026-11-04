@@ -52,7 +52,7 @@ def example_minimize_rosenbrock():
 
     result = minimize_function(rosenbrock, x0=[-1.0, 1.0], method="Nelder-Mead")
 
-    print(f"  x_opt   : ({result['x_opt'][0]:.6f}, {result['x_opt'][1]:.6f})  " f"(true: [1, 1])")
+    print(f"  x_opt   : ({result['x_opt'][0]:.6f}, {result['x_opt'][1]:.6f})  (true: [1, 1])")
     print(f"  f(x)    : {result['fun']:.2e}")
     print(f"  success : {result['success']}")
     print(f"{CHECK} Rosenbrock minimized")

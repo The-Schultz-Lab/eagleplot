@@ -83,7 +83,7 @@ def example_polynomial_fit():
     fig, ax = scatter_plot(
         r, V, xlabel="r (Angstrom)", ylabel="Energy (kcal/mol)", title="Polynomial Fit to PE Curve"
     )
-    ax.plot(x_fit, y_fit, "r-", linewidth=2, label=f'Degree-{result["degree"]} fit')
+    ax.plot(x_fit, y_fit, "r-", linewidth=2, label=f"Degree-{result['degree']} fit")
     ax.legend()
 
     out = OUTPUT_DIR / "polynomial_fit.png"

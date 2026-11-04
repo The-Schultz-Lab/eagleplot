@@ -612,7 +612,7 @@ class TestASCOperations:
         """Lines starting with # are skipped."""
         p = temp_dir / "spectrum.asc"
         p.write_text(
-            "# Raman spectrum of sample A\n" "# Wavenumber  Intensity\n" "100.0 0.12\n200.0 0.25\n"
+            "# Raman spectrum of sample A\n# Wavenumber  Intensity\n100.0 0.12\n200.0 0.25\n"
         )
         df = load_asc(p)
         assert len(df) == 2

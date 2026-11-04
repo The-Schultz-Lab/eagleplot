@@ -29,7 +29,7 @@ def _write_plugin(tmp_path: Path, filename: str, content: str) -> Path:
     return p
 
 
-VALID_PLUGIN_SRC = '''\
+VALID_PLUGIN_SRC = """\
 PLUGIN_NAME = "Test Plugin"
 PLUGIN_VERSION = "2.0.0"
 PLUGIN_DESCRIPTION = "A test plugin."
@@ -39,14 +39,14 @@ def get_plot_types():
 
 def get_analysis_tools():
     return [{"name": "test_tool", "label": "Test Tool", "function": lambda: None}]
-'''
+"""
 
-MINIMAL_PLUGIN_SRC = '''\
+MINIMAL_PLUGIN_SRC = """\
 # No metadata, no functions
 x = 42
-'''
+"""
 
-RAISING_PLOT_TYPES_SRC = '''\
+RAISING_PLOT_TYPES_SRC = """\
 PLUGIN_NAME = "Raiser"
 PLUGIN_VERSION = "0.1.0"
 
@@ -55,7 +55,7 @@ def get_plot_types():
 
 def get_analysis_tools():
     return []
-'''
+"""
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +164,8 @@ class TestGetPluginPlotTypes:
         _write_plugin(
             tmp_path,
             "plugin_b.py",
-            'def get_plot_types():\n    return [{"name": "b_plot", "label": "B", "function": None}]\n',
+            "def get_plot_types():\n"
+            '    return [{"name": "b_plot", "label": "B", "function": None}]\n',
         )
         plugins = discover_plugins(tmp_path)
         result = get_plugin_plot_types(plugins)
@@ -210,7 +211,8 @@ class TestGetPluginAnalysisTools:
         _write_plugin(
             tmp_path,
             "plugin_b.py",
-            'def get_analysis_tools():\n    return [{"name": "b_tool", "label": "B", "function": None}]\n',
+            "def get_analysis_tools():\n"
+            '    return [{"name": "b_tool", "label": "B", "function": None}]\n',
         )
         plugins = discover_plugins(tmp_path)
         result = get_plugin_analysis_tools(plugins)
