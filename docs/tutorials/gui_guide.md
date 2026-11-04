@@ -16,7 +16,7 @@ Open `http://localhost:8501` in your browser. The sidebar on the left lists all 
 
 ---
 
-## Page 1 — Data Upload
+## Data Upload
 
 **Purpose:** Load one or more data files into the session. All subsequent pages work with
 the data loaded here.
@@ -43,7 +43,7 @@ the data loaded here.
 
 ---
 
-## Page 2 — Quick Plot
+## Quick Plot
 
 **Purpose:** Generate any of the 13 supported plot types with point-and-click controls.
 
@@ -72,7 +72,7 @@ the data loaded here.
 
 ---
 
-## Page 3 — Analysis Tools
+## Analysis Tools
 
 **Purpose:** Run quantitative analysis on the active dataset. Five tabs cover the most
 common scientific workflows.
@@ -119,7 +119,7 @@ Upload or enter a matrix, then compute:
 
 ---
 
-## Page 4 — Multi-Plot Dashboard
+## Multi-Plot Dashboard
 
 **Purpose:** Display up to six independent plots side-by-side in a configurable grid.
 
@@ -137,7 +137,7 @@ Upload or enter a matrix, then compute:
 
 ---
 
-## Page 5 — Advanced Plotting
+## Advanced Plotting
 
 **Purpose:** Specialized visualizations not available on the Quick Plot page.
 
@@ -153,7 +153,7 @@ Upload or enter a matrix, then compute:
 
 ---
 
-## Page 6 — Settings
+## Settings
 
 **Purpose:** Persist plot defaults and create named style presets.
 
@@ -175,13 +175,13 @@ across app restarts.
 
 ---
 
-## Page 7 — Export Results
+## Export Results
 
 **Purpose:** Download figures, datasets, and analysis results generated during the session.
 
 ### Plot history
 
-Every plot generated on Page 2 or Page 5 is recorded in the session history. For each:
+Every plot generated on Quick Plot or Advanced Plotting is recorded in the session history. For each:
 
 - Choose a format: **PNG 150 dpi**, **PNG 300 dpi**, **SVG**, **PDF**, or **HTML** (Plotly)
 - Click **Download** to save the file
@@ -192,7 +192,7 @@ Export the currently loaded dataset as **CSV**, **JSON**, **NumPy (.npy)**, or *
 
 ### Analysis results
 
-Export any curve-fit or statistics result from Page 3 as a structured **JSON** file.
+Export any curve-fit or statistics result from Analysis Tools as a structured **JSON** file.
 
 ### Session save / load
 
@@ -206,11 +206,11 @@ Export any curve-fit or statistics result from Page 3 as a structured **JSON** f
 
 Goal: Upload a calibration dataset, fit a Beer-Lambert curve, export the fit result.
 
-1. **Page 1:** Upload `calibration.csv` (columns: `concentration`, `absorbance`).
-2. **Page 3 → Curve Fitting:** Select `concentration` (X) and `absorbance` (Y); choose
+1. **Data Upload:** Upload `calibration.csv` (columns: `concentration`, `absorbance`).
+2. **Analysis Tools → Curve Fitting:** Select `concentration` (X) and `absorbance` (Y); choose
    **Linear**; click **Fit**. Note the slope (molar absorptivity · path length) and R².
-3. **Page 2:** Select **Scatter** plot; X = `concentration`, Y = `absorbance`; title =
+3. **Quick Plot:** Select **Scatter** plot; X = `concentration`, Y = `absorbance`; title =
    "Beer-Lambert Calibration"; click **Generate Plot**.
-4. **Page 7:** Download the scatter plot as PNG 300 dpi. Download the curve-fit result as JSON.
+4. **Export Results:** Download the scatter plot as PNG 300 dpi. Download the curve-fit result as JSON.
 
 Total time: under two minutes with no code written.

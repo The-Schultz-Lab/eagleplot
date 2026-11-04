@@ -84,7 +84,7 @@ def settings_page(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     monkeypatch.setattr(us, "_CONFIG_PATH", cfg)
-    at = AppTest.from_file(str(PAGES / "14_Settings.py"), default_timeout=30).run()
+    at = AppTest.from_file(str(PAGES / "13_Settings.py"), default_timeout=30).run()
     assert not at.exception
     return at, cfg
 
@@ -137,7 +137,7 @@ def _session_downloads(at):
 class TestSessionDownloadPersists:
     @pytest.fixture
     def export_page(self):
-        at = AppTest.from_file(str(PAGES / "7_Export_Results.py"), default_timeout=30)
+        at = AppTest.from_file(str(PAGES / "6_Export_Results.py"), default_timeout=30)
         at.run()
         at.session_state["datasets"] = {"a.csv": pd.DataFrame({"x": [1, 2, 3]})}
         at.run()

@@ -221,12 +221,12 @@ adv_plt_pg = st.Page(
     url_path="plot-advanced",
 )
 spec_pg = st.Page(
-    str(_PAGES_DIR / "10_Spectroscopy.py"),
+    str(_PAGES_DIR / "9_Spectroscopy.py"),
     title="Spectroscopy",
     url_path="plot-spectroscopy",
 )
 molvis_pg = st.Page(
-    str(_PAGES_DIR / "11_Molecular_Viz.py"),
+    str(_PAGES_DIR / "10_Molecular_Viz.py"),
     title="Molecular Viz",
     url_path="plot-molecular-viz",
 )
@@ -238,35 +238,35 @@ single_pg = st.Page(
     url_path="analyze-single",
 )
 batch_pg = st.Page(
-    str(_PAGES_DIR / "12_Batch_Analysis.py"),
+    str(_PAGES_DIR / "11_Batch_Analysis.py"),
     title="Batch",
     url_path="analyze-batch",
 )
 
 # Top-level pages
 export_pg = st.Page(
-    str(_PAGES_DIR / "7_Export_Results.py"),
+    str(_PAGES_DIR / "6_Export_Results.py"),
     title="Export",
     url_path="export",
 )
 gallery_pg = st.Page(
-    str(_PAGES_DIR / "8_Gallery.py"),
+    str(_PAGES_DIR / "7_Gallery.py"),
     title="Gallery",
     url_path="gallery",
 )
 help_pg = st.Page(
-    str(_PAGES_DIR / "13_Help.py"),
+    str(_PAGES_DIR / "12_Help.py"),
     title="Help",
     url_path="help",
 )
 settings_pg = st.Page(
-    str(_PAGES_DIR / "14_Settings.py"),
+    str(_PAGES_DIR / "13_Settings.py"),
     title="Settings",
     url_path="settings",
 )
 
 datatools_pg = st.Page(
-    str(_PAGES_DIR / "9_Data_Tools.py"),
+    str(_PAGES_DIR / "8_Data_Tools.py"),
     title="Data Tools",
     url_path="analyze-data-tools",
 )
