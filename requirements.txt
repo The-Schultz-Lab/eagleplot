@@ -40,7 +40,7 @@ requests>=2.28.0
 # jcamp>=1.2.0      # JCAMP-DX (.jdx, .dx): IR, Raman, NMR, MS spectra  [parser unreliable in CI]
 h5py>=3.0.0       # HDF5 (.h5, .hdf5): simulation outputs, large arrays
 xarray>=0.20.0    # NetCDF (.nc, .cdf): atmospheric/oceanographic data
-netcdf4>=1.6.0    # NetCDF engine used by xarray
+netcdf4>=1.7.2    # NetCDF engine used by xarray
 # spc>=0.2          # Thermo Fisher SPC (.spc): Raman/IR spectra  [unmaintained; requires ez_setup]
 
 # Mass Spectrometry — mzML/mzXML (optional)
