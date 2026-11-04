@@ -26,6 +26,8 @@ from plottle.utils.plot_config import (
     COLOR_PALETTES,
     COLOR_PALETTE_NAMES,
     PLOT_TYPES,
+    _STYLE_KEYS,
+    _WIDGET_FUNCS,
     format_marker_label,
     get_plot_kwargs,
     selected_points,
@@ -295,6 +297,40 @@ class TestPlotTypes:
         for key, info in PLOT_TYPES.items():
             assert info["category"] in known, f"Unknown category '{info['category']}' for '{key}'"
 
+    # Callability of each entry in plottle.plotting is asserted in
+    # test_docs_consistency.py::TestPlotTypeCatalogue; not repeated here.
+
+    def test_every_plot_type_has_a_config_widget(self):
+        """Quick Plot and the Dashboard call get_plot_config_widgets(key, ...) for any
+        PLOT_TYPES key; a key with no widget builder only shows "Unknown plot type"."""
+        missing = sorted(set(PLOT_TYPES) - set(_WIDGET_FUNCS))
+        assert not missing, f"PLOT_TYPES entries with no widget builder: {missing}"
+
+    def test_no_orphan_config_widgets(self):
+        orphans = sorted(set(_WIDGET_FUNCS) - set(PLOT_TYPES))
+        assert not orphans, f"widget builders with no PLOT_TYPES entry: {orphans}"
+
+    def test_widget_builders_are_callable(self):
+        assert all(callable(f) for f in _WIDGET_FUNCS.values())
+
+    def test_labels_unique_within_category(self):
+        """Quick Plot maps (category, label) -> key; a duplicate label would shadow
+        one plot type so it could never be selected."""
+        seen = {}
+        dupes = []
+        for key, info in PLOT_TYPES.items():
+            slot = (info["category"], info["label"])
+            if slot in seen:
+                dupes.append((seen[slot], key))
+            seen[slot] = key
+        assert not dupes, f"duplicate (category, label) pairs: {dupes}"
+
+    def test_labels_and_categories_are_strings(self):
+        for key, info in PLOT_TYPES.items():
+            assert isinstance(key, str) and key.isidentifier(), key
+            assert isinstance(info["label"], str) and info["label"].strip(), key
+            assert isinstance(info["category"], str), key
+
 
 # ============================================================================
 # plot_config — click-to-annotate helpers (Quick Plot, Plotly mode)
@@ -414,6 +450,55 @@ class TestGetPlotKwargs:
         kwargs = get_plot_kwargs(config)
         assert "legend" in kwargs
         assert kwargs["legend"] is False
+
+    @pytest.mark.parametrize("value", [0, 0.0, False, "", [], (), {}])
+    def test_falsy_but_valid_values_pass_through_unchanged(self, value):
+        """Only ``None`` is dropped; every other falsy value is a real setting."""
+        kwargs = get_plot_kwargs({"some_option": value})
+        assert kwargs == {"some_option": value}
+        assert kwargs["some_option"] is value
+
+    def test_nan_is_not_treated_as_none(self):
+        kwargs = get_plot_kwargs({"alpha": float("nan")})
+        assert np.isnan(kwargs["alpha"])
+
+    @pytest.mark.parametrize("key", ["_x_col", "__dunder", "_", "_grid"])
+    def test_any_leading_underscore_is_private(self, key):
+        assert get_plot_kwargs({key: "anything", "title": "T"}) == {"title": "T"}
+
+    def test_underscore_inside_key_is_public(self):
+        """Only a *leading* underscore marks a key private."""
+        kwargs = get_plot_kwargs({"marker_size": 5, "x_col_": "x"})
+        assert kwargs == {"marker_size": 5, "x_col_": "x"}
+
+    def test_private_key_with_none_value_is_dropped(self):
+        assert get_plot_kwargs({"_y_col": None}) == {}
+
+    def test_style_key_dropped_even_when_none_or_falsy(self):
+        assert get_plot_kwargs({"grid": False, "linewidth": None, "fontsize": 0}) == {}
+
+    def test_every_style_key_is_stripped(self):
+        config = {k: "value" for k in _STYLE_KEYS}
+        config["title"] = "kept"
+        assert get_plot_kwargs(config) == {"title": "kept"}
+
+    def test_does_not_mutate_input_and_returns_new_dict(self):
+        config = {"title": "T", "_x_col": "x", "xlabel": None, "grid": True}
+        snapshot = dict(config)
+        kwargs = get_plot_kwargs(config)
+        assert config == snapshot
+        assert kwargs is not config
+        kwargs["extra"] = 1
+        assert "extra" not in config
+
+    def test_preserves_insertion_order(self):
+        config = {"zeta": 1, "_hidden": 2, "alpha": 3, "mid": None, "beta": 4}
+        assert list(get_plot_kwargs(config)) == ["zeta", "alpha", "beta"]
+
+    def test_mutable_values_are_not_copied(self):
+        """The result is a shallow filter: list/dict values are the same objects."""
+        figsize = [8, 6]
+        assert get_plot_kwargs({"figsize": figsize})["figsize"] is figsize
 
 
 # ============================================================================

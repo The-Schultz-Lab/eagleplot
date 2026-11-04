@@ -21,6 +21,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import plottle.plotting as plotting
 from plottle.plotting import (
     distribution_plot,
     box_plot,
@@ -185,26 +186,54 @@ class TestSeabornPlots:
         assert ax is not None
 
 
-@pytest.mark.skipif(HAS_SEABORN, reason="Test seaborn import error")
+def _missing_library_error(library, func_name):
+    """``pytest.raises`` context for the guard each optional-library function runs.
+
+    The guards read ``"<Library> is required for <func>. Install it with: pip install
+    <library>"``; the capitalisation of the library name varies between functions.
+    """
+    pattern = rf"(?i){library} is required for {func_name}\b.*pip install {library}"
+    return pytest.raises(ImportError, match=pattern)
+
+
 class TestSeabornImportError:
-    """Test that functions raise ImportError when seaborn is not installed."""
+    """Seaborn-backed functions raise a helpful ImportError when seaborn is missing.
+
+    seaborn is a hard dependency, so "missing" is simulated by patching the
+    module-level ``HAS_SEABORN`` flag that every guard reads at call time.
+    (A-34: these tests used to be skipped whenever seaborn was installed, i.e. always.)
+    """
+
+    @pytest.fixture(autouse=True)
+    def _no_seaborn(self, monkeypatch):
+        monkeypatch.setattr(plotting, "HAS_SEABORN", False)
 
     def test_distribution_plot_import_error(self, sample_data):
-        """Test distribution_plot raises ImportError without seaborn."""
-        with pytest.raises(ImportError):
+        with _missing_library_error("seaborn", "distribution_plot"):
             distribution_plot(sample_data)
 
     def test_box_plot_import_error(self, sample_dataframe):
-        """Test box_plot raises ImportError without seaborn."""
-        with pytest.raises(ImportError):
+        with _missing_library_error("seaborn", "box_plot"):
             box_plot(sample_dataframe, x="group", y="value")
 
     def test_regression_plot_import_error(self):
-        """Test regression_plot raises ImportError without seaborn."""
         x = np.linspace(0, 10, 50)
         y = 2 * x + 1
-        with pytest.raises(ImportError):
+        with _missing_library_error("seaborn", "regression_plot"):
             regression_plot(x, y)
+
+    def test_pair_plot_import_error(self, sample_dataframe):
+        with _missing_library_error("seaborn", "pair_plot"):
+            pair_plot(sample_dataframe)
+
+    def test_guard_does_not_leak_a_figure(self, sample_data):
+        """The guard fires before any figure is created."""
+        import matplotlib.pyplot as plt
+
+        before = set(plt.get_fignums())
+        with pytest.raises(ImportError):
+            distribution_plot(sample_data)
+        assert set(plt.get_fignums()) == before
 
 
 # ============================================================================
@@ -388,48 +417,84 @@ class TestPlotlyPlots:
         assert output_file.exists()
 
 
-@pytest.mark.skipif(HAS_PLOTLY, reason="Test plotly import error")
 class TestPlotlyImportError:
-    """Test that functions raise ImportError when plotly is not installed."""
+    """Plotly-backed functions raise a helpful ImportError when plotly is missing.
+
+    plotly is a hard dependency, so "missing" is simulated by patching the
+    module-level ``HAS_PLOTLY`` flag that every guard reads at call time.
+    (A-34: these tests used to be skipped whenever plotly was installed, i.e. always.)
+    """
+
+    @pytest.fixture(autouse=True)
+    def _no_plotly(self, monkeypatch):
+        monkeypatch.setattr(plotting, "HAS_PLOTLY", False)
 
     def test_interactive_histogram_import_error(self, sample_data):
-        """Test interactive_histogram raises ImportError without plotly."""
-        with pytest.raises(ImportError):
+        with _missing_library_error("plotly", "interactive_histogram"):
             interactive_histogram(sample_data)
 
     def test_interactive_scatter_import_error(self):
-        """Test interactive_scatter raises ImportError without plotly."""
         x = np.random.rand(10)
         y = np.random.rand(10)
-        with pytest.raises(ImportError):
+        with _missing_library_error("plotly", "interactive_scatter"):
             interactive_scatter(x, y)
 
     def test_interactive_line_import_error(self):
-        """Test interactive_line raises ImportError without plotly."""
         x = np.linspace(0, 10, 50)
         y = np.sin(x)
-        with pytest.raises(ImportError):
+        with _missing_library_error("plotly", "interactive_line"):
             interactive_line(x, y)
 
     def test_interactive_heatmap_import_error(self, sample_2d_data):
-        """Test interactive_heatmap raises ImportError without plotly."""
-        with pytest.raises(ImportError):
+        with _missing_library_error("plotly", "interactive_heatmap"):
             interactive_heatmap(sample_2d_data)
 
     def test_interactive_3d_surface_import_error(self):
-        """Test interactive_3d_surface raises ImportError without plotly."""
         x = np.linspace(-5, 5, 20)
         y = np.linspace(-5, 5, 20)
         X, Y = np.meshgrid(x, y)
         Z = X**2 + Y**2
-        with pytest.raises(ImportError):
+        with _missing_library_error("plotly", "interactive_3d_surface"):
             interactive_3d_surface(X, Y, Z)
 
-    def test_export_interactive_import_error(self):
-        """Test export_interactive raises ImportError without plotly."""
-        # This would normally require a plotly figure, but we'll test with None
-        with pytest.raises(ImportError):
-            export_interactive(None, "test.html")
+    def test_interactive_3d_scatter_import_error(self):
+        x, y, z = np.random.rand(3, 10)
+        with _missing_library_error("plotly", "interactive_3d_scatter"):
+            interactive_3d_scatter(x, y, z)
+
+    def test_interactive_ternary_import_error(self):
+        a, b, c = np.random.dirichlet([1, 1, 1], size=10).T
+        with _missing_library_error("plotly", "interactive_ternary"):
+            interactive_ternary(a, b, c)
+
+    def test_export_interactive_import_error(self, tmp_path):
+        """Even with a real figure, nothing is written when plotly is unavailable."""
+        import plotly.graph_objects as go
+
+        output_file = tmp_path / "plot.html"
+        with _missing_library_error("plotly", "export_interactive"):
+            export_interactive(go.Figure(), output_file)
+        assert not output_file.exists()
+
+
+class TestOptionalLibraryGuardCoverage:
+    """Every GUI plot type backed by seaborn/plotly has a missing-library test above.
+
+    Adding a Seaborn- or Plotly-category entry to ``PLOT_TYPES`` without a matching
+    ``test_<name>_import_error`` here fails, so the guard cannot silently go untested.
+    """
+
+    @pytest.mark.parametrize(
+        "category, test_class",
+        [("Seaborn", TestSeabornImportError), ("Plotly", TestPlotlyImportError)],
+    )
+    def test_every_library_backed_plot_type_has_a_guard_test(self, category, test_class):
+        from plottle.utils.plot_config import PLOT_TYPES
+
+        expected = {k for k, meta in PLOT_TYPES.items() if meta["category"] == category}
+        assert expected, f"no {category} plot types found; did the category get renamed?"
+        untested = sorted(k for k in expected if not hasattr(test_class, f"test_{k}_import_error"))
+        assert not untested, f"{category} plot types with no missing-library test: {untested}"
 
 
 # ============================================================================
