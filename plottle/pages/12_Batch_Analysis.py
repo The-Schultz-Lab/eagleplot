@@ -5,6 +5,8 @@ loaded datasets simultaneously.  Workflow presets let you save and recall
 named analysis configurations that persist across app restarts via config.json.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 import sys
 import json

@@ -39,6 +39,11 @@ cd plottle
    *(If macOS asks "Are you sure you want to open it?", click Open.)*
 2. Double-click **`launch.command`** — starts Plottle. Use this every time you want to open the app.
 
+**Linux:**
+1. Run **`./setup.sh`** in a terminal — creates the virtual environment and installs all dependencies.
+   *(On Debian/Ubuntu you may first need `sudo apt install python3-venv`.)*
+2. Run **`./launch.sh`** — starts Plottle.
+
 After the app starts, open **`http://localhost:8501`** in your browser (Streamlit usually opens it automatically).
 
 #### 2 (alternative) — Set up and launch from the terminal
@@ -207,15 +212,15 @@ plottle/                            ← repository root
 │   ├── assets/                     ← logo + NCCU branding (shipped in the wheel)
 │   ├── gallery/                    ← pre-rendered gallery PNGs + manifest.json
 │   └── example-data/Artificial/    ← built-in sample datasets
-├── tests/                          ← 17 test files, 950+ tests
+├── tests/                          ← pytest suite, 1,000+ tests
 ├── plugins/                        ← plugin_example.py starter template
 ├── examples/                       ← 15+ standalone scripts + batch_config.json
-├── docs/                           ← tutorials, cheatsheet, Sphinx sources
+├── docs/                           ← tutorials, cheatsheet, site built by build_docs.py
 ├── generate_gallery.py             ← regenerates plottle/gallery/
 ├── requirements.txt
 ├── pyproject.toml
-├── setup.bat / setup.command       ← First-run setup (Windows / macOS — double-click)
-└── launch.bat / launch.command     ← App launcher (Windows / macOS — double-click)
+├── setup.bat / .command / .sh      ← First-run setup (Windows / macOS / Linux)
+└── launch.bat / .command / .sh     ← App launcher (Windows / macOS / Linux)
 ```
 
 Runtime assets (`assets/`, `gallery/`, `example-data/`) live **inside** the package

@@ -15,6 +15,17 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM ── Check the Python version (pyproject.toml: >=3.9, !=3.9.7) ─────────────────
+python -c "import sys; v = sys.version_info[:3]; sys.exit(0 if v >= (3, 9) and v != (3, 9, 7) else 1)"
+if errorlevel 1 (
+    echo ERROR: Plottle needs Python 3.9 or later ^(but not 3.9.7^).
+    python --version
+    echo Install a newer Python from https://www.python.org/downloads/
+    echo.
+    pause
+    exit /b 1
+)
+
 REM ── Create virtual environment (skip if already exists) ───────────────────────
 if exist .venv (
     echo Virtual environment already exists -- skipping creation.
