@@ -3,9 +3,9 @@ version: 2
 updates:
   - package-ecosystem: "pip"
     directory: "/"
+    # Monthly: each Dependabot PR runs the full 7-cell test matrix.
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
 
     # Group the core scientific stack into one PR to avoid churn
     groups:
@@ -26,7 +26,6 @@ updates:
           - "ruff"
           - "mypy"
           - "pre-commit"
-          - "sphinx*"
 
     # Keep PRs manageable — security updates are handled separately
     open-pull-requests-limit: 5
@@ -36,8 +35,13 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    # Monthly: each Dependabot PR runs the full 7-cell test matrix.
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
+    # One PR for all action bumps instead of one per action.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
     commit-message:
       prefix: "ci"
