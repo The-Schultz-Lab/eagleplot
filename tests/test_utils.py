@@ -25,7 +25,9 @@ from plottle.utils.plot_config import (
     COLOR_PALETTES,
     COLOR_PALETTE_NAMES,
     PLOT_TYPES,
+    format_marker_label,
     get_plot_kwargs,
+    selected_points,
 )
 from plottle.utils.session_state import (
     _serialize_data, _deserialize_data,
@@ -266,6 +268,61 @@ class TestPlotTypes:
             assert info["category"] in known, (
                 f"Unknown category '{info['category']}' for '{key}'"
             )
+
+
+# ============================================================================
+# plot_config — click-to-annotate helpers (Quick Plot, Plotly mode)
+# ============================================================================
+
+class _AttrDict(dict):
+    """Mimics Streamlit's AttributeDictionary: the event and its ``selection``
+    support attribute access, but each point is a plain dict."""
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError as exc:
+            raise AttributeError(name) from exc
+
+
+class TestSelectedPoints:
+    def test_points_are_plain_dicts(self):
+        # Regression: Quick Plot crashed with
+        # AttributeError: 'dict' object has no attribute 'x'
+        event = _AttrDict(selection=_AttrDict(points=[
+            {"curve_number": 0, "point_index": 3, "x": 1.5, "y": 2.5},
+            {"curve_number": 0, "point_index": 7, "x": 4.0, "y": -1.0},
+        ]))
+        assert selected_points(event) == [{"x": 1.5, "y": 2.5}, {"x": 4.0, "y": -1.0}]
+
+    def test_plain_dict_event(self):
+        event = {"selection": {"points": [{"x": "a", "y": 3}]}}
+        assert selected_points(event) == [{"x": "a", "y": 3}]
+
+    def test_attribute_style_points_still_work(self):
+        pt = type("Pt", (), {"x": 1, "y": 2})()
+        assert selected_points({"selection": {"points": [pt]}}) == [{"x": 1, "y": 2}]
+
+    @pytest.mark.parametrize("event", [None, {}, {"selection": None},
+                                       {"selection": {"points": []}}])
+    def test_empty_or_missing(self, event):
+        assert selected_points(event) == []
+
+    def test_skips_points_without_coordinates(self):
+        event = {"selection": {"points": [{"label": "slice", "value": 4},
+                                          {"x": 0, "y": 0}]}}
+        assert selected_points(event) == [{"x": 0, "y": 0}]
+
+
+class TestFormatMarkerLabel:
+    def test_numeric(self):
+        assert format_marker_label(1.234567, 2) == "(1.235, 2)"
+
+    def test_numpy_scalar(self):
+        assert format_marker_label(np.float64(0.000123456), np.int64(5)) == "(0.0001235, 5)"
+
+    def test_non_numeric_does_not_raise(self):
+        assert format_marker_label("2024-01-05", "group A") == "(2024-01-05, group A)"
 
 
 # ============================================================================
