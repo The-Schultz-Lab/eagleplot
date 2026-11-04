@@ -88,7 +88,10 @@ jobs:
           # them, so the exact G-010 combination (macOS + 3.9) needs an Intel runner.
           # Until then it is covered by ubuntu 3.9 plus the absolute-path assertions in
           # tests/test_gui_paths.py, which are OS-independent.
-          - os: macos-latest
+          # Pinned to macos-15 rather than macos-latest: -latest labels move without
+          # notice (macos-latest became macOS 26, and jobs on it sat queued with no
+          # runner on 2026-11-04). Bump deliberately when macos-15 nears retirement.
+          - os: macos-15
             python-version: "3.12"
           - os: windows-latest
             python-version: "3.11"
