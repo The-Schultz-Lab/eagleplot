@@ -76,8 +76,13 @@ jobs:
         # G-010 (st.Page on 3.9) and the tomllib import in the Settings page (3.11+
         # stdlib) reach users. See audit A-12.
         os: [ubuntu-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
         include:
+          # Python 3.9 is pinned to ubuntu-24.04: ubuntu-latest became 26.04, and
+          # actions/setup-python publishes no 3.9 build for it (3.9 is past EOL), so
+          # the cell failed during setup before any test ran.
+          - os: ubuntu-24.04
+            python-version: "3.9"
           # Non-Linux spot checks: the setup/launch scripts target macOS and Windows.
           # Note macOS runners are arm64 and actions/setup-python has no 3.9 build for
           # them, so the exact G-010 combination (macOS + 3.9) needs an Intel runner.
