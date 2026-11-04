@@ -116,10 +116,19 @@ jobs:
       # ran tests/test_cli.py (27 tests, the entire CLI surface) or
       # tests/test_integration.py (14 tests) -- a hand-maintained list gives no signal
       # when it falls behind. See audit A-11.
+      # Coverage only on the cell that uploads it; the other six skip the
+      # instrumentation overhead.
       - name: Run tests
         env:
           MPLBACKEND: Agg
-        run: pytest tests/ --cov=plottle --cov-report=xml --cov-report=term-missing -v
+          COVERAGE_CELL: ${{ matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11' }}
+        shell: bash
+        run: |
+          if [ "$COVERAGE_CELL" = "true" ]; then
+            pytest tests/ --cov=plottle --cov-report=xml --cov-report=term-missing
+          else
+            pytest tests/
+          fi
 
       # One cell only: with a matrix, every job uploading the same artifact name is an
       # error on upload-artifact v4+.
