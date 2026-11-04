@@ -122,7 +122,11 @@ line-length = 100
 target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "F", "W"]
+# FA102: a PEP 604 union (`X | None`) in an annotation that is evaluated at runtime
+# crashes on Python 3.9 unless the module has `from __future__ import annotations`.
+# That shipped once: Quick Plot failed to load on 3.9. target-version = "py39" above
+# is what makes ruff apply it.
+select = ["E", "F", "W", "FA102"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
