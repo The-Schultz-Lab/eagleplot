@@ -449,10 +449,10 @@ def example_practical_workflow():
     print(f"{CHECK} Created regression analysis plot")
 
     print(f"\n{CHECK} Workflow complete! Generated 4 plots:")
-    print(f"  1. Yield distribution (Seaborn)")
-    print(f"  2. Catalyst comparison (Seaborn)")
-    print(f"  3. Interactive 3D exploration (Plotly)")
-    print(f"  4. Regression analysis (Seaborn)")
+    print("  1. Yield distribution (Seaborn)")
+    print("  2. Catalyst comparison (Seaborn)")
+    print("  3. Interactive 3D exploration (Plotly)")
+    print("  4. Regression analysis (Seaborn)")
 
 
 def main():
@@ -464,9 +464,9 @@ def main():
     print("including statistical visualizations and interactive plots.\n")
 
     if not HAS_SEABORN:
-        print(f"⚠️  Warning: Seaborn not installed. Install with: pip install seaborn")
+        print("⚠️  Warning: Seaborn not installed. Install with: pip install seaborn")
     if not HAS_PLOTLY:
-        print(f"⚠️  Warning: Plotly not installed. Install with: pip install plotly")
+        print("⚠️  Warning: Plotly not installed. Install with: pip install plotly")
 
     if not HAS_SEABORN and not HAS_PLOTLY:
         print(f"\n{CROSS} Neither Seaborn nor Plotly are installed. Exiting.")

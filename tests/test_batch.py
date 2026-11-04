@@ -362,7 +362,11 @@ class TestBatchCurveFit:
         # Either skipped (no row for ds1) or an error row with error info
         if len(result) > 0:
             row = result.iloc[0]
-            assert "error" in row.index or "r_squared" not in result.columns or pd.isna(row.get("r_squared"))
+            assert (
+                "error" in row.index
+                or "r_squared" not in result.columns
+                or pd.isna(row.get("r_squared"))
+            )
 
     def test_missing_y_column_produces_error_row_or_skips(self):
         df = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
@@ -460,7 +464,15 @@ class TestBatchPeakAnalysis:
     def test_output_columns_present(self):
         datasets = {"ds1": _make_gaussian_signal()}
         result = batch_peak_analysis(datasets, y_col="y")
-        for col in ["dataset", "n_peaks", "peak_positions", "mean_height", "max_height", "mean_fwhm"]:
+        expected = [
+            "dataset",
+            "n_peaks",
+            "peak_positions",
+            "mean_height",
+            "max_height",
+            "mean_fwhm",
+        ]
+        for col in expected:
             assert col in result.columns, f"Missing column: {col}"
 
     def test_non_dataframe_datasets_skipped(self):

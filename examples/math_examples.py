@@ -10,7 +10,6 @@ Run this script from the plottle directory:
 import sys
 from pathlib import Path
 import numpy as np
-import pandas as pd
 
 # Add parent directory to path to import plottle
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -93,7 +92,7 @@ def example_distribution_analysis():
     fit_result = fit_distribution(normal_data, 'norm')
 
     mu, sigma = fit_result['params']
-    print(f"  Fitted parameters:")
+    print("  Fitted parameters:")
     print(f"    Mean (mu): {mu:.2f}")
     print(f"    Std (sigma): {sigma:.2f}")
     print(f"  KS test p-value: {fit_result['ks_pvalue']:.4f}")
@@ -104,7 +103,7 @@ def example_distribution_analysis():
     exp_data = np.random.exponential(2, 1000)
     exp_result = fit_distribution(exp_data, 'expon')
 
-    print(f"  Fitted exponential distribution")
+    print("  Fitted exponential distribution")
     print(f"  KS test p-value: {exp_result['ks_pvalue']:.4f}")
 
 
@@ -153,7 +152,7 @@ def example_curve_fitting():
 
     exp_fit = fit_exponential(x_exp, y_exp)
 
-    print(f"  Fitted parameters:")
+    print("  Fitted parameters:")
     print(f"    a = {exp_fit['a']:.3f}")
     print(f"    b = {exp_fit['b']:.3f}")
     print(f"    c = {exp_fit['c']:.3f}")
@@ -171,7 +170,7 @@ def example_curve_fitting():
     gauss_fit = fit_custom(x_gauss, y_gauss, gaussian, p0=[8, 0, 1])
 
     amp, mu, sigma = gauss_fit['parameters']
-    print(f"  Fitted Gaussian parameters:")
+    print("  Fitted Gaussian parameters:")
     print(f"    Amplitude: {amp:.2f}")
     print(f"    Mean (mu): {mu:.2f}")
     print(f"    Std (sigma): {sigma:.2f}")
@@ -193,7 +192,7 @@ def example_optimization():
 
     result = minimize_function(rosenbrock, x0=[0, 0], method='BFGS')
 
-    print(f"  Starting point: [0, 0]")
+    print("  Starting point: [0, 0]")
     print(f"  Optimal point: [{result['x'][0]:.4f}, {result['x'][1]:.4f}]")
     print(f"  Minimum value: {result['fun']:.6f}")
     print(f"  Success: {result['success']}")
@@ -215,7 +214,8 @@ def example_optimization():
     print(f"\n{CHECK} Finding roots of function")
     print("  f(x) = x^2 - 4")
 
-    func = lambda x: x**2 - 4
+    def func(x):
+        return x**2 - 4
 
     root_result = find_roots(func, bracket=(0, 3))
 
@@ -259,8 +259,8 @@ def example_linear_algebra():
     b = np.array([9, 8])
 
     print("  System:")
-    print(f"    3x + 1y = 9")
-    print(f"    1x + 2y = 8")
+    print("    3x + 1y = 9")
+    print("    1x + 2y = 8")
 
     sol_result = solve_linear_system(A_sys, b)
 

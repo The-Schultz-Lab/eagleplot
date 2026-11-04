@@ -113,7 +113,7 @@ def example_dataframe_operations():
     save_dataframe(df, csv_file)
     print(f"{CHECK} Saved DataFrame to {csv_file}")
     print(f"  Shape: {df.shape}")
-    print(f"\nFirst few rows:")
+    print("\nFirst few rows:")
     print(df.head())
 
     # Save to Excel
@@ -154,7 +154,7 @@ def example_universal_loader():
 
         # Load using universal loader
         loaded = load_data(filepath)
-        print(f"  Loaded back successfully!")
+        print("  Loaded back successfully!")
 
         if format_name == 'numpy':
             assert np.array_equal(data, loaded)

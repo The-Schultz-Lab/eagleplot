@@ -164,7 +164,8 @@ class TestGetPluginPlotTypes:
         _write_plugin(
             tmp_path,
             "plugin_b.py",
-            'def get_plot_types():\n    return [{"name": "b_plot", "label": "B", "function": None}]\n',
+            "def get_plot_types():\n"
+            '    return [{"name": "b_plot", "label": "B", "function": None}]\n',
         )
         plugins = discover_plugins(tmp_path)
         result = get_plugin_plot_types(plugins)
@@ -210,7 +211,8 @@ class TestGetPluginAnalysisTools:
         _write_plugin(
             tmp_path,
             "plugin_b.py",
-            'def get_analysis_tools():\n    return [{"name": "b_tool", "label": "B", "function": None}]\n',
+            "def get_analysis_tools():\n"
+            '    return [{"name": "b_tool", "label": "B", "function": None}]\n',
         )
         plugins = discover_plugins(tmp_path)
         result = get_plugin_analysis_tools(plugins)

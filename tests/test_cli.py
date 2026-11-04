@@ -417,10 +417,12 @@ class TestVerbosityModes:
             '--output', str(output)
         )
 
+        assert result_normal.returncode == 0
         assert result_verbose.returncode == 0
-        # Verbose should have [INFO] messages
+        # Verbose should have [INFO] messages; normal mode should not
         assert '[INFO]' in result_verbose.stdout or \
                '[INFO]' in result_verbose.stderr
+        assert '[INFO]' not in result_normal.stdout + result_normal.stderr
 
     def test_quiet_mode(self, temp_dir, test_data_dir):
         """Test that quiet mode suppresses informational output."""

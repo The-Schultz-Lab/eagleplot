@@ -19,13 +19,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from plottle.plotting import (
     # Figure management
-    create_figure, configure_axes, save_figure,
+    configure_axes, save_figure,
     # Core plots
     histogram, line_plot, scatter_plot,
     # Advanced plots
     heatmap, contour_plot,
     # Styling
-    set_style, get_color_palette, apply_publication_style
+    get_color_palette, apply_publication_style
 )
 
 # Use ASCII-safe symbols for Windows compatibility
@@ -56,7 +56,7 @@ def example_histogram():
         alpha=0.7
     )
 
-    print(f"  Data statistics:")
+    print("  Data statistics:")
     print(f"    Mean: {info['mean']:.2f}")
     print(f"    Std Dev: {info['std']:.2f}")
     print(f"    Number of bins: {len(info['bins'])-1}")

@@ -366,7 +366,8 @@ class TestOptimization:
 
     def test_find_roots_simple(self):
         """Test root finding for simple function."""
-        func = lambda x: x**2 - 4
+        def func(x):
+            return x**2 - 4
 
         result = find_roots(func, bracket=(0, 3))
 
@@ -379,7 +380,8 @@ class TestOptimization:
 
     def test_find_roots_trigonometric(self):
         """Test root finding for trigonometric function."""
-        func = lambda x: np.sin(x)
+        def func(x):
+            return np.sin(x)
 
         result = find_roots(func, bracket=(2, 4))
 
@@ -388,7 +390,8 @@ class TestOptimization:
 
     def test_find_roots_no_sign_change(self):
         """Test ValueError when bracket does not contain a sign change."""
-        func = lambda x: x**2 + 1  # Always positive
+        def func(x):
+            return x**2 + 1  # Always positive
 
         with pytest.raises(ValueError):
             find_roots(func, bracket=(0, 3))

@@ -201,7 +201,12 @@ class TestAnalysisResultToFigure:
         plt.close(fig)
 
     def test_empty_results_dict(self):
-        result = {"type": "test", "dataset": "d.csv", "timestamp": "2026-01-01T00:00:00", "results": {}}
+        result = {
+            "type": "test",
+            "dataset": "d.csv",
+            "timestamp": "2026-01-01T00:00:00",
+            "results": {},
+        }
         fig = _analysis_result_to_figure(result)
         assert isinstance(fig, plt.Figure)
         plt.close(fig)
@@ -359,7 +364,14 @@ class TestGeneratePdfReport:
 
     def test_custom_dpi_accepted(self, tmp_path, mpl_fig):
         out = tmp_path / "dpi300.pdf"
-        plot_entries = [{"type": "line", "dataset": "d", "timestamp": "2026-01-01T00:00:00", "figure": mpl_fig}]
+        plot_entries = [
+            {
+                "type": "line",
+                "dataset": "d",
+                "timestamp": "2026-01-01T00:00:00",
+                "figure": mpl_fig,
+            }
+        ]
         generate_pdf_report(str(out), "High DPI", plot_entries, {}, [], dpi=300)
         assert out.stat().st_size > 0
 
