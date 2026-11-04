@@ -104,3 +104,15 @@ class TestDocumentedPlotCountMatchesCode:
             "wording changed (update _FILES_STATING_THE_COUNT and the regex) or the "
             "count is stale everywhere."
         )
+
+
+class TestVersionShownOnDocsSite:
+    def test_nav_badge_matches_package_version(self):
+        # The landing page hard-codes the version in its nav badge; it drifted once
+        # already (audit A-26 covered six other copies).
+        from plottle import __version__
+
+        html = (_REPO_ROOT / "docs" / "index.html").read_text(encoding="utf-8")
+        badge = re.search(r'class="nav__badge">v([0-9][^ <&]*)', html)
+        assert badge, "nav badge not found in docs/index.html"
+        assert badge.group(1) == __version__

@@ -8,13 +8,96 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+---
+
+## [2.1.0] - 2026-11-04
+
+The first release published to PyPI. It closes the security, packaging and CI findings of
+the July 2026 code audit.
+
+### ⚠️ Changed: import paths and the CLI command
+
+- **The package is now imported as `plottle`.** Code that did `from modules.io import
+  load_data` must change to `from plottle.io import load_data`. The README for 2.0.x already
+  documented `plottle.*`, but the code still shipped as `modules`. The old name also meant
+  installing the wheel claimed the generic top-level names `modules` and `cli`, which could
+  collide with other projects.
+- **The CLI is the `plottle` command**, installed by `pip install`. From a source checkout
+  without installing, use `python -m plottle.cli`. The repo-root `cli.py` is gone.
+- **Setup scripts install the package** (`pip install -e ".[formats,nist]"`) rather than
+  `requirements.txt`, so the `plottle` command exists after setup.
+
+### Security
+
+- **Session files no longer execute code.** Loading a `.json` session ran `pickle.loads` on
+  data inside it, so opening a session someone else shared ran their code. Arrays are now
+  stored as dtype, shape and raw bytes. Sessions saved by 2.0.1 or earlier that contain
+  pickled entries are refused, and the Export page lists what was skipped.
+- **Formula evaluation is sandboxed properly.** Data Tools formulas used `eval()` with
+  empty builtins, which can be escaped. They are now parsed and checked against a whitelist
+  of operators and functions. `SECURITY.md` now describes what is and isn't guaranteed.
+- `.pkl` files are no longer accepted by the GUI uploader or batch import. Use
+  `plottle.io.load_pickle()` from Python for files you trust.
+- Batch import from a folder reads a path on the machine running Plottle, so it is now
+  available only to local connections. Set `PLOTTLE_ALLOW_FOLDER_LOAD=1` to allow it
+  everywhere, or `0` to turn it off.
+- Uploaded files go into a private temporary directory that is deleted after loading,
+  instead of a shared folder where two users uploading `data.csv` overwrote each other.
+
 ### Fixed
 
-- Quick Plot (Plotly mode): clicking a data point no longer crashes the page with
-  `AttributeError: 'dict' object has no attribute 'x'`. Streamlit returns selected points
-  as plain dicts; they are now read through `selected_points()` in
-  `plottle/utils/plot_config.py`. Marker labels on non-numeric axes (dates, categories)
-  also no longer raise on the `:.4g` format.
+- **Quick Plot failed to load on Python 3.9** (`TypeError: unsupported operand type(s) for
+  |`). The Molecular Viz and Batch Analysis pages had the same problem in code paths reached
+  later.
+- **The Settings page failed on Python 3.9 and 3.10** (`ModuleNotFoundError: tomllib`).
+  `tomli` is now used as a fallback.
+- **Quick Plot (Plotly mode): clicking a data point crashed the page** with
+  `AttributeError: 'dict' object has no attribute 'x'`. Marker labels on dates and
+  categories no longer raise either.
+- **A pip-installed GUI was missing its assets.** The logo, NCCU branding, example datasets
+  and gallery images now ship inside the package.
+- **Theme settings:** "Theme saved" was shown even when nothing was written, and saving
+  discarded every comment in `config.toml` and could write invalid TOML. The theme is now
+  written to `.streamlit/config.toml` in the working directory, where Streamlit reads it,
+  with comments and other sections preserved. Page styling follows the active theme
+  instead of a hard-coded dark palette, which left white text on a light background.
+- **Export → Save session:** the download button disappeared after any other click, so it
+  took two tries to download. It now stays available until the session changes.
+- **Settings:** "Reset defaults", "Delete preset" and "Delete config.json" each need a
+  confirmation tick first, and "Delete config.json" offers a backup download.
+- The macOS `setup.command` and `launch.command` files are executable again, so Finder will
+  run them from a fresh clone.
+- The Data Tools page is reachable from the navigation. The sidebar can be collapsed again,
+  and images have alt text.
+- `streamlit>=1.49` is now the declared minimum. The code needed it, but the old `>=1.25`
+  floor allowed versions that fail.
+
+### Added
+
+- `setup.sh` and `launch.sh` for Linux. All setup scripts now check the Python version
+  first.
+- `formats` (HDF5/NetCDF), `nist` (NIST WebBook lookups), `test` and `all` install extras,
+  so a normal install no longer pulls in the developer tools.
+- A documentation site built from the guides by `build_docs.py`, replacing the unbuilt
+  Sphinx setup. Every guide is linked from the landing page.
+- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue forms and a pull request template.
+
+### Development
+
+- CI tests Python 3.9 to 3.12 on Linux, plus macOS and Windows, and runs the whole test
+  suite. It used to run a hand-written list of files that skipped the CLI and integration
+  tests. Python 3.9 is pinned to `ubuntu-24.04` and macOS to `macos-15`.
+- mypy runs with the project installed, so it checks real types instead of treating
+  numpy, pandas and matplotlib as `Any`. ruff and mypy are pinned to exact versions.
+- `ruff check` and `ruff format --check` cover the whole repository, and ruff flags
+  `X | None` annotations that would fail on Python 3.9 (FA102).
+- New tests:
+  - every GUI page renders on a fresh session,
+  - the "Seaborn/Plotly not installed" errors (9 of these tests were always skipped),
+  - the Settings, Export and upload behaviour above.
+
+  The suite has 1,100+ tests.
+- The version number has a single source, `plottle/__init__.py`.
 
 ---
 
@@ -243,5 +326,9 @@ Initial development release. Stages 0–6 complete (foundation, I/O, math, basic
 
 ---
 
+[Unreleased]: https://github.com/The-Schultz-Lab/plottle/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/The-Schultz-Lab/plottle/compare/v2.0.1...v2.1.0
+[2.0.1]: https://github.com/The-Schultz-Lab/plottle/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/The-Schultz-Lab/plottle/releases/tag/v2.0.0
 [1.0.0]: https://github.com/The-Schultz-Lab/plottle/releases/tag/v1.0.0
 [0.1.0]: https://github.com/The-Schultz-Lab/plottle/releases/tag/v0.1.0
