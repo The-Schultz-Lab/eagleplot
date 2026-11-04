@@ -27,7 +27,7 @@ _FILES_STATING_THE_COUNT = [
     _REPO_ROOT / "README.md",
     _REPO_ROOT / "docs" / "index.html",
     _PACKAGE_ROOT / "Home.py",
-    _PACKAGE_ROOT / "pages" / "13_Help.py",
+    _PACKAGE_ROOT / "pages" / "12_Help.py",
 ]
 
 
