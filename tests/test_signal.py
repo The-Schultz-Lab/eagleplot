@@ -129,7 +129,7 @@ class TestFilters:
     def test_lowpass_attenuates_high_freq(self):
         fs = 1000
         t = np.linspace(0, 1, fs, endpoint=False)
-        low = np.sin(2 * np.pi * 5 * t)   # 5 Hz — below cutoff
+        low = np.sin(2 * np.pi * 5 * t)  # 5 Hz — below cutoff
         high = np.sin(2 * np.pi * 200 * t)  # 200 Hz — above cutoff
         mixed = low + high
         out = filter_lowpass(mixed, cutoff=50, fs=fs)
@@ -139,7 +139,7 @@ class TestFilters:
     def test_highpass_attenuates_low_freq(self):
         fs = 1000
         t = np.linspace(0, 1, fs, endpoint=False)
-        low = np.sin(2 * np.pi * 2 * t)   # 2 Hz — below cutoff
+        low = np.sin(2 * np.pi * 2 * t)  # 2 Hz — below cutoff
         high = np.sin(2 * np.pi * 200 * t)  # 200 Hz — above cutoff
         mixed = low + high
         out = filter_highpass(mixed, cutoff=50, fs=fs)

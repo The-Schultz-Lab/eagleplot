@@ -31,6 +31,7 @@ from plottle.spectroscopy import (
 # 1. TestAbsorbanceTransmittanceConversion
 # ---------------------------------------------------------------------------
 
+
 class TestAbsorbanceTransmittanceConversion:
     def test_zero_absorbance_gives_100_percent(self):
         result = absorbance_to_transmittance(np.array([0.0]))
@@ -63,6 +64,7 @@ class TestAbsorbanceTransmittanceConversion:
 # ---------------------------------------------------------------------------
 # 2. TestATRCorrection
 # ---------------------------------------------------------------------------
+
 
 class TestATRCorrection:
     def _spectrum(self):
@@ -101,6 +103,7 @@ class TestATRCorrection:
 # ---------------------------------------------------------------------------
 # 3. TestSpectralSubtraction
 # ---------------------------------------------------------------------------
+
 
 class TestSpectralSubtraction:
     def _arrays(self):
@@ -141,6 +144,7 @@ class TestSpectralSubtraction:
 # 4. TestCosmicRayRemoval
 # ---------------------------------------------------------------------------
 
+
 class TestCosmicRayRemoval:
     def test_spike_replaced(self):
         # Signal needs some non-zero variance so local_std > 0; use small noise.
@@ -171,6 +175,7 @@ class TestCosmicRayRemoval:
 # ---------------------------------------------------------------------------
 # 5. TestFunctionalGroupAssignment
 # ---------------------------------------------------------------------------
+
 
 class TestFunctionalGroupAssignment:
     def test_assign_bands_returns_list(self):
@@ -213,6 +218,7 @@ class TestFunctionalGroupAssignment:
 # ---------------------------------------------------------------------------
 # 6. TestBeerLambert
 # ---------------------------------------------------------------------------
+
 
 class TestBeerLambert:
     def test_solve_concentration(self):
@@ -260,6 +266,7 @@ class TestBeerLambert:
 # 7. TestMolarAbsorptivitySeries
 # ---------------------------------------------------------------------------
 
+
 class TestMolarAbsorptivitySeries:
     def _perfect_data(self):
         # Perfect Beer-Lambert: eps=5000, l=1
@@ -295,14 +302,22 @@ class TestMolarAbsorptivitySeries:
     def test_result_keys(self):
         conc, abs_vals = self._perfect_data()
         result = molar_absorptivity_series(conc, abs_vals)
-        for key in ("epsilon", "r_squared", "slope", "intercept",
-                    "fitted_absorbances", "residuals", "linearity_ok"):
+        for key in (
+            "epsilon",
+            "r_squared",
+            "slope",
+            "intercept",
+            "fitted_absorbances",
+            "residuals",
+            "linearity_ok",
+        ):
             assert key in result
 
 
 # ---------------------------------------------------------------------------
 # 8. TestSpectralOverlapIntegral
 # ---------------------------------------------------------------------------
+
 
 class TestSpectralOverlapIntegral:
     def _gaussian(self, wl, center, sigma, amplitude=1.0):
@@ -350,6 +365,7 @@ class TestSpectralOverlapIntegral:
 # 9. TestNMRCalibration
 # ---------------------------------------------------------------------------
 
+
 class TestNMRCalibration:
     def test_zero_reference(self):
         hz = np.array([0.0, 300.0, 600.0, 1500.0])
@@ -377,6 +393,7 @@ class TestNMRCalibration:
 # 10. TestLinebroadeningAndZeroFill
 # ---------------------------------------------------------------------------
 
+
 class TestLinebroadeningAndZeroFill:
     def _fid(self, n=512):
         t = np.arange(n, dtype=float) * 1e-4
@@ -384,18 +401,18 @@ class TestLinebroadeningAndZeroFill:
 
     def test_lorentzian_mode_returns_array(self):
         fid = self._fid()
-        result = apply_line_broadening(fid, dt=1e-4, lb=1.0, mode='lorentzian')
+        result = apply_line_broadening(fid, dt=1e-4, lb=1.0, mode="lorentzian")
         assert result.shape == fid.shape
 
     def test_gaussian_mode_returns_array(self):
         fid = self._fid()
-        result = apply_line_broadening(fid, dt=1e-4, lb=1.0, mode='gaussian')
+        result = apply_line_broadening(fid, dt=1e-4, lb=1.0, mode="gaussian")
         assert result.shape == fid.shape
 
     def test_invalid_mode_raises(self):
         fid = self._fid()
         with pytest.raises(ValueError):
-            apply_line_broadening(fid, dt=1e-4, lb=1.0, mode='hamming')
+            apply_line_broadening(fid, dt=1e-4, lb=1.0, mode="hamming")
 
     def test_zero_fill_increases_length(self):
         fid = np.ones(256)
@@ -416,6 +433,7 @@ class TestLinebroadeningAndZeroFill:
 # ---------------------------------------------------------------------------
 # 11. TestNMRFFT
 # ---------------------------------------------------------------------------
+
 
 class TestNMRFFT:
     def _fid(self, n=1024):
@@ -448,12 +466,12 @@ class TestNMRFFT:
 # 12. TestNMRPeakPicking
 # ---------------------------------------------------------------------------
 
+
 class TestNMRPeakPicking:
     def _synthetic_nmr(self):
         ppm = np.linspace(0.0, 10.0, 2000)
-        spectrum = (
-            np.exp(-((ppm - 2.0) ** 2) / (2 * 0.05 ** 2))
-            + 0.5 * np.exp(-((ppm - 7.5) ** 2) / (2 * 0.05 ** 2))
+        spectrum = np.exp(-((ppm - 2.0) ** 2) / (2 * 0.05**2)) + 0.5 * np.exp(
+            -((ppm - 7.5) ** 2) / (2 * 0.05**2)
         )
         return ppm, spectrum
 
@@ -490,12 +508,12 @@ class TestNMRPeakPicking:
 # 13. TestNMRIntegration
 # ---------------------------------------------------------------------------
 
+
 class TestNMRIntegration:
     def _spectrum(self):
         ppm = np.linspace(0.0, 10.0, 1000)
-        spectrum = (
-            np.exp(-((ppm - 2.0) ** 2) / (2 * 0.1 ** 2))
-            + 0.5 * np.exp(-((ppm - 7.0) ** 2) / (2 * 0.1 ** 2))
+        spectrum = np.exp(-((ppm - 2.0) ** 2) / (2 * 0.1**2)) + 0.5 * np.exp(
+            -((ppm - 7.0) ** 2) / (2 * 0.1**2)
         )
         return ppm, spectrum
 
@@ -534,6 +552,7 @@ class TestNMRIntegration:
 # 14. TestMZPeakFinding
 # ---------------------------------------------------------------------------
 
+
 class TestMZPeakFinding:
     def _ms_spectrum(self):
         mz = np.linspace(50.0, 500.0, 4500)
@@ -546,8 +565,14 @@ class TestMZPeakFinding:
     def test_result_keys(self):
         mz, intensity = self._ms_spectrum()
         result = find_mz_peaks(mz, intensity)
-        for key in ("mz_positions", "intensities", "relative_intensities",
-                    "base_peak_mz", "base_peak_intensity", "n_peaks"):
+        for key in (
+            "mz_positions",
+            "intensities",
+            "relative_intensities",
+            "base_peak_mz",
+            "base_peak_intensity",
+            "n_peaks",
+        ):
             assert key in result
 
     def test_base_peak_is_highest(self):
@@ -581,6 +606,7 @@ class TestMZPeakFinding:
 # ---------------------------------------------------------------------------
 # 15. TestCentroidSpectrum
 # ---------------------------------------------------------------------------
+
 
 class TestCentroidSpectrum:
     def test_result_keys(self):

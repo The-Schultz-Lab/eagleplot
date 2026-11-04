@@ -85,7 +85,7 @@ def example_color_palettes():
 
     fig, ax = create_figure(figsize=(8, 4))
     for i, color in enumerate(palette):
-        ax.plot(x, np.sin(x + i * np.pi / 5), color=color, linewidth=2, label=f"Series {i+1}")
+        ax.plot(x, np.sin(x + i * np.pi / 5), color=color, linewidth=2, label=f"Series {i + 1}")
     configure_axes(ax, xlabel="x", ylabel="y", title="Color-Blind-Safe Palette Demo", grid=True)
     ax.legend(loc="upper right", ncol=3)
 

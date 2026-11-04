@@ -85,8 +85,15 @@ class TestFindPeaks:
         x, y = single_peak
         result = find_peaks(y, x=x)
         expected = {
-            "indices", "positions", "heights", "prominences",
-            "widths_samples", "widths", "left_ips", "right_ips", "n_peaks",
+            "indices",
+            "positions",
+            "heights",
+            "prominences",
+            "widths_samples",
+            "widths",
+            "left_ips",
+            "right_ips",
+            "n_peaks",
         }
         assert set(result.keys()) == expected
 
@@ -274,8 +281,14 @@ class TestFitPeak:
         x, y = single_peak
         result = fit_peak(y, x, center_guess=5.0)
         expected = {
-            "params", "param_names", "std_errors", "fitted_y",
-            "residuals", "r_squared", "model", "background",
+            "params",
+            "param_names",
+            "std_errors",
+            "fitted_y",
+            "residuals",
+            "r_squared",
+            "model",
+            "background",
         }
         assert set(result.keys()) == expected
 
@@ -351,8 +364,17 @@ class TestFitMultipeak:
         x, y = single_peak
         result = fit_multipeak(y, x, n_peaks=1)
         expected = {
-            "params", "param_names", "std_errors", "fitted_y", "individual_y",
-            "residuals", "r_squared", "model", "background", "n_peaks", "peak_summaries",
+            "params",
+            "param_names",
+            "std_errors",
+            "fitted_y",
+            "individual_y",
+            "residuals",
+            "r_squared",
+            "model",
+            "background",
+            "n_peaks",
+            "peak_summaries",
         }
         assert set(result.keys()) == expected
 
@@ -367,7 +389,11 @@ class TestFitMultipeak:
         x, y = two_peaks
         guesses = [(5.0, 3.0, 0.5), (15.0, 2.0, 0.7)]
         result = fit_multipeak(
-            y, x, n_peaks=2, model="gaussian", background="none",
+            y,
+            x,
+            n_peaks=2,
+            model="gaussian",
+            background="none",
             initial_guesses=guesses,
         )
         assert result["r_squared"] > 0.99

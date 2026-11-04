@@ -109,15 +109,24 @@ class TestRectangle:
     def test_rectangle_facecolor(self, ax):
         apply_annotations(
             ax,
-            [{"type": "rectangle", "x1": 0, "y1": 0, "x2": 1, "y2": 1,
-              "color": "red", "facecolor": "yellow", "alpha": 0.4}],
+            [
+                {
+                    "type": "rectangle",
+                    "x1": 0,
+                    "y1": 0,
+                    "x2": 1,
+                    "y2": 1,
+                    "color": "red",
+                    "facecolor": "yellow",
+                    "alpha": 0.4,
+                }
+            ],
         )
 
     def test_rectangle_label(self, ax):
         apply_annotations(
             ax,
-            [{"type": "rectangle", "x1": 0, "y1": 0, "x2": 1, "y2": 1,
-              "label": "box"}],
+            [{"type": "rectangle", "x1": 0, "y1": 0, "x2": 1, "y2": 1, "label": "box"}],
         )
 
 
@@ -132,8 +141,17 @@ class TestEllipse:
     def test_ellipse_facecolor(self, ax):
         apply_annotations(
             ax,
-            [{"type": "ellipse", "cx": 1.0, "cy": 0.5, "width": 1.0, "height": 0.5,
-              "color": "blue", "facecolor": "cyan"}],
+            [
+                {
+                    "type": "ellipse",
+                    "cx": 1.0,
+                    "cy": 0.5,
+                    "width": 1.0,
+                    "height": 0.5,
+                    "color": "blue",
+                    "facecolor": "cyan",
+                }
+            ],
         )
 
 

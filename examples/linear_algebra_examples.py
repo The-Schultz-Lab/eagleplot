@@ -44,7 +44,7 @@ def example_eigenvalues():
 
     print("  Eigenvalues (vibrational frequencies^2):")
     for i, ev in enumerate(result["eigenvalues"]):
-        print(f"    lambda_{i+1} = {ev:.4f}")
+        print(f"    lambda_{i + 1} = {ev:.4f}")
     print("  Eigenvectors (columns are normal modes):")
     print(f"    {result['eigenvectors'].round(4)}")
     print(f"{CHECK} Eigenvalue decomposition complete")

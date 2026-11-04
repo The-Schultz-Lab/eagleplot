@@ -16,27 +16,37 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from plottle.math import (
     # Statistics
-    calculate_mean, calculate_median, calculate_std, calculate_statistics,
+    calculate_mean,
+    calculate_median,
+    calculate_std,
+    calculate_statistics,
     # Distribution analysis
-    check_normality, fit_distribution,
+    check_normality,
+    fit_distribution,
     # Curve fitting
-    fit_polynomial, fit_linear, fit_exponential, fit_custom,
+    fit_polynomial,
+    fit_linear,
+    fit_exponential,
+    fit_custom,
     # Optimization
-    minimize_function, find_roots,
+    minimize_function,
+    find_roots,
     # Linear algebra
-    compute_eigenvalues, solve_linear_system, matrix_decomposition
+    compute_eigenvalues,
+    solve_linear_system,
+    matrix_decomposition,
 )
 
 # Use ASCII-safe symbols for Windows compatibility
-CHECK = '[OK]'
-ARROW = '-->'
+CHECK = "[OK]"
+ARROW = "-->"
 
 
 def example_basic_statistics():
     """Example 1: Basic statistical analysis."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 1: Basic Statistical Analysis")
-    print("="*70)
+    print("=" * 70)
 
     # Simulate experimental measurements
     np.random.seed(42)
@@ -72,9 +82,9 @@ def example_basic_statistics():
 
 def example_distribution_analysis():
     """Example 2: Distribution analysis and fitting."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 2: Distribution Analysis")
-    print("="*70)
+    print("=" * 70)
 
     # Generate normal distribution data
     np.random.seed(42)
@@ -89,9 +99,9 @@ def example_distribution_analysis():
 
     # Fit normal distribution
     print(f"\n{CHECK} Fitting normal distribution...")
-    fit_result = fit_distribution(normal_data, 'norm')
+    fit_result = fit_distribution(normal_data, "norm")
 
-    mu, sigma = fit_result['params']
+    mu, sigma = fit_result["params"]
     print("  Fitted parameters:")
     print(f"    Mean (mu): {mu:.2f}")
     print(f"    Std (sigma): {sigma:.2f}")
@@ -101,7 +111,7 @@ def example_distribution_analysis():
     # Generate exponential data and fit
     print(f"\n{CHECK} Testing exponential distribution...")
     exp_data = np.random.exponential(2, 1000)
-    exp_result = fit_distribution(exp_data, 'expon')
+    exp_result = fit_distribution(exp_data, "expon")
 
     print("  Fitted exponential distribution")
     print(f"  KS test p-value: {exp_result['ks_pvalue']:.4f}")
@@ -109,9 +119,9 @@ def example_distribution_analysis():
 
 def example_curve_fitting():
     """Example 3: Curve fitting techniques."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 3: Curve Fitting")
-    print("="*70)
+    print("=" * 70)
 
     # Generate linear data with noise
     np.random.seed(42)
@@ -139,7 +149,7 @@ def example_curve_fitting():
 
     # Predict new values
     x_new = np.array([5.0, 7.5, 10.0])
-    y_pred = poly_result['predict'](x_new)
+    y_pred = poly_result["predict"](x_new)
 
     print(f"\n{CHECK} Predictions at new x values:")
     for xi, yi in zip(x_new, y_pred):
@@ -162,14 +172,14 @@ def example_curve_fitting():
     print(f"\n{CHECK} Fitting custom Gaussian function")
 
     def gaussian(x, amp, mu, sigma):
-        return amp * np.exp(-(x - mu)**2 / (2 * sigma**2))
+        return amp * np.exp(-((x - mu) ** 2) / (2 * sigma**2))
 
     x_gauss = np.linspace(-5, 5, 100)
     y_gauss = gaussian(x_gauss, 10, 0, 1) + np.random.normal(0, 0.5, 100)
 
     gauss_fit = fit_custom(x_gauss, y_gauss, gaussian, p0=[8, 0, 1])
 
-    amp, mu, sigma = gauss_fit['parameters']
+    amp, mu, sigma = gauss_fit["parameters"]
     print("  Fitted Gaussian parameters:")
     print(f"    Amplitude: {amp:.2f}")
     print(f"    Mean (mu): {mu:.2f}")
@@ -179,18 +189,18 @@ def example_curve_fitting():
 
 def example_optimization():
     """Example 4: Optimization and root finding."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 4: Optimization and Root Finding")
-    print("="*70)
+    print("=" * 70)
 
     # Minimize the Rosenbrock function
     print(f"\n{CHECK} Minimizing Rosenbrock function")
     print("  f(x,y) = (1-x)^2 + 100*(y-x^2)^2")
 
     def rosenbrock(x):
-        return (1 - x[0])**2 + 100*(x[1] - x[0]**2)**2
+        return (1 - x[0]) ** 2 + 100 * (x[1] - x[0] ** 2) ** 2
 
-    result = minimize_function(rosenbrock, x0=[0, 0], method='BFGS')
+    result = minimize_function(rosenbrock, x0=[0, 0], method="BFGS")
 
     print("  Starting point: [0, 0]")
     print(f"  Optimal point: [{result['x'][0]:.4f}, {result['x'][1]:.4f}]")
@@ -203,7 +213,7 @@ def example_optimization():
     print("  f(x,y) = (x-3)^2 + (y+2)^2")
 
     def quadratic(x):
-        return (x[0] - 3)**2 + (x[1] + 2)**2
+        return (x[0] - 3) ** 2 + (x[1] + 2) ** 2
 
     result2 = minimize_function(quadratic, x0=[0, 0])
 
@@ -235,21 +245,21 @@ def example_optimization():
 
 def example_linear_algebra():
     """Example 5: Linear algebra operations."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 5: Linear Algebra")
-    print("="*70)
+    print("=" * 70)
 
     # Compute eigenvalues
     print(f"\n{CHECK} Computing eigenvalues and eigenvectors")
     A = np.array([[1, 2], [2, 1]])
 
     print("  Matrix A:")
-    print(f"    [[{A[0,0]}, {A[0,1]}]")
-    print(f"     [{A[1,0]}, {A[1,1]}]]")
+    print(f"    [[{A[0, 0]}, {A[0, 1]}]")
+    print(f"     [{A[1, 0]}, {A[1, 1]}]]")
 
     eigen_result = compute_eigenvalues(A)
 
-    eigenvals = np.sort(eigen_result['eigenvalues'].real)
+    eigenvals = np.sort(eigen_result["eigenvalues"].real)
     print(f"\n  Eigenvalues: [{eigenvals[0]:.2f}, {eigenvals[1]:.2f}]")
     print(f"  {ARROW} Expected: [-1, 3]")
 
@@ -273,7 +283,7 @@ def example_linear_algebra():
     print(f"\n{CHECK} Matrix decomposition (SVD)")
     M = np.random.rand(5, 3)
 
-    svd_result = matrix_decomposition(M, method='svd')
+    svd_result = matrix_decomposition(M, method="svd")
 
     print(f"  Original matrix shape: {M.shape}")
     print(f"  U shape: {svd_result['U'].shape}")
@@ -281,8 +291,8 @@ def example_linear_algebra():
     print(f"  Vh shape: {svd_result['Vh'].shape}")
 
     # Reconstruct matrix
-    U, S, Vh = svd_result['U'], svd_result['S'], svd_result['Vh']
-    M_reconstructed = U[:, :len(S)] @ np.diag(S) @ Vh
+    U, S, Vh = svd_result["U"], svd_result["S"], svd_result["Vh"]
+    M_reconstructed = U[:, : len(S)] @ np.diag(S) @ Vh
     reconstruction_error = np.linalg.norm(M - M_reconstructed)
 
     print(f"  Reconstruction error: {reconstruction_error:.2e}")
@@ -290,9 +300,9 @@ def example_linear_algebra():
 
     # QR decomposition
     print(f"\n{CHECK} QR decomposition")
-    qr_result = matrix_decomposition(M, method='qr')
+    qr_result = matrix_decomposition(M, method="qr")
 
-    Q, R = qr_result['Q'], qr_result['R']
+    Q, R = qr_result["Q"], qr_result["R"]
     print(f"  Q shape: {Q.shape}")
     print(f"  R shape: {R.shape}")
 
@@ -303,9 +313,9 @@ def example_linear_algebra():
 
 def example_practical_workflow():
     """Example 6: Practical data analysis workflow."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Example 6: Practical Workflow - Kinetics Data Analysis")
-    print("="*70)
+    print("=" * 70)
 
     print("\n1. Simulating chemical kinetics experiment...")
 
@@ -342,8 +352,8 @@ def example_practical_workflow():
 
     fit_result = fit_custom(t, C_measured, first_order_decay, p0=[1.0, 0.5])
 
-    C0_fit, k_fit = fit_result['parameters']
-    C0_err, k_err = fit_result['std_errors']
+    C0_fit, k_fit = fit_result["parameters"]
+    C0_err, k_err = fit_result["std_errors"]
 
     print(f"{CHECK} Fitted parameters:")
     print(f"  C0 = {C0_fit:.4f} +/- {C0_err:.4f} M")
@@ -362,7 +372,7 @@ def example_practical_workflow():
     print("\n4. Predicting future concentrations...")
 
     t_future = np.array([12, 15, 20])
-    C_future = fit_result['predict'](t_future)
+    C_future = fit_result["predict"](t_future)
 
     print(f"{CHECK} Concentration predictions:")
     for ti, Ci in zip(t_future, C_future):
@@ -371,7 +381,7 @@ def example_practical_workflow():
     # Check residuals
     print("\n5. Residual analysis...")
 
-    C_fitted = fit_result['predict'](t)
+    C_fitted = fit_result["predict"](t)
     residuals = C_measured - C_fitted
 
     residual_stats = calculate_statistics(residuals)
@@ -393,28 +403,28 @@ def example_practical_workflow():
     print("\n6. Reaction progress analysis...")
 
     t_target = 5.0
-    C_at_5s = fit_result['predict'](np.array([t_target]))[0]
+    C_at_5s = fit_result["predict"](np.array([t_target]))[0]
     conversion = (C0_fit - C_at_5s) / C0_fit * 100
 
     print(f"{CHECK} At t = {t_target} s:")
     print(f"  Concentration: {C_at_5s:.4f} M")
     print(f"  Conversion: {conversion:.1f}%")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("Analysis complete! This workflow demonstrated:")
     print("  - Statistical analysis of experimental data")
     print("  - Non-linear curve fitting")
     print("  - Parameter estimation with uncertainties")
     print("  - Prediction and extrapolation")
     print("  - Residual analysis and quality assessment")
-    print("="*70)
+    print("=" * 70)
 
 
 def main():
     """Run all examples."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("PLOTTING HELPER - MATH MODULE EXAMPLES")
-    print("="*70)
+    print("=" * 70)
     print("\nThis script demonstrates the mathematical capabilities of the")
     print("plottle package for scientific data analysis.\n")
 
@@ -427,15 +437,16 @@ def main():
         example_linear_algebra()
         example_practical_workflow()
 
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print(f"All examples completed successfully! {CHECK}")
-        print("="*70)
+        print("=" * 70)
 
     except Exception as e:
         print(f"\n[ERROR] {e}")
         import traceback
+
         traceback.print_exc()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

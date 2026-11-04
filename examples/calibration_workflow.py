@@ -49,7 +49,7 @@ def run_calibration_workflow():
         f"  Concentration range: {df['concentration'].min():.2f} – "
         f"{df['concentration'].max():.2f} mM"
     )
-    print(f"  Absorbance range   : {df['absorbance'].min():.4f} – " f"{df['absorbance'].max():.4f}")
+    print(f"  Absorbance range   : {df['absorbance'].min():.4f} – {df['absorbance'].max():.4f}")
     print(f"  {CHECK} Data loaded")
 
     # 2. Fit Beer-Lambert: A = epsilon * l * c

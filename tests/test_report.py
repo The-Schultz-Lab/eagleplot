@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import matplotlib
+
 matplotlib.use("Agg")  # non-interactive backend; must come before pyplot import
 
 import matplotlib.pyplot as plt
@@ -65,6 +66,7 @@ def mpl_fig() -> plt.Figure:
 def plotly_fig():
     try:
         import plotly.graph_objects as go
+
         return go.Figure(go.Scatter(x=[1, 2, 3], y=[4, 5, 6]))
     except ImportError:
         pytest.skip("plotly not installed")

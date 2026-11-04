@@ -65,7 +65,7 @@ class TestGuiPathsAreAbsolute:
             if "Path(__file__).parent" in ln and ".resolve()" not in ln
         ]
         assert not offenders, (
-            "Path(__file__).parent without .resolve() reintroduces G-010: " f"{offenders}"
+            f"Path(__file__).parent without .resolve() reintroduces G-010: {offenders}"
         )
 
     def test_page_files_referenced_by_home_all_exist(self, package_root: Path) -> None:

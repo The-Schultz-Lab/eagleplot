@@ -23,8 +23,20 @@ from plottle.batch import (
 
 # ── shared fixtures ────────────────────────────────────────────────────────────
 
-_STAT_COLS = ["dataset", "column", "n", "mean", "median", "std",
-              "min", "max", "q1", "q3", "iqr", "range"]
+_STAT_COLS = [
+    "dataset",
+    "column",
+    "n",
+    "mean",
+    "median",
+    "std",
+    "min",
+    "max",
+    "q1",
+    "q3",
+    "iqr",
+    "range",
+]
 
 
 def _make_linear_df(n: int = 50, slope: float = 2.0, intercept: float = 1.0) -> pd.DataFrame:
@@ -55,6 +67,7 @@ def _make_multi_peak_signal(n: int = 500) -> pd.DataFrame:
 # ══════════════════════════════════════════════════════════════════════════════
 # scan_directory
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 class TestScanDirectory:
     """Tests for scan_directory()."""
@@ -119,6 +132,7 @@ class TestScanDirectory:
 # ══════════════════════════════════════════════════════════════════════════════
 # batch_load_files
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 class TestBatchLoadFiles:
     """Tests for batch_load_files()."""
@@ -199,6 +213,7 @@ class TestBatchLoadFiles:
 # ══════════════════════════════════════════════════════════════════════════════
 # batch_statistics
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 class TestBatchStatistics:
     """Tests for batch_statistics()."""
@@ -297,6 +312,7 @@ class TestBatchStatistics:
 # batch_curve_fit
 # ══════════════════════════════════════════════════════════════════════════════
 
+
 class TestBatchCurveFit:
     """Tests for batch_curve_fit()."""
 
@@ -324,24 +340,23 @@ class TestBatchCurveFit:
 
     def test_polynomial_fit_returns_required_columns(self):
         datasets = {"ds1": _make_linear_df()}
-        result = batch_curve_fit(datasets, x_col="x", y_col="y",
-                                 fit_type="polynomial", degree=3)
+        result = batch_curve_fit(datasets, x_col="x", y_col="y", fit_type="polynomial", degree=3)
         assert "degree" in result.columns
         assert "r_squared" in result.columns
         assert "coeff_0" in result.columns
 
     def test_polynomial_degree_recorded(self):
         datasets = {"ds1": _make_linear_df()}
-        result = batch_curve_fit(datasets, x_col="x", y_col="y",
-                                 fit_type="polynomial", degree=4)
+        result = batch_curve_fit(datasets, x_col="x", y_col="y", fit_type="polynomial", degree=4)
         row = result.iloc[0]
         assert int(row["degree"]) == 4
 
     def test_polynomial_coefficient_columns_present(self):
         datasets = {"ds1": _make_linear_df()}
         degree = 3
-        result = batch_curve_fit(datasets, x_col="x", y_col="y",
-                                 fit_type="polynomial", degree=degree)
+        result = batch_curve_fit(
+            datasets, x_col="x", y_col="y", fit_type="polynomial", degree=degree
+        )
         for i in range(degree + 1):
             assert f"coeff_{i}" in result.columns
 
@@ -407,6 +422,7 @@ class TestBatchCurveFit:
 # ══════════════════════════════════════════════════════════════════════════════
 # batch_peak_analysis
 # ══════════════════════════════════════════════════════════════════════════════
+
 
 class TestBatchPeakAnalysis:
     """Tests for batch_peak_analysis()."""

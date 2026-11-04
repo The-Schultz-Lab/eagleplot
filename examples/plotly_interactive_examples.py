@@ -122,7 +122,7 @@ def example_interactive_heatmap():
 
     np.random.seed(42)
     n = 5
-    labels = [f"Var {i+1}" for i in range(n)]
+    labels = [f"Var {i + 1}" for i in range(n)]
     raw = np.random.randn(100, n)
     raw[:, 1] = 0.8 * raw[:, 0] + 0.2 * raw[:, 1]  # induce correlation
     corr = np.corrcoef(raw.T)

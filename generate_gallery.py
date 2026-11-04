@@ -266,7 +266,7 @@ _ENTRIES = [
     {
         "key": "histogram",
         "title": "Histogram",
-        "description": "Distribution of temperature measurements " "with 30 bins.",
+        "description": "Distribution of temperature measurements with 30 bins.",
         "best_for": "Single-variable distributions",
         "dataset": "normal_distribution.csv",
         "library": "Matplotlib",
@@ -275,7 +275,7 @@ _ENTRIES = [
     {
         "key": "line_plot",
         "title": "Line Plot",
-        "description": "Sine and cosine waves over 0–4π with " "per-series colour.",
+        "description": "Sine and cosine waves over 0–4π with per-series colour.",
         "best_for": "Time series, ordered data, multi-trace",
         "dataset": "sine_cosine_waves.csv",
         "library": "Matplotlib",
@@ -284,7 +284,7 @@ _ENTRIES = [
     {
         "key": "scatter_plot",
         "title": "Scatter Plot",
-        "description": "Reaction time vs product yield showing " "a positive correlation.",
+        "description": "Reaction time vs product yield showing a positive correlation.",
         "best_for": "Correlation, two-variable comparison",
         "dataset": "scatter_correlation.csv",
         "library": "Matplotlib",
@@ -293,7 +293,7 @@ _ENTRIES = [
     {
         "key": "heatmap",
         "title": "Heatmap",
-        "description": "10×10 correlation matrix with colour " "encoding and cell annotations.",
+        "description": "10×10 correlation matrix with colour encoding and cell annotations.",
         "best_for": "2-D matrices, correlation tables",
         "dataset": "correlation_matrix.npy",
         "library": "Matplotlib",
@@ -302,7 +302,7 @@ _ENTRIES = [
     {
         "key": "contour_plot",
         "title": "Contour Plot",
-        "description": "Filled contours of a double-Gaussian " "potential energy surface.",
+        "description": "Filled contours of a double-Gaussian potential energy surface.",
         "best_for": "Scalar fields, PES, 2-D functions",
         "dataset": "gaussian_surface.npy",
         "library": "Matplotlib",
@@ -311,7 +311,7 @@ _ENTRIES = [
     {
         "key": "distribution_plot",
         "title": "Distribution (KDE)",
-        "description": "Kernel density estimate of a bimodal " "absorbance distribution.",
+        "description": "Kernel density estimate of a bimodal absorbance distribution.",
         "best_for": "Overlaid distributions, KDE, ECDF",
         "dataset": "bimodal_distribution.csv",
         "library": "Seaborn",
@@ -320,7 +320,7 @@ _ENTRIES = [
     {
         "key": "box_plot",
         "title": "Box / Violin Plot",
-        "description": "Yield distributions grouped by catalyst " "type.",
+        "description": "Yield distributions grouped by catalyst type.",
         "best_for": "Group comparisons, outlier detection",
         "dataset": "grouped_categorical.csv",
         "library": "Seaborn",
@@ -329,7 +329,7 @@ _ENTRIES = [
     {
         "key": "regression_plot",
         "title": "Regression Plot",
-        "description": "Linear regression of yield vs temperature " "with 95% confidence band.",
+        "description": "Linear regression of yield vs temperature with 95% confidence band.",
         "best_for": "Trend lines, linear modelling",
         "dataset": "scatter_correlation.csv",
         "library": "Seaborn",
@@ -347,7 +347,7 @@ _ENTRIES = [
     {
         "key": "interactive_scatter",
         "title": "Interactive Scatter",
-        "description": "Click-to-annotate scatter with hover " "coordinates.",
+        "description": "Click-to-annotate scatter with hover coordinates.",
         "best_for": "Interactive correlation exploration",
         "dataset": "scatter_correlation.csv",
         "library": "Plotly",
@@ -356,7 +356,7 @@ _ENTRIES = [
     {
         "key": "interactive_line",
         "title": "Interactive Line",
-        "description": "Multi-trace interactive line chart with " "legend toggle.",
+        "description": "Multi-trace interactive line chart with legend toggle.",
         "best_for": "Interactive time-series comparison",
         "dataset": "sine_cosine_waves.csv",
         "library": "Plotly",

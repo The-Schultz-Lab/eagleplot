@@ -220,8 +220,7 @@ class TestVibrationalDataStructures:
     def _make_data(self):
         coords = np.array([[0.0, 0.0, 0.117], [0.0, 0.757, -0.468]])
         atomic_numbers = [8, 1]
-        modes = [self._make_mode(1000.0, mode_number=1),
-                 self._make_mode(2000.0, mode_number=2)]
+        modes = [self._make_mode(1000.0, mode_number=1), self._make_mode(2000.0, mode_number=2)]
         return VibrationalData(
             coordinates=coords,
             atomic_numbers=atomic_numbers,
@@ -510,16 +509,20 @@ class TestParseVibrations:
 
 def _make_water_vd() -> VibrationalData:
     """Build a minimal water VibrationalData for visualization tests."""
-    coords = np.array([
-        [0.0, 0.0, 0.117],
-        [0.0, 0.757, -0.468],
-        [0.0, -0.757, -0.468],
-    ])
-    disps = np.array([
-        [0.0, 0.0, 0.071],
-        [0.0, 0.571, -0.565],
-        [0.0, -0.571, -0.565],
-    ])
+    coords = np.array(
+        [
+            [0.0, 0.0, 0.117],
+            [0.0, 0.757, -0.468],
+            [0.0, -0.757, -0.468],
+        ]
+    )
+    disps = np.array(
+        [
+            [0.0, 0.0, 0.071],
+            [0.0, 0.571, -0.565],
+            [0.0, -0.571, -0.565],
+        ]
+    )
     mode = VibrationalMode(
         mode_number=1,
         frequency=1595.0,
@@ -549,9 +552,7 @@ class TestVisualizationHelpers:
 
     def test_create_displacement_arrows_show_all(self):
         vd = _make_water_vd()
-        arrows = create_displacement_arrows(
-            vd, mode_number=1, show_small_displacements=True
-        )
+        arrows = create_displacement_arrows(vd, mode_number=1, show_small_displacements=True)
         assert len(arrows) > 0
 
     def test_create_displacement_arrows_invalid_mode_raises(self):
