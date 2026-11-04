@@ -74,8 +74,8 @@ dev = [
     # change. Dependabot's `dev-tools` group bumps these. See audit A-10.
     # NOTE: these pins constrain the Python versions `dev` can install on. Keep them
     # out of anything the 3.9 test cell installs.
-    "ruff==0.16.1",
-    "mypy==2.3.0",
+    "ruff==0.17.3",
+    "mypy==2.4.1",
     "types-PyYAML>=6.0.0",
     "types-requests>=2.28.0",
     "build>=1.4.3",
