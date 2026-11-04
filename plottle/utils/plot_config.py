@@ -2661,3 +2661,61 @@ def get_plot_kwargs(config: Dict) -> Dict:
         for k, v in config.items()
         if not k.startswith("_") and v is not None and k not in _STYLE_KEYS
     }
+
+
+# ── Click-to-annotate helpers (Quick Plot, Plotly mode) ──────────────────────
+
+
+def _get(obj: Any, key: str, default: Any = None) -> Any:
+    """Read ``key`` from a mapping or an attribute-style object."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    try:
+        return obj[key]
+    except (KeyError, TypeError, IndexError):
+        return getattr(obj, key, default)
+
+
+def selected_points(event: Any) -> List[Dict[str, Any]]:
+    """Extract ``{"x", "y"}`` pairs from a ``st.plotly_chart`` selection event.
+
+    Streamlit returns each selected point as a plain ``dict`` (not an object),
+    so attribute access such as ``point.x`` raises ``AttributeError``. This
+    helper reads both forms and skips points that carry no x/y coordinate
+    (e.g. pie slices).
+
+    Args:
+        event: The value returned by ``st.plotly_chart(..., on_select="rerun")``,
+            or ``None``.
+
+    Returns:
+        List of ``{"x": ..., "y": ...}`` dicts, in selection order.
+    """
+    if not event:
+        return []
+    selection = _get(event, "selection")
+    if not selection:
+        return []
+    points = _get(selection, "points") or []
+    result: List[Dict[str, Any]] = []
+    for pt in points:
+        x, y = _get(pt, "x"), _get(pt, "y")
+        if x is None or y is None:
+            continue
+        result.append({"x": x, "y": y})
+    return result
+
+
+def format_marker_label(x: Any, y: Any) -> str:
+    """Format a marked point as ``"(x, y)"``; numbers use 4 significant digits.
+
+    Non-numeric coordinates (category names, date strings) are shown as-is
+    instead of raising on the ``:.4g`` format spec.
+    """
+
+    def _fmt(v: Any) -> str:
+        if isinstance(v, (int, float, np.number)) and not isinstance(v, bool):
+            return f"{v:.4g}"
+        return str(v)
+
+    return f"({_fmt(x)}, {_fmt(y)})"

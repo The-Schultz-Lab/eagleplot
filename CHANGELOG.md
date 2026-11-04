@@ -6,6 +6,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Quick Plot (Plotly mode): clicking a data point no longer crashes the page with
+  `AttributeError: 'dict' object has no attribute 'x'`. Streamlit returns selected points
+  as plain dicts; they are now read through `selected_points()` in
+  `plottle/utils/plot_config.py`. Marker labels on non-numeric axes (dates, categories)
+  also no longer raise on the `:.4g` format.
+
+---
+
 ## [2.0.1] - 2026-04-08
 
 ### Fixed

@@ -62,6 +62,8 @@ from plottle.utils.plot_config import (
     COLOR_PALETTES,
     get_plot_config_widgets,
     get_plot_kwargs,
+    selected_points,
+    format_marker_label,
 )
 
 initialize_session_state()
@@ -1433,7 +1435,7 @@ if st.session_state.qp_is_plotly and st.session_state.qp_fig_dict:
     if st.session_state.qp_annotations:
         _ax = [a["x"] for a in st.session_state.qp_annotations]
         _ay = [a["y"] for a in st.session_state.qp_annotations]
-        _al = [f"({a['x']:.4g}, {a['y']:.4g})" for a in st.session_state.qp_annotations]
+        _al = [format_marker_label(a["x"], a["y"]) for a in st.session_state.qp_annotations]
         _fig.add_trace(
             go.Scatter(
                 x=_ax,
@@ -1462,12 +1464,10 @@ if st.session_state.qp_is_plotly and st.session_state.qp_fig_dict:
             selection_mode="points",
             key="qp_chart",
         )
-        # Handle newly selected points
-        if _event and hasattr(_event, "selection"):
-            for _pt in _event.selection.points:
-                _ann = {"x": _pt.x, "y": _pt.y}
-                if _ann not in st.session_state.qp_annotations:
-                    st.session_state.qp_annotations.append(_ann)
+        # Handle newly selected points (Streamlit returns each point as a dict)
+        for _ann in selected_points(_event):
+            if _ann not in st.session_state.qp_annotations:
+                st.session_state.qp_annotations.append(_ann)
     except TypeError:
         # on_select not supported in this Streamlit version
         st.plotly_chart(_fig, width="stretch")
