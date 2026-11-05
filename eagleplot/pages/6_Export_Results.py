@@ -23,6 +23,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from eagleplot.utils import initialize_session_state
+from eagleplot.utils.figures import LAZY_DOWNLOAD, cached_for, download_payload
 from eagleplot.utils.session_state import (
     get_current_dataset,
     get_session_summary,
@@ -49,6 +50,16 @@ def _mpl_bytes(fig, fmt: str, dpi: int = 150) -> bytes:
 def _plotly_html(fig) -> bytes:
     """Render a Plotly figure to HTML bytes."""
     return fig.to_html(include_plotlyjs="cdn").encode("utf-8")
+
+
+def _lazy(cache_name: str, version, key, make):
+    """Download payload built only when needed (roadmap D1.2).
+
+    This page used to render every plot in the history as PNG 150/300 dpi, SVG and PDF,
+    and to serialise the dataset, on *every* rerun. Now each payload is a callable run on
+    click (Streamlit >= 1.52) or computed once per *version* and cached.
+    """
+    return download_payload(make, cache_name=cache_name, version=version, key=key)
 
 
 def _is_mpl(fig) -> bool:
@@ -105,7 +116,12 @@ else:
                 with c1:
                     st.download_button(
                         "PNG 150 dpi",
-                        data=_mpl_bytes(fig, "png", dpi=150),
+                        data=_lazy(
+                            f"_exp_plot_{i}",
+                            id(fig),
+                            "png150",
+                            lambda f=fig: _mpl_bytes(f, "png", 150),
+                        ),
                         file_name=f"plot_{i + 1}.png",
                         mime="image/png",
                         key=f"dl_png150_{i}",
@@ -113,7 +129,12 @@ else:
                 with c2:
                     st.download_button(
                         "PNG 300 dpi",
-                        data=_mpl_bytes(fig, "png", dpi=300),
+                        data=_lazy(
+                            f"_exp_plot_{i}",
+                            id(fig),
+                            "png300",
+                            lambda f=fig: _mpl_bytes(f, "png", 300),
+                        ),
                         file_name=f"plot_{i + 1}_hires.png",
                         mime="image/png",
                         key=f"dl_png300_{i}",
@@ -121,7 +142,9 @@ else:
                 with c3:
                     st.download_button(
                         "SVG",
-                        data=_mpl_bytes(fig, "svg"),
+                        data=_lazy(
+                            f"_exp_plot_{i}", id(fig), "svg", lambda f=fig: _mpl_bytes(f, "svg")
+                        ),
                         file_name=f"plot_{i + 1}.svg",
                         mime="image/svg+xml",
                         key=f"dl_svg_{i}",
@@ -129,7 +152,9 @@ else:
                 with c4:
                     st.download_button(
                         "PDF",
-                        data=_mpl_bytes(fig, "pdf"),
+                        data=_lazy(
+                            f"_exp_plot_{i}", id(fig), "pdf", lambda f=fig: _mpl_bytes(f, "pdf")
+                        ),
                         file_name=f"plot_{i + 1}.pdf",
                         mime="application/pdf",
                         key=f"dl_pdf_{i}",
@@ -138,7 +163,7 @@ else:
             elif _is_plotly(fig):
                 st.download_button(
                     "HTML (interactive)",
-                    data=_plotly_html(fig),
+                    data=_lazy(f"_exp_plot_{i}", id(fig), "html", lambda f=fig: _plotly_html(f)),
                     file_name=f"plot_{i + 1}.html",
                     mime="text/html",
                     key=f"dl_html_{i}",
@@ -150,10 +175,14 @@ else:
                 try:
                     import kaleido  # noqa: F401
 
-                    png_bytes = fig.to_image(format="png", scale=2)
                     st.download_button(
                         "PNG (2x)",
-                        data=png_bytes,
+                        data=_lazy(
+                            f"_exp_plot_{i}",
+                            id(fig),
+                            "plotly_png",
+                            lambda f=fig: f.to_image(format="png", scale=2),
+                        ),
                         file_name=f"plot_{i + 1}.png",
                         mime="image/png",
                         key=f"dl_plotly_png_{i}",
@@ -181,31 +210,42 @@ else:
     if isinstance(current_data, pd.DataFrame):
         c1, c2 = st.columns(2)
         with c1:
-            csv_bytes = current_data.to_csv(index=False).encode("utf-8")
             st.download_button(
                 "Download as CSV",
-                data=csv_bytes,
+                data=_lazy(
+                    "_exp_dataset",
+                    (current_name, id(current_data)),
+                    "csv",
+                    lambda d=current_data: d.to_csv(index=False).encode("utf-8"),
+                ),
                 file_name=f"{Path(current_name).stem}_export.csv",
                 mime="text/csv",
                 key="dl_dataset_csv",
             )
         with c2:
-            json_bytes = current_data.to_json(orient="records", indent=2).encode("utf-8")
             st.download_button(
                 "Download as JSON",
-                data=json_bytes,
+                data=_lazy(
+                    "_exp_dataset",
+                    (current_name, id(current_data)),
+                    "json",
+                    lambda d=current_data: d.to_json(orient="records", indent=2).encode("utf-8"),
+                ),
                 file_name=f"{Path(current_name).stem}_export.json",
                 mime="application/json",
                 key="dl_dataset_json",
             )
 
     elif isinstance(current_data, np.ndarray):
-        buf = io.BytesIO()
-        np.save(buf, current_data)
-        buf.seek(0)
+
+        def _npy_bytes(arr=current_data) -> bytes:
+            buf = io.BytesIO()
+            np.save(buf, arr)
+            return buf.getvalue()
+
         st.download_button(
             "Download as .npy",
-            data=buf.read(),
+            data=_lazy("_exp_dataset", (current_name, id(current_data)), "npy", _npy_bytes),
             file_name=f"{Path(current_name).stem}_export.npy",
             mime="application/octet-stream",
             key="dl_dataset_npy",
@@ -214,10 +254,14 @@ else:
     else:
         import pickle as _pickle
 
-        pkl_bytes = _pickle.dumps(current_data)
         st.download_button(
             "Download as .pkl",
-            data=pkl_bytes,
+            data=_lazy(
+                "_exp_dataset",
+                (current_name, id(current_data)),
+                "pkl",
+                lambda d=current_data: _pickle.dumps(d),
+            ),
             file_name=f"{Path(current_name).stem}_export.pkl",
             mime="application/octet-stream",
             key="dl_dataset_pkl",
@@ -251,12 +295,16 @@ else:
             return [_make_serializable(x) for x in obj]
         return obj
 
-    serializable = _make_serializable(analysis_results)
-    results_json = json.dumps(serializable, indent=2).encode("utf-8")
-
     st.download_button(
         "Download all results as JSON",
-        data=results_json,
+        data=_lazy(
+            "_exp_results",
+            (len(analysis_results), id(analysis_results[-1])),
+            "json",
+            lambda res=list(analysis_results): json.dumps(_make_serializable(res), indent=2).encode(
+                "utf-8"
+            ),
+        ),
         file_name="analysis_results.json",
         mime="application/json",
         key="dl_analysis_json",
@@ -307,38 +355,67 @@ else:
         key="pdf_report_dpi",
     )
 
-    if st.button("Generate PDF Report", type="primary", key="pdf_report_btn"):
-        _df_datasets = {
-            k: v
-            for k, v in st.session_state.get("datasets", {}).items()
-            if isinstance(v, pd.DataFrame)
-        }
-        with st.spinner("Generating PDF..."):
-            with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as _tmp:
-                _tmp_path = _tmp.name
-            try:
-                _gen_pdf(
-                    filepath=_tmp_path,
-                    title=_report_title,
-                    plot_entries=st.session_state.get("plot_history", []),
-                    datasets=_df_datasets,
-                    analysis_results=st.session_state.get("analysis_results", []),
-                    author=_report_author,
-                    dpi=_report_dpi,
-                )
-                _pdf_bytes = Path(_tmp_path).read_bytes()
-                st.download_button(
-                    "Download PDF Report",
-                    data=_pdf_bytes,
-                    file_name="eagleplot_report.pdf",
-                    mime="application/pdf",
-                    key="dl_pdf_report",
-                )
-                st.success("PDF ready for download.")
-            except Exception as _pdf_err:
-                st.error(f"Could not generate PDF: {_pdf_err}")
-            finally:
-                Path(_tmp_path).unlink(missing_ok=True)
+    _df_datasets = {
+        k: v for k, v in st.session_state.get("datasets", {}).items() if isinstance(v, pd.DataFrame)
+    }
+    _report_args = dict(
+        title=_report_title,
+        plot_entries=list(st.session_state.get("plot_history", [])),
+        datasets=_df_datasets,
+        analysis_results=list(st.session_state.get("analysis_results", [])),
+        author=_report_author,
+        dpi=_report_dpi,
+    )
+
+    def _build_report(args=_report_args) -> bytes:
+        # Captures plain objects, not st.session_state: on Streamlit >= 1.52 this runs on
+        # click, outside the script run, where session state is not available.
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as _tmp:
+            _tmp_path = _tmp.name
+        try:
+            _gen_pdf(filepath=_tmp_path, **args)
+            return Path(_tmp_path).read_bytes()
+        finally:
+            Path(_tmp_path).unlink(missing_ok=True)
+
+    if LAZY_DOWNLOAD:
+        # One click: the report is built when the button is pressed.
+        st.download_button(
+            "Download PDF Report",
+            data=_build_report,
+            file_name="eagleplot_report.pdf",
+            mime="application/pdf",
+            type="primary",
+            key="dl_pdf_report",
+        )
+    else:
+        # Older Streamlit needs the bytes up front. Build on request, then keep the
+        # bytes until the report's inputs change, so the download button does not
+        # vanish on the next interaction (the A-32 problem).
+        _fingerprint = (
+            _report_title,
+            _report_author,
+            _report_dpi,
+            tuple(id(e) for e in _report_args["plot_entries"]),
+            tuple((k, id(v)) for k, v in _df_datasets.items()),
+            len(_report_args["analysis_results"]),
+        )
+        if st.button("Generate PDF Report", type="primary", key="pdf_report_btn"):
+            with st.spinner("Generating PDF..."):
+                try:
+                    cached_for("_exp_report", _fingerprint, "pdf", _build_report)
+                except Exception as _pdf_err:
+                    st.error(f"Could not generate PDF: {_pdf_err}")
+        _ready = st.session_state.get("_exp_report", {})
+        if _ready.get("_version") == _fingerprint and "pdf" in _ready:
+            st.download_button(
+                "Download PDF Report",
+                data=_ready["pdf"],
+                file_name="eagleplot_report.pdf",
+                mime="application/pdf",
+                key="dl_pdf_report",
+            )
+            st.success("PDF ready for download.")
 
 st.markdown("---")
 

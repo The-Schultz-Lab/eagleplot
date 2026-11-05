@@ -17,6 +17,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from eagleplot.utils.figures import LAZY_DOWNLOAD  # noqa: E402
 from eagleplot.utils.session_state import initialize_session_state
 from eagleplot.molecular import (
     VibrationalData,
@@ -172,8 +173,37 @@ st.subheader("Export")
 
 col1, col2 = st.columns(2)
 
+
+def _freq_table_csv(modes) -> bytes:
+    return (
+        pd.DataFrame(
+            {
+                "mode": [m.mode_number for m in modes],
+                "frequency_cm-1": [m.frequency for m in modes],
+                "ir_intensity_km_per_mol": [
+                    (m.ir_intensity if m.ir_intensity is not None else float("nan")) for m in modes
+                ],
+                "is_imaginary": [m.is_imaginary for m in modes],
+            }
+        )
+        .to_csv(index=False)
+        .encode()
+    )
+
+
+# On Streamlit >= 1.52 each export is one click: the file is built when Download is
+# pressed. Older Streamlit keeps the two-step "prepare, then download" flow, so no
+# export is built on every rerun there either (roadmap D1.2).
 with col1:
-    if st.button("Export as interactive HTML", key="mol_export_html"):
+    if LAZY_DOWNLOAD:
+        st.download_button(
+            "Download interactive HTML",
+            data=lambda f=fig: f.to_html(full_html=True, include_plotlyjs="cdn"),
+            file_name=f"{Path(uploaded.name).stem}_mol.html",
+            mime="text/html",
+            key="mol_dl_html",
+        )
+    elif st.button("Export as interactive HTML", key="mol_export_html"):
         try:
             html_str = fig.to_html(full_html=True, include_plotlyjs="cdn")
             st.download_button(
@@ -187,22 +217,18 @@ with col1:
             st.error(str(exc))
 
 with col2:
-    if vib_data.modes and st.button("Download frequency table (CSV)", key="mol_dl_csv"):
-        freq_df_dl = pd.DataFrame(
-            {
-                "mode": [m.mode_number for m in vib_data.modes],
-                "frequency_cm-1": [m.frequency for m in vib_data.modes],
-                "ir_intensity_km_per_mol": [
-                    (m.ir_intensity if m.ir_intensity is not None else float("nan"))
-                    for m in vib_data.modes
-                ],
-                "is_imaginary": [m.is_imaginary for m in vib_data.modes],
-            }
+    if vib_data.modes and LAZY_DOWNLOAD:
+        st.download_button(
+            "Download frequency table (CSV)",
+            data=lambda modes=list(vib_data.modes): _freq_table_csv(modes),
+            file_name=f"{Path(uploaded.name).stem}_frequencies.csv",
+            mime="text/csv",
+            key="mol_dl_csv_btn",
         )
-        csv_bytes = freq_df_dl.to_csv(index=False).encode()
+    elif vib_data.modes and st.button("Download frequency table (CSV)", key="mol_dl_csv"):
         st.download_button(
             "Download CSV",
-            data=csv_bytes,
+            data=_freq_table_csv(vib_data.modes),
             file_name=f"{Path(uploaded.name).stem}_frequencies.csv",
             mime="text/csv",
             key="mol_dl_csv_btn",

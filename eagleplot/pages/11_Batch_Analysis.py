@@ -16,6 +16,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+from eagleplot.utils.figures import download_payload  # noqa: E402
 from eagleplot.utils.session_state import initialize_session_state
 from eagleplot.batch import (
     batch_statistics,
@@ -55,10 +56,31 @@ _RESULT_OUTPUT_COLS = [
 ]
 
 
-def _csv_download(df: pd.DataFrame, filename: str, label: str = "Download CSV") -> None:
-    """Render a CSV download button for *df*."""
-    csv_bytes = df.to_csv(index=False).encode("utf-8")
-    st.download_button(label, data=csv_bytes, file_name=filename, mime="text/csv")
+def _show_result(state_key: str, filename: str) -> None:
+    """Show the last result of a batch tool, with a CSV download.
+
+    Results live in session state, so they stay on screen after any later interaction,
+    including clicking Download (which reruns the page). They used to exist only on the
+    rerun right after Run. The CSV is built on click, or once per result (roadmap D1.2).
+    """
+    saved = st.session_state.get(state_key)
+    if not saved:
+        return
+    result_df, names = saved["df"], saved["datasets"]
+    st.success(f"Results for {len(names)} dataset(s): {', '.join(names)}")
+    st.dataframe(result_df, width="stretch")
+    st.download_button(
+        "Download CSV",
+        data=download_payload(
+            lambda df=result_df: df.to_csv(index=False).encode("utf-8"),
+            cache_name=f"_{state_key}_csv",
+            version=id(result_df),
+            key="csv",
+        ),
+        file_name=filename,
+        mime="text/csv",
+        key=f"{state_key}_dl",
+    )
 
 
 # ── top-level tabs ─────────────────────────────────────────────────────────────
@@ -120,11 +142,13 @@ with tab_analysis:
             cols_arg = col_filter if col_filter else None
             try:
                 result_df = batch_statistics(selected_datasets, columns=cols_arg)
-                st.success(f"Statistics computed for {len(selected_names)} dataset(s).")
-                st.dataframe(result_df, width="stretch")
-                _csv_download(result_df, "batch_statistics.csv")
+                st.session_state["ba_stats_result"] = {
+                    "df": result_df,
+                    "datasets": list(selected_names),
+                }
             except Exception as exc:
                 st.error(f"Error: {exc}")
+        _show_result("ba_stats_result", "batch_statistics.csv")
 
     # ── Curve Fit ─────────────────────────────────────────────────────────────
     with sub_fit:
@@ -164,11 +188,13 @@ with tab_analysis:
                         fit_type=fit_type,
                         degree=fit_degree,
                     )
-                    st.success(f"Curve fit complete for {len(selected_names)} dataset(s).")
-                    st.dataframe(result_df, width="stretch")
-                    _csv_download(result_df, "batch_curve_fit.csv")
+                    st.session_state["ba_fit_result"] = {
+                        "df": result_df,
+                        "datasets": list(selected_names),
+                    }
                 except Exception as exc:
                     st.error(f"Error: {exc}")
+        _show_result("ba_fit_result", "batch_curve_fit.csv")
 
     # ── Peak Analysis ─────────────────────────────────────────────────────────
     with sub_peaks:
@@ -229,11 +255,13 @@ with tab_analysis:
                         prominence=pa_prominence,
                         distance=pa_distance,
                     )
-                    st.success(f"Peak analysis complete for {len(selected_names)} dataset(s).")
-                    st.dataframe(result_df, width="stretch")
-                    _csv_download(result_df, "batch_peak_analysis.csv")
+                    st.session_state["ba_pa_result"] = {
+                        "df": result_df,
+                        "datasets": list(selected_names),
+                    }
                 except Exception as exc:
                     st.error(f"Error: {exc}")
+        _show_result("ba_pa_result", "batch_peak_analysis.csv")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
