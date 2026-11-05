@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "saved_at": "2026-11-05T19:11:31.428892",
+  "datasets": {
+    "spectrum.csv": {
+      "__type__": "DataFrame",
+      "__data__": "{\"columns\":[\"wavenumber\",\"transmittance\",\"label\"],\"index\":[0,1,2],\"data\":[[4000.0,0.85,\"a\"],[3998.0,0.82,\"b\"],[3996.0,0.31,\"c\"]]}"
+    },
+    "signal.npy": {
+      "__type__": "ndarray",
+      "__dtype__": "<f8",
+      "__shape__": [
+        2,
+        2
+      ],
+      "__data__": "AAAAAAAA+D8AAAAAAAAAQAAAAAAAAApAAAAAAAAAEMA="
+    }
+  },
+  "dataset_metadata": {
+    "spectrum.csv": {
+      "added_time": "2026-11-05T19:11:31.428228",
+      "data_type": "DataFrame",
+      "shape": [
+        3,
+        3
+      ],
+      "columns": [
+        "wavenumber",
+        "transmittance",
+        "label"
+      ],
+      "dtypes": {
+        "wavenumber": "float64",
+        "transmittance": "float64",
+        "label": "str"
+      }
+    },
+    "signal.npy": {
+      "added_time": "2026-11-05T19:11:31.428709",
+      "data_type": "ndarray",
+      "shape": [
+        2,
+        2
+      ],
+      "dtype": "float64"
+    }
+  },
+  "current_dataset": "spectrum.csv",
+  "plot_history": [
+    {
+      "type": "line_plot",
+      "dataset": "spectrum.csv",
+      "config": {
+        "title": "IR"
+      },
+      "timestamp": "2026-11-05T19:11:31.428789"
+    }
+  ],
+  "analysis_results": [
+    {
+      "type": "statistics",
+      "dataset": "spectrum.csv",
+      "results": {
+        "mean": 0.66
+      },
+      "timestamp": "2026-11-05T19:11:31.428857"
+    }
+  ],
+  "plot_config": {
+    "default_figsize": [
+      8,
+      6
+    ],
+    "default_dpi": 100,
+    "default_style": "default"
+  }
+}
