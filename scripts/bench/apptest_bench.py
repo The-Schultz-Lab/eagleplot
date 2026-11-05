@@ -41,12 +41,20 @@ def scenario(dataset_file, plot_category, plot_label, prefix, slider_key):
     res = {}
     timed(at, "generate", res, lambda a: a.button(key="qp_generate").click())
     for i in range(6):
-        timed(at, "edit title (plot on screen)", res,
-              lambda a, i=i: a.text_input(key=f"{prefix}_title").set_value(f"Title {i}"))
+        timed(
+            at,
+            "edit title (plot on screen)",
+            res,
+            lambda a, i=i: a.text_input(key=f"{prefix}_title").set_value(f"Title {i}"),
+        )
     if slider_key:
         for v in (0.3, 0.5, 0.7, 0.4, 0.6, 0.8):
-            timed(at, "move slider (plot on screen)", res,
-                  lambda a, v=v: a.slider(key=slider_key).set_value(v))
+            timed(
+                at,
+                "move slider (plot on screen)",
+                res,
+                lambda a, v=v: a.slider(key=slider_key).set_value(v),
+            )
     for _ in range(3):
         timed(at, "generate", res, lambda a: a.button(key="qp_generate").click())
     return res
@@ -55,11 +63,20 @@ def scenario(dataset_file, plot_category, plot_label, prefix, slider_key):
 def report(name, res):
     print(f"\n## {name}")
     for label, xs in res.items():
-        print(f"  {label:32s} median {statistics.median(xs):7.0f} ms   (n={len(xs)}, max {max(xs):.0f})")
+        print(
+            f"  {label:32s} median {statistics.median(xs):7.0f} ms"
+            f"   (n={len(xs)}, max {max(xs):.0f})"
+        )
 
 
 if __name__ == "__main__":
-    report("Matplotlib histogram, normal_distribution.csv",
-           scenario("normal_distribution.csv", "Matplotlib", "Histogram", "histogram", "histogram_alpha"))
-    report("Matplotlib line plot, ir_spectrum.csv",
-           scenario("ir_spectrum.csv", "Matplotlib", "Line Plot", "line_plot", None))
+    report(
+        "Matplotlib histogram, normal_distribution.csv",
+        scenario(
+            "normal_distribution.csv", "Matplotlib", "Histogram", "histogram", "histogram_alpha"
+        ),
+    )
+    report(
+        "Matplotlib line plot, ir_spectrum.csv",
+        scenario("ir_spectrum.csv", "Matplotlib", "Line Plot", "line_plot", None),
+    )
