@@ -1,6 +1,6 @@
-"""Command-Line Interface for Plottle.
+"""Command-Line Interface for EaglePlot.
 
-This module provides a comprehensive command-line interface for the Plottle
+This module provides a comprehensive command-line interface for the EaglePlot
 package, allowing users to perform data visualization, analysis, and batch processing
 from the terminal.
 
@@ -44,10 +44,10 @@ import numpy as np
 import pandas as pd
 
 # Import module functions
-from plottle import __version__
-from plottle.io import load_data, save_data
-from plottle.math import calculate_statistics, check_normality
-from plottle.plotting import (
+from eagleplot import __version__
+from eagleplot.io import load_data, save_data
+from eagleplot.math import calculate_statistics, check_normality
+from eagleplot.plotting import (
     histogram,
     line_plot,
     scatter_plot,
@@ -58,7 +58,7 @@ from plottle.plotting import (
 
 # Optional imports for advanced plotting
 try:
-    from plottle.plotting import (
+    from eagleplot.plotting import (
         distribution_plot,
         box_plot,
         regression_plot,
@@ -510,12 +510,12 @@ def main():
     """
     # Create main parser
     parser = argparse.ArgumentParser(
-        description="Plottle - Scientific Data Visualization and Analysis Toolkit",
+        description="EaglePlot - Scientific Data Visualization and Analysis Toolkit",
         epilog="NCCU Department of Chemistry and Biochemistry — Schultz Lab",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    parser.add_argument("--version", action="version", version=f"Plottle {__version__}")
+    parser.add_argument("--version", action="version", version=f"EaglePlot {__version__}")
 
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
 

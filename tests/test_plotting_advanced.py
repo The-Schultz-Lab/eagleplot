@@ -21,8 +21,8 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import plottle.plotting as plotting
-from plottle.plotting import (
+import eagleplot.plotting as plotting
+from eagleplot.plotting import (
     distribution_plot,
     box_plot,
     regression_plot,
@@ -489,7 +489,7 @@ class TestOptionalLibraryGuardCoverage:
         [("Seaborn", TestSeabornImportError), ("Plotly", TestPlotlyImportError)],
     )
     def test_every_library_backed_plot_type_has_a_guard_test(self, category, test_class):
-        from plottle.utils.plot_config import PLOT_TYPES
+        from eagleplot.utils.plot_config import PLOT_TYPES
 
         expected = {k for k, meta in PLOT_TYPES.items() if meta["category"] == category}
         assert expected, f"no {category} plot types found; did the category get renamed?"
@@ -588,7 +588,7 @@ class TestPairPlot:
 
     def test_no_seaborn_raises(self):
         """ImportError raised when seaborn unavailable (mock HAS_SEABORN)."""
-        import plottle.plotting as mp
+        import eagleplot.plotting as mp
 
         orig = mp.HAS_SEABORN
         mp.HAS_SEABORN = False
@@ -628,7 +628,7 @@ class TestInteractive3DScatter:
 
     def test_no_plotly_raises(self):
         """ImportError raised when plotly unavailable (mock HAS_PLOTLY)."""
-        import plottle.plotting as mp
+        import eagleplot.plotting as mp
 
         orig = mp.HAS_PLOTLY
         mp.HAS_PLOTLY = False
@@ -672,7 +672,7 @@ class TestInteractiveTernary:
         assert info["n_points"] == 1
 
     def test_no_plotly_raises(self):
-        import plottle.plotting as mp
+        import eagleplot.plotting as mp
 
         orig = mp.HAS_PLOTLY
         mp.HAS_PLOTLY = False

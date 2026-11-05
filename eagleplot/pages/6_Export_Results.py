@@ -22,8 +22,8 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from plottle.utils import initialize_session_state
-from plottle.utils.session_state import (
+from eagleplot.utils import initialize_session_state
+from eagleplot.utils.session_state import (
     get_current_dataset,
     get_session_summary,
     save_session_to_file,
@@ -281,7 +281,7 @@ st.markdown(
 
 # Import report generator lazily to avoid hard dependency at module load
 try:
-    from plottle.report import generate_pdf_report as _gen_pdf
+    from eagleplot.report import generate_pdf_report as _gen_pdf
 
     _report_available = True
 except ImportError:
@@ -292,7 +292,7 @@ if not _report_available:
 else:
     _report_title = st.text_input(
         "Report title",
-        value="Plottle Analysis Report",
+        value="EaglePlot Analysis Report",
         key="pdf_report_title",
     )
     _report_author = st.text_input(
@@ -330,7 +330,7 @@ else:
                 st.download_button(
                     "Download PDF Report",
                     data=_pdf_bytes,
-                    file_name="plottle_report.pdf",
+                    file_name="eagleplot_report.pdf",
                     mime="application/pdf",
                     key="dl_pdf_report",
                 )
@@ -401,7 +401,7 @@ with tab_save:
         st.download_button(
             "Download session.json",
             data=_cached["data"],
-            file_name="plottle_session.json",
+            file_name="eagleplot_session.json",
             mime="application/json",
             type="primary",
             key="dl_session_json",

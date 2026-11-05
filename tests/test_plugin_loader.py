@@ -1,4 +1,4 @@
-"""Tests for plottle/plugin_loader.py."""
+"""Tests for eagleplot/plugin_loader.py."""
 
 import sys
 import types
@@ -8,7 +8,7 @@ from pathlib import Path
 # Ensure the project root is on the path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.plugin_loader import (
+from eagleplot.plugin_loader import (
     discover_plugins,
     get_plugin_analysis_tools,
     get_plugin_plot_types,

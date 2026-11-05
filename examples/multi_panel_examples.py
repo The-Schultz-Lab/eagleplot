@@ -1,7 +1,7 @@
 """Examples for multi-panel and complex figure layouts.
 
 Demonstrates creating subplots, shared axes, insets, and complex
-grid layouts using Matplotlib alongside the Plottle API.
+grid layouts using Matplotlib alongside the EaglePlot API.
 
 Run from the repo root:
     python examples/multi_panel_examples.py
@@ -18,7 +18,7 @@ import matplotlib.gridspec as gridspec
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.plotting import (
+from eagleplot.plotting import (
     save_figure,
 )
 
@@ -149,7 +149,7 @@ def example_gridspec_layout():
 
 
 if __name__ == "__main__":
-    print("Plottle — Multi-Panel Figure Examples")
+    print("EaglePlot — Multi-Panel Figure Examples")
     print("=" * 70)
     example_2x2_grid()
     example_shared_axes()

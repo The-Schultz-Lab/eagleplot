@@ -1,4 +1,4 @@
-# Plottle — Feature Requests
+# EaglePlot — Feature Requests
 
 > **Inbox for feature ideas and quality-of-life requests.**
 >

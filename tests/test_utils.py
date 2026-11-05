@@ -1,10 +1,10 @@
 """Unit tests for the utils modules.
 
 Covers:
-- plottle.utils.user_settings  — config.json CRUD operations
-- plottle.utils.plot_config    — get_plot_kwargs, COLOR_PALETTES, PLOT_TYPES
-- plottle.utils.session_state  — dataset management, serialization, save/load
-- plottle.utils.data_preview   — pure info helpers and Streamlit display helpers
+- eagleplot.utils.user_settings  — config.json CRUD operations
+- eagleplot.utils.plot_config    — get_plot_kwargs, COLOR_PALETTES, PLOT_TYPES
+- eagleplot.utils.session_state  — dataset management, serialization, save/load
+- eagleplot.utils.data_preview   — pure info helpers and Streamlit display helpers
 """
 
 import json
@@ -19,10 +19,10 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import plottle.utils.user_settings as us
-import plottle.utils.session_state as _ss
-import plottle.utils.data_preview as _dp
-from plottle.utils.plot_config import (
+import eagleplot.utils.user_settings as us
+import eagleplot.utils.session_state as _ss
+import eagleplot.utils.data_preview as _dp
+from eagleplot.utils.plot_config import (
     COLOR_PALETTES,
     COLOR_PALETTE_NAMES,
     PLOT_TYPES,
@@ -32,7 +32,7 @@ from plottle.utils.plot_config import (
     get_plot_kwargs,
     selected_points,
 )
-from plottle.utils.session_state import (
+from eagleplot.utils.session_state import (
     _serialize_data,
     _deserialize_data,
     initialize_session_state,
@@ -48,7 +48,7 @@ from plottle.utils.session_state import (
     clear_session,
     get_session_summary,
 )
-from plottle.utils.data_preview import (
+from eagleplot.utils.data_preview import (
     preview_dataframe,
     get_dataframe_info,
     get_array_info,
@@ -297,7 +297,7 @@ class TestPlotTypes:
         for key, info in PLOT_TYPES.items():
             assert info["category"] in known, f"Unknown category '{info['category']}' for '{key}'"
 
-    # Callability of each entry in plottle.plotting is asserted in
+    # Callability of each entry in eagleplot.plotting is asserted in
     # test_docs_consistency.py::TestPlotTypeCatalogue; not repeated here.
 
     def test_every_plot_type_has_a_config_widget(self):
@@ -881,7 +881,7 @@ class TestSessionDeserializationIsSafe:
     """
 
     def test_session_state_module_does_not_import_pickle(self):
-        import plottle.utils.session_state as ss
+        import eagleplot.utils.session_state as ss
 
         assert not hasattr(ss, "pickle"), (
             "session_state must not import pickle — it is reachable from an upload"

@@ -1,4 +1,4 @@
-"""Tests for plottle/data_tools.py.
+"""Tests for eagleplot/data_tools.py.
 
 Coverage targets all 12 public functions and their key error paths.
 """
@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from plottle.data_tools import (
+from eagleplot.data_tools import (
     add_formula_column,
     drop_nan,
     fill_nan,
@@ -202,7 +202,7 @@ class TestFormulaExpressionSandbox:
         # Guards against the old implementation being reintroduced.
         import inspect
 
-        import plottle.data_tools as dt
+        import eagleplot.data_tools as dt
 
         source = inspect.getsource(dt.add_formula_column)
         assert "eval(" not in source or "_safe_eval(" in source

@@ -1,7 +1,7 @@
 """Examples for data I/O pipeline and format conversion.
 
 Demonstrates the full load → process → save pipeline using all 8 formats
-supported by plottle.io.
+supported by eagleplot.io.
 
 Run from the repo root:
     python examples/data_pipeline_examples.py
@@ -18,9 +18,9 @@ matplotlib.use("Agg")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.io import load_data, save_data
-from plottle.math import calculate_statistics
-from plottle.plotting import histogram, save_figure
+from eagleplot.io import load_data, save_data
+from eagleplot.math import calculate_statistics
+from eagleplot.plotting import histogram, save_figure
 
 OUTPUT_DIR = Path(__file__).parent / "plots"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -130,7 +130,7 @@ def example_process_and_save():
 
 
 if __name__ == "__main__":
-    print("Plottle — Data Pipeline Examples")
+    print("EaglePlot — Data Pipeline Examples")
     print("=" * 70)
     example_load_existing_data()
     example_format_roundtrips()

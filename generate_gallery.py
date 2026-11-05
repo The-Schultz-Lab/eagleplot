@@ -1,7 +1,7 @@
-"""Gallery Generator — Plottle.
+"""Gallery Generator — EaglePlot.
 
 Run this script once from the repo root to produce pre-rendered PNG thumbnails
-and a ``plottle/gallery/manifest.json`` file that the Gallery page reads.
+and a ``eagleplot/gallery/manifest.json`` file that the Gallery page reads.
 
 Usage
 -----
@@ -9,7 +9,7 @@ Usage
 
 Output
 ------
-plottle/gallery/
+eagleplot/gallery/
     manifest.json           — metadata for all generated figures
     histogram.png
     line_plot.png
@@ -33,13 +33,13 @@ import pandas as pd
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 _ROOT = Path(__file__).parent
-_EXAMPLE_DIR = _ROOT / "plottle" / "example-data" / "Artificial"
-_GALLERY_DIR = _ROOT / "plottle" / "gallery"
+_EXAMPLE_DIR = _ROOT / "eagleplot" / "example-data" / "Artificial"
+_GALLERY_DIR = _ROOT / "eagleplot" / "gallery"
 _GALLERY_DIR.mkdir(parents=True, exist_ok=True)
 
 sys.path.insert(0, str(_ROOT))
 
-from plottle.plotting import (  # noqa: E402
+from eagleplot.plotting import (  # noqa: E402
     histogram,
     line_plot,
     scatter_plot,

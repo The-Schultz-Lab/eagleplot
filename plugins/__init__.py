@@ -1,1 +1,1 @@
-# Plottle plugins directory
+# EaglePlot plugins directory

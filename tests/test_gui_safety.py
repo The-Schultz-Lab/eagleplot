@@ -7,11 +7,11 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from plottle.utils.access import FOLDER_LOAD_ENV, folder_loading_allowed
+from eagleplot.utils.access import FOLDER_LOAD_ENV, folder_loading_allowed
 
 AppTest = pytest.importorskip("streamlit.testing.v1").AppTest
 
-PAGES = Path(__file__).resolve().parent.parent / "plottle" / "pages"
+PAGES = Path(__file__).resolve().parent.parent / "eagleplot" / "pages"
 
 
 # ── A-15 ─────────────────────────────────────────────────────────────────────
@@ -42,21 +42,21 @@ class TestBatchFolderTab:
     # client address is patched to what Streamlit reports for each case.
     def test_tab_works_locally(self, monkeypatch):
         monkeypatch.delenv(FOLDER_LOAD_ENV, raising=False)
-        monkeypatch.setattr("plottle.utils.access._client_ip", lambda: None)
+        monkeypatch.setattr("eagleplot.utils.access._client_ip", lambda: None)
         at = AppTest.from_file(str(PAGES / "1_Data_Upload.py"), default_timeout=30).run()
         assert not at.exception
         assert any(t.key == "batch_folder_path" for t in at.text_input)
 
     def test_tab_hidden_for_remote_connection(self, monkeypatch):
         monkeypatch.delenv(FOLDER_LOAD_ENV, raising=False)
-        monkeypatch.setattr("plottle.utils.access._client_ip", lambda: "203.0.113.7")
+        monkeypatch.setattr("eagleplot.utils.access._client_ip", lambda: "203.0.113.7")
         at = AppTest.from_file(str(PAGES / "1_Data_Upload.py"), default_timeout=30).run()
         assert not at.exception
         assert not any(t.key == "batch_folder_path" for t in at.text_input)
 
     def test_tab_hidden_when_disabled(self, monkeypatch):
         monkeypatch.setenv(FOLDER_LOAD_ENV, "0")
-        monkeypatch.setattr("plottle.utils.access._client_ip", lambda: None)
+        monkeypatch.setattr("eagleplot.utils.access._client_ip", lambda: None)
         at = AppTest.from_file(str(PAGES / "1_Data_Upload.py"), default_timeout=30).run()
         assert not at.exception
         assert not any(t.key == "batch_folder_path" for t in at.text_input)
@@ -69,7 +69,7 @@ class TestBatchFolderTab:
 @pytest.fixture
 def settings_page(tmp_path, monkeypatch):
     """Settings page with config.json redirected to a temp file holding 2 presets."""
-    import plottle.utils.user_settings as us
+    import eagleplot.utils.user_settings as us
 
     cfg = tmp_path / "config.json"
     cfg.write_text(

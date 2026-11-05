@@ -6,12 +6,12 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from plottle.utils.session_state import initialize_session_state
+from eagleplot.utils.session_state import initialize_session_state
 
 initialize_session_state()
 
 st.title("Help")
-st.caption("Documentation, quick reference, and tips for using Plottle.")
+st.caption("Documentation, quick reference, and tips for using EaglePlot.")
 
 tab_start, tab_plots, tab_analysis, tab_formats, tab_tips = st.tabs(
     ["Getting Started", "Plot Types", "Analysis Tools", "File Formats", "Tips & Tricks"]

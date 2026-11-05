@@ -1,5 +1,5 @@
 #!/bin/bash
-# launch.command — Start Plottle (macOS)
+# launch.command — Start EaglePlot (macOS)
 # Double-click this file in Finder after running setup.command once.
 
 cd "$(dirname "$0")"
@@ -13,5 +13,5 @@ if [ ! -d ".venv" ]; then
 fi
 
 source .venv/bin/activate
-streamlit run plottle/Home.py
+streamlit run eagleplot/Home.py
 read -r -p "Press Enter to close..."

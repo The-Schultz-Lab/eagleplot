@@ -55,7 +55,7 @@ def run_cli(*args):
     # have the project's dependencies installed, and every one of these tests
     # fails with ModuleNotFoundError. See G-016 / audit A-11a.
     repo_root = Path(__file__).resolve().parent.parent
-    cmd = [sys.executable, "-m", "plottle.cli"] + list(args)
+    cmd = [sys.executable, "-m", "eagleplot.cli"] + list(args)
     result = subprocess.run(cmd, cwd=repo_root, capture_output=True, text=True)
     return result
 
@@ -72,18 +72,18 @@ class TestBasicCLI:
         """Test that --help displays help message."""
         result = run_cli("--help")
         assert result.returncode == 0
-        assert "Plottle" in result.stdout
+        assert "EaglePlot" in result.stdout
         assert "plot" in result.stdout
         assert "stats" in result.stdout
 
     def test_version(self):
         """Test that --version reports the packaged version.
 
-        Asserts against ``plottle.__version__`` rather than a hardcoded string:
+        Asserts against ``eagleplot.__version__`` rather than a hardcoded string:
         this test previously asserted '1.0.0' and went stale unnoticed because
         CI never ran tests/test_cli.py. See audit A-11 / A-26.
         """
-        from plottle import __version__
+        from eagleplot import __version__
 
         result = run_cli("--version")
         assert result.returncode == 0

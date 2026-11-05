@@ -1,6 +1,6 @@
 # Code of Conduct
 
-Plottle is developed for research and teaching at North Carolina Central University, and
+EaglePlot is developed for research and teaching at North Carolina Central University, and
 many of its users are students. We want everyone who uses or contributes to it to feel
 welcome.
 

@@ -180,14 +180,14 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Plottle — user configuration (contains local defaults and presets)
+# EaglePlot — user configuration (contains local defaults and presets)
 config.json
 .claude/settings.local.json
 
-# Plottle — local AI working context (not for public repo)
+# EaglePlot — local AI working context (not for public repo)
 CLAUDE.md
 
-# Plottle — generated test artifacts (should never be committed)
+# EaglePlot — generated test artifacts (should never be committed)
 tests/*.png
 tests/*.json
 

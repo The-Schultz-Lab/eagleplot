@@ -1,11 +1,11 @@
 #!/bin/bash
-# setup.command — First-run setup for Plottle (macOS)
+# setup.command — First-run setup for EaglePlot (macOS)
 # Double-click this file in Finder to create the virtual environment
 # and install all dependencies.
 
 cd "$(dirname "$0")"
 
-echo "=== Plottle Setup ==="
+echo "=== EaglePlot Setup ==="
 echo
 
 # ── Check Python 3 is available ──────────────────────────────────────────────
@@ -19,7 +19,7 @@ fi
 
 # ── Check the Python version (pyproject.toml: >=3.9, !=3.9.7) ─────────────────
 if ! python3 -c 'import sys; v = sys.version_info[:3]; sys.exit(0 if v >= (3, 9) and v != (3, 9, 7) else 1)'; then
-    echo "ERROR: Plottle needs Python 3.9 or later (but not 3.9.7)."
+    echo "ERROR: EaglePlot needs Python 3.9 or later (but not 3.9.7)."
     echo "Found: $(python3 --version 2>&1)"
     echo "Install a newer Python from https://www.python.org/downloads/"
     echo
@@ -67,7 +67,7 @@ fi
 echo
 echo "============================================================"
 echo " Setup complete!"
-echo " Double-click launch.command to start Plottle."
+echo " Double-click launch.command to start EaglePlot."
 echo "============================================================"
 echo
 read -r -p "Press Enter to close..."

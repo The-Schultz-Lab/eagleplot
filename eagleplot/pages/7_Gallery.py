@@ -27,7 +27,7 @@ _MANIFEST_PATH = _GALLERY_DIR / "manifest.json"
 
 sys.path.insert(0, str(_APP_ROOT))
 
-from plottle.utils import initialize_session_state
+from eagleplot.utils import initialize_session_state
 
 initialize_session_state()
 

@@ -1,4 +1,4 @@
-# Plottle — Bug Reports
+# EaglePlot — Bug Reports
 
 > **Inbox for user-reported bugs.**
 >

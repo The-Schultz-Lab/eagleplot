@@ -1,6 +1,6 @@
 """Modules Package.
 
-This package contains the core functionality for the Plottle toolkit.
+This package contains the core functionality for the EaglePlot toolkit.
 
 Available Modules
 -----------------

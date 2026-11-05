@@ -15,8 +15,8 @@ matplotlib.use("Agg")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.math import minimize_function, find_roots
-from plottle.plotting import line_plot, save_figure
+from eagleplot.math import minimize_function, find_roots
+from eagleplot.plotting import line_plot, save_figure
 
 OUTPUT_DIR = Path(__file__).parent / "plots"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -104,7 +104,7 @@ def example_find_roots_transcendental():
 
 
 if __name__ == "__main__":
-    print("Plottle — Optimization Examples")
+    print("EaglePlot — Optimization Examples")
     print("=" * 70)
     example_minimize_parabola()
     example_minimize_rosenbrock()

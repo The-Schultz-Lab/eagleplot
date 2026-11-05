@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 
-echo === Plottle Setup ===
+echo === EaglePlot Setup ===
 echo.
 
 REM ── Check Python is available ────────────────────────────────────────────────
@@ -18,7 +18,7 @@ if errorlevel 1 (
 REM ── Check the Python version (pyproject.toml: >=3.9, !=3.9.7) ─────────────────
 python -c "import sys; v = sys.version_info[:3]; sys.exit(0 if v >= (3, 9) and v != (3, 9, 7) else 1)"
 if errorlevel 1 (
-    echo ERROR: Plottle needs Python 3.9 or later ^(but not 3.9.7^).
+    echo ERROR: EaglePlot needs Python 3.9 or later ^(but not 3.9.7^).
     python --version
     echo Install a newer Python from https://www.python.org/downloads/
     echo.
@@ -61,7 +61,7 @@ if errorlevel 1 (
 echo.
 echo ============================================================
 echo  Setup complete!
-echo  Double-click launch.bat to start Plottle.
+echo  Double-click launch.bat to start EaglePlot.
 echo ============================================================
 echo.
 pause

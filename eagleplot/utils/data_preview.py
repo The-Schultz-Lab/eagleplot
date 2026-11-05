@@ -22,7 +22,7 @@ Examples
 --------
 >>> import streamlit as st
 >>> import pandas as pd
->>> from plottle.utils.data_preview import preview_dataframe, get_dataframe_info
+>>> from eagleplot.utils.data_preview import preview_dataframe, get_dataframe_info
 >>> df = pd.DataFrame({'a': [1, 2, 3], 'b': [4, 5, 6]})
 >>> info = get_dataframe_info(df)
 >>> st.write(info)

@@ -1,4 +1,4 @@
-"""User settings persistence for the Plottle GUI.
+"""User settings persistence for the EaglePlot GUI.
 
 Saves user defaults and named configuration presets to a local
 ``config.json`` file alongside the app.  The file is intentionally

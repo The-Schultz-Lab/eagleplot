@@ -16,7 +16,7 @@ Supported Formats
 
 Examples
 --------
->>> from plottle.io import load_data, save_data
+>>> from eagleplot.io import load_data, save_data
 >>> data = load_data('experiment.pkl')
 >>> save_data(processed_data, 'results.pkl')
 >>> spectrum = load_data('spectrum.jdx')   # returns pd.DataFrame

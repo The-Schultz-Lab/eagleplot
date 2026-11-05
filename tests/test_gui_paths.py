@@ -25,9 +25,9 @@ import pytest
 
 @pytest.fixture(scope="module")
 def package_root() -> Path:
-    import plottle
+    import eagleplot
 
-    return Path(plottle.__file__).resolve().parent
+    return Path(eagleplot.__file__).resolve().parent
 
 
 # ── G-010: every GUI path must be absolute ────────────────────────────────────

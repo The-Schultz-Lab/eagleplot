@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in Plottle doesn't work as expected
+description: Something in EaglePlot doesn't work as expected
 labels: ["bug"]
 body:
   - type: textarea
@@ -30,8 +30,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Plottle version
-      description: Run `plottle --version` in the environment where Plottle is installed.
+      label: EaglePlot version
+      description: Run `eagleplot --version` in the environment where EaglePlot is installed.
     validations:
       required: true
   - type: input

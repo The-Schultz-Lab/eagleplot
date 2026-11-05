@@ -160,7 +160,7 @@ def fetch_ir_spectrum(cas_or_id: str, index: int = 0) -> Any:
             "requests is required for NIST WebBook access. Install it with: pip install requests"
         ) from exc
 
-    from plottle.io import load_jcamp
+    from eagleplot.io import load_jcamp
 
     url = get_ir_jcamp_url(cas_or_id, index)
     resp = requests.get(url, timeout=15)

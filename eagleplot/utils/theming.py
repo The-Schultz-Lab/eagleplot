@@ -1,4 +1,4 @@
-"""Theme reading, writing, and CSS generation for the Plottle GUI.
+"""Theme reading, writing, and CSS generation for the EaglePlot GUI.
 
 Why this module exists
 ----------------------
@@ -40,7 +40,7 @@ import tempfile
 from pathlib import Path
 from typing import Dict, List, Optional
 
-# tomllib is stdlib from Python 3.11; Plottle supports 3.9+ (G-013).
+# tomllib is stdlib from Python 3.11; EaglePlot supports 3.9+ (G-013).
 try:
     import tomllib
 except ModuleNotFoundError:  # Python 3.9 / 3.10
@@ -294,8 +294,8 @@ def app_css(theme: Optional[Dict[str, str]] = None) -> str:
         font-weight: 600 !important;
     }}
     /* Muted text helpers, derived from the theme's text colour */
-    .plottle-muted {{ color: {muted}; margin-top: 0; }}
-    .plottle-section-label {{
+    .eagleplot-muted {{ color: {muted}; margin-top: 0; }}
+    .eagleplot-section-label {{
         margin: 0.6rem 0 0.15rem 0;
         font-size: 0.68rem;
         color: {faint};

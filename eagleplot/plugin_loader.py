@@ -1,4 +1,4 @@
-"""Plugin loader for Plottle.
+"""Plugin loader for EaglePlot.
 
 Discovers and loads plugin_*.py files from the plugins/ directory.
 Each plugin is a standard Python module that optionally exposes:

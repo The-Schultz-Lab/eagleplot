@@ -16,7 +16,7 @@ matplotlib.use("Agg")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.plotting import (
+from eagleplot.plotting import (
     interactive_histogram,
     interactive_scatter,
     interactive_line,
@@ -167,7 +167,7 @@ def example_interactive_3d_surface():
 
 
 if __name__ == "__main__":
-    print("Plottle — Plotly Interactive Examples")
+    print("EaglePlot — Plotly Interactive Examples")
     print("=" * 70)
     example_interactive_histogram()
     example_interactive_scatter()

@@ -1,11 +1,11 @@
-"""Tests for plottle.utils.theming — audit A-17, A-18, A-19."""
+"""Tests for eagleplot.utils.theming — audit A-17, A-18, A-19."""
 
 from pathlib import Path
 
 import pytest
 
-from plottle.utils import theming
-from plottle.utils.theming import (
+from eagleplot.utils import theming
+from eagleplot.utils.theming import (
     STREAMLIT_DEFAULTS,
     THEME_KEYS,
     _hex_to_rgba,
@@ -24,7 +24,7 @@ def in_tmp_cwd(tmp_path, monkeypatch):
 
 
 _SHIPPED_CONFIG = """\
-# Plottle — Streamlit configuration
+# EaglePlot — Streamlit configuration
 
 # ── NCCU theme ────────────────────────────────────────────────────────────────
 # primaryColor:           soft rose — accent, tab underlines, active states
@@ -88,7 +88,7 @@ class TestWriteTheme:
         text = cfg.read_text(encoding="utf-8")
 
         # Header and section comments survive.
-        assert "# Plottle — Streamlit configuration" in text
+        assert "# EaglePlot — Streamlit configuration" in text
         assert "# ── NCCU theme" in text
         assert "soft rose" in text
         # Other sections survive verbatim, values included.
@@ -248,9 +248,9 @@ class TestHomePageUsesThemedCss:
 
     @pytest.fixture(scope="class")
     def home_source(self) -> str:
-        import plottle
+        import eagleplot
 
-        return (Path(plottle.__file__).resolve().parent / "Home.py").read_text("utf-8")
+        return (Path(eagleplot.__file__).resolve().parent / "Home.py").read_text("utf-8")
 
     def test_home_delegates_styling_to_app_css(self, home_source: str):
         assert "app_css()" in home_source

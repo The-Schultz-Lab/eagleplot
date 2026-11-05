@@ -13,8 +13,8 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from plottle.utils.session_state import initialize_session_state, add_dataset
-from plottle.spectroscopy import (
+from eagleplot.utils.session_state import initialize_session_state, add_dataset
+from eagleplot.spectroscopy import (
     absorbance_to_transmittance,
     apply_line_broadening,
     assign_bands,
@@ -289,7 +289,7 @@ with tab_ir:
                 key="nist_idx",
                 help="0 = first available IR spectrum",
             )
-        from plottle.nist import fetch_ir_spectrum as _nist_fetch, get_compound_url as _nist_url
+        from eagleplot.nist import fetch_ir_spectrum as _nist_fetch, get_compound_url as _nist_url
 
         nist_page_url = _nist_url(nist_cas) if nist_cas.strip() else ""
         if nist_page_url:

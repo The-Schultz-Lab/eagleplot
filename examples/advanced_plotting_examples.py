@@ -3,7 +3,7 @@
 This script demonstrates statistical visualizations with Seaborn and
 interactive plots with Plotly.
 
-Run this script from the plottle directory:
+Run this script from the eagleplot directory:
     python examples/advanced_plotting_examples.py
 """
 
@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# Add parent directory to path to import plottle
+# Add parent directory to path to import eagleplot
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Set matplotlib to non-interactive backend
@@ -20,7 +20,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-from plottle.plotting import (
+from eagleplot.plotting import (
     distribution_plot,
     box_plot,
     regression_plot,

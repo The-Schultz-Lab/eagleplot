@@ -1,4 +1,4 @@
-"""Tests for plottle/annotations.py (M16)."""
+"""Tests for eagleplot/annotations.py (M16)."""
 
 import pytest
 import matplotlib
@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 matplotlib.use("Agg")  # headless backend for CI
 
-from plottle.annotations import apply_annotations, describe_overlay, ANNOTATION_COLORS
+from eagleplot.annotations import apply_annotations, describe_overlay, ANNOTATION_COLORS
 
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────

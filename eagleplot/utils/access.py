@@ -1,6 +1,6 @@
 """Gates for GUI features that reach outside the browser sandbox.
 
-Plottle is meant to be run locally (``launch.bat`` / ``launch.command``), where
+EaglePlot is meant to be run locally (``launch.bat`` / ``launch.command``), where
 reading a folder on the user's own disk is the point. On a shared deployment the
 same feature lets any visitor list and read files on the *server*. See audit A-15.
 """
@@ -8,11 +8,15 @@ same feature lets any visitor list and read files on the *server*. See audit A-1
 from __future__ import annotations
 
 import os
+import warnings
 from typing import Mapping, Optional
 
 #: Environment variable that overrides the folder-loading default.
 #: ``1``/``true``/``yes``/``on`` always allow; ``0``/``false``/``no``/``off`` always deny.
-FOLDER_LOAD_ENV = "PLOTTLE_ALLOW_FOLDER_LOAD"
+FOLDER_LOAD_ENV = "EAGLEPLOT_ALLOW_FOLDER_LOAD"
+#: Name used before the Plottle -> EaglePlot rename (3.0.0). Still honoured, with a
+#: deprecation warning, when the new name is not set. Remove in 4.0.
+LEGACY_FOLDER_LOAD_ENV = "PLOTTLE_ALLOW_FOLDER_LOAD"
 
 _TRUE = {"1", "true", "yes", "on"}
 _FALSE = {"0", "false", "no", "off"}
@@ -35,7 +39,7 @@ def folder_loading_allowed(env_value: Optional[str], client_ip: Optional[str]) -
         An explicit setting wins. Unset or unrecognised, folder loading is allowed
         only for a local connection. The IP check alone is not a security control
         (a reverse proxy on the same host looks local), so shared deployments
-        should set ``PLOTTLE_ALLOW_FOLDER_LOAD=0``.
+        should set ``EAGLEPLOT_ALLOW_FOLDER_LOAD=0``.
     """
     if env_value is not None:
         value = env_value.strip().lower()
@@ -56,4 +60,18 @@ def _client_ip() -> Optional[str]:
 def folder_loading_allowed_here(environ: Optional[Mapping[str, str]] = None) -> bool:
     """:func:`folder_loading_allowed` for the current Streamlit session."""
     env = os.environ if environ is None else environ
-    return folder_loading_allowed(env.get(FOLDER_LOAD_ENV), _client_ip())
+    return folder_loading_allowed(folder_load_setting(env), _client_ip())
+
+
+def folder_load_setting(env: Mapping[str, str]) -> Optional[str]:
+    """The folder-loading setting from *env*, accepting the pre-3.0 variable name."""
+    value = env.get(FOLDER_LOAD_ENV)
+    if value is None and LEGACY_FOLDER_LOAD_ENV in env:
+        warnings.warn(
+            f"{LEGACY_FOLDER_LOAD_ENV} is deprecated; set {FOLDER_LOAD_ENV} instead "
+            "(Plottle was renamed EaglePlot in 3.0).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        value = env[LEGACY_FOLDER_LOAD_ENV]
+    return value

@@ -1,9 +1,9 @@
 """Examples for using the math module.
 
-This script demonstrates how to use the plottle math module
+This script demonstrates how to use the eagleplot math module
 for statistical analysis, curve fitting, optimization, and linear algebra.
 
-Run this script from the plottle directory:
+Run this script from the eagleplot directory:
     python examples/math_examples.py
 """
 
@@ -11,10 +11,10 @@ import sys
 from pathlib import Path
 import numpy as np
 
-# Add parent directory to path to import plottle
+# Add parent directory to path to import eagleplot
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.math import (
+from eagleplot.math import (
     # Statistics
     calculate_mean,
     calculate_median,
@@ -426,7 +426,7 @@ def main():
     print("PLOTTING HELPER - MATH MODULE EXAMPLES")
     print("=" * 70)
     print("\nThis script demonstrates the mathematical capabilities of the")
-    print("plottle package for scientific data analysis.\n")
+    print("eagleplot package for scientific data analysis.\n")
 
     try:
         # Run all examples

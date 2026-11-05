@@ -10,5 +10,5 @@ if not exist .venv (
 )
 
 call .venv\Scripts\activate.bat
-streamlit run plottle/Home.py
+streamlit run eagleplot/Home.py
 pause

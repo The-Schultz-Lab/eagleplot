@@ -83,9 +83,9 @@ _EXAMPLES = {
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from plottle.io import load_data  # noqa: E402
-from plottle.math import calculate_statistics, check_normality  # noqa: E402
-from plottle.utils import (  # noqa: E402
+from eagleplot.io import load_data  # noqa: E402
+from eagleplot.math import calculate_statistics, check_normality  # noqa: E402
+from eagleplot.utils import (  # noqa: E402
     initialize_session_state,
     add_dataset,
     get_dataset,
@@ -94,9 +94,9 @@ from plottle.utils import (  # noqa: E402
     display_dataset_card,
     display_data_preview,
 )
-from plottle.batch import scan_directory, batch_load_files  # noqa: E402
-from plottle.io import downsample_for_preview  # noqa: E402
-from plottle.utils.access import folder_loading_allowed_here  # noqa: E402
+from eagleplot.batch import scan_directory, batch_load_files  # noqa: E402
+from eagleplot.io import downsample_for_preview  # noqa: E402
+from eagleplot.utils.access import folder_loading_allowed_here  # noqa: E402
 
 _LARGE_FILE_BYTES = 50 * 1024 * 1024  # 50 MB — warn above this
 _PREVIEW_MAX_ROWS = 10_000  # downsample preview above this
@@ -120,7 +120,7 @@ tab1, tab2, tab3 = st.tabs(["Upload File", "Example Datasets", "Batch Import"])
 with tab1:
     # NOTE: `pkl` is deliberately absent. Unpickling an uploaded file executes
     # code contained in it, and a user clicking "Browse files" has not consented
-    # to that. `plottle.io.load_pickle()` remains available in the Python API,
+    # to that. `eagleplot.io.load_pickle()` remains available in the Python API,
     # where the caller has chosen to trust the file. See TDEC-011 / audit A-16.
     uploaded_file = st.file_uploader(
         "Choose a data file",
@@ -148,7 +148,7 @@ with tab1:
     )
     st.caption(
         "Pickle (`.pkl`) files are not accepted here — loading one runs any code it "
-        "contains. Use `plottle.io.load_pickle()` from Python if you trust the file, "
+        "contains. Use `eagleplot.io.load_pickle()` from Python if you trust the file, "
         "or re-save your data as CSV or Parquet."
     )
 
@@ -156,11 +156,11 @@ with tab1:
         try:
             with st.spinner(f"Loading {uploaded_file.name}..."):
                 # Each upload gets its own temp directory, removed as soon as the
-                # file is parsed. A shared $TMP/plottle/ let two sessions uploading
+                # file is parsed. A shared $TMP/eagleplot/ let two sessions uploading
                 # the same filename overwrite each other's data, and nothing was
                 # ever deleted. The browser-supplied name is reduced to its
                 # basename before it touches the filesystem. See audit A-14.
-                with tempfile.TemporaryDirectory(prefix="plottle-upload-") as temp_dir:
+                with tempfile.TemporaryDirectory(prefix="eagleplot-upload-") as temp_dir:
                     temp_path = Path(temp_dir) / Path(uploaded_file.name).name
                     temp_path.write_bytes(uploaded_file.getvalue())
                     data = load_data(str(temp_path))
@@ -277,15 +277,15 @@ with tab2:
                                 st.error(f"Error: {_ex_err}")
 
 with tab3:
-    # Reading a typed folder path is the point when Plottle runs on your own
+    # Reading a typed folder path is the point when EaglePlot runs on your own
     # machine, and a way to read the server's disk on a shared deployment.
-    # See audit A-15 and plottle/utils/access.py.
+    # See audit A-15 and eagleplot/utils/access.py.
     if not folder_loading_allowed_here():
         st.info(
             "Batch import from a folder is turned off on this server, because "
             "the path would be read on the server, not your computer. Upload files "
             "individually on the **Upload File** tab instead. To enable it, start "
-            "Plottle with the environment variable `PLOTTLE_ALLOW_FOLDER_LOAD=1`."
+            "EaglePlot with the environment variable `EAGLEPLOT_ALLOW_FOLDER_LOAD=1`."
         )
     else:
         st.markdown(

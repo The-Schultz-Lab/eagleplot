@@ -1,7 +1,7 @@
 """Graphical User Interface Module - Main Entry Point.
 
 This module provides the main entry point for the Streamlit-based GUI for
-the Plottle toolkit. It provides an interactive interface for data
+the EaglePlot toolkit. It provides an interactive interface for data
 exploration, visualization, and analysis.
 
 Navigation Structure
@@ -25,7 +25,7 @@ Settings
 
 Usage
 -----
-    streamlit run plottle/Home.py
+    streamlit run eagleplot/Home.py
 """
 
 import base64
@@ -46,9 +46,9 @@ _LOGO_PNG = _ASSETS_DIR / "logo.png"
 _NCCU_HORIZ = _ASSETS_DIR / "nccu-horiz-logo.png"
 _NCCU_WINGS = _ASSETS_DIR / "nccu-wings.png"
 
-from plottle import __version__  # noqa: E402
-from plottle.utils import initialize_session_state, get_session_summary  # noqa: E402
-from plottle.utils.theming import app_css  # noqa: E402
+from eagleplot import __version__  # noqa: E402
+from eagleplot.utils import initialize_session_state, get_session_summary  # noqa: E402
+from eagleplot.utils.theming import app_css  # noqa: E402
 
 try:
     from PIL import Image as _PILImage
@@ -59,13 +59,13 @@ except ImportError:
 
 # ── Page configuration (must be the first Streamlit call) ─────────────────────
 st.set_page_config(
-    page_title="Plottle",
+    page_title="EaglePlot",
     page_icon=_page_icon,
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         "About": (
-            f"**Plottle** v{__version__}\n\n"
+            f"**EaglePlot** v{__version__}\n\n"
             "Scientific data visualization and analysis toolkit for research "
             "and teaching in computational science — developed at North Carolina "
             "Central University.\n\n"
@@ -75,7 +75,7 @@ st.set_page_config(
 )
 
 # ── App-wide styling, derived from the active theme ───────────────────────────
-# Colours come from plottle.utils.theming.app_css() rather than being hardcoded, so
+# Colours come from eagleplot.utils.theming.app_css() rather than being hardcoded, so
 # the stylesheet follows whatever the user selects in Settings. Previously the NCCU
 # dark palette was baked in as literals, which left the hero subtitle
 # white-on-white on a light theme (A-17).
@@ -98,17 +98,17 @@ def _home_page() -> None:
             if _LOGO_PNG.exists():
                 _b64 = base64.b64encode(_LOGO_PNG.read_bytes()).decode()
                 st.markdown(
-                    f'<img src="data:image/png;base64,{_b64}" alt="Plottle logo"'
+                    f'<img src="data:image/png;base64,{_b64}" alt="EaglePlot logo"'
                     ' style="width:110px;height:auto;display:block;">',
                     unsafe_allow_html=True,
                 )
         with _title_col:
             st.markdown(
-                "<h1 style='margin-bottom: 0.1rem;'>Plottle</h1>",
+                "<h1 style='margin-bottom: 0.1rem;'>EaglePlot</h1>",
                 unsafe_allow_html=True,
             )
             st.markdown(
-                "<p class='plottle-muted'>"
+                "<p class='eagleplot-muted'>"
                 "Scientific data visualization and analysis "
                 f"&nbsp;&middot;&nbsp; v{__version__}"
                 "</p>",
@@ -188,7 +188,7 @@ def _home_page() -> None:
 
         st.markdown("## About")
         st.markdown(f"""
-        **Plottle** is developed at North Carolina Central University for research and teaching
+        **EaglePlot** is developed at North Carolina Central University for research and teaching
         in computational science.
         Built with Streamlit · NumPy · Pandas · Matplotlib · Seaborn · Plotly · SciPy.
         Version {__version__}
@@ -299,13 +299,13 @@ pg = st.navigation(
 
 # ── Custom sidebar navigation ─────────────────────────────────────────────────
 
-_ADV_HEADER = "<p class='plottle-section-label'>Advanced</p>"
+_ADV_HEADER = "<p class='eagleplot-section-label'>Advanced</p>"
 
 with st.sidebar:
     if _LOGO_PNG.exists():
         _sb_logo_b64 = base64.b64encode(_LOGO_PNG.read_bytes()).decode()
         st.markdown(
-            f'<img src="data:image/png;base64,{_sb_logo_b64}" alt="Plottle logo"'
+            f'<img src="data:image/png;base64,{_sb_logo_b64}" alt="EaglePlot logo"'
             ' style="width:72px;height:auto;display:block;margin:0.5rem auto 1rem;">',
             unsafe_allow_html=True,
         )
@@ -350,7 +350,7 @@ with st.sidebar:
                 unsafe_allow_html=True,
             )
         st.markdown(
-            "**Plottle** is a scientific data visualization and analysis "
+            "**EaglePlot** is a scientific data visualization and analysis "
             "toolkit developed for research and teaching in computational "
             "science at North Carolina Central University."
         )

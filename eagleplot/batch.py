@@ -1,4 +1,4 @@
-"""Batch processing utilities for Plottle.
+"""Batch processing utilities for EaglePlot.
 
 Provides helpers for scanning directories, loading multiple files in bulk,
 and running common analyses (statistics, curve fitting, peak detection) across
@@ -29,14 +29,14 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from plottle.io import load_data
-from plottle.math import (
+from eagleplot.io import load_data
+from eagleplot.math import (
     calculate_statistics,
     fit_exponential,
     fit_linear,
     fit_polynomial,
 )
-from plottle.peaks import compute_fwhm, find_peaks
+from eagleplot.peaks import compute_fwhm, find_peaks
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ def scan_directory(
         folder_path: Path to the directory to scan.
         extensions: List of file extensions to include, e.g. ``['csv', 'xlsx']``.
             Leading dots are optional. Pass ``None`` (default) to accept all
-            Plottle-supported formats.
+            EaglePlot-supported formats.
         pattern: Optional ``fnmatch``-style filename filter, e.g.
             ``'sample_*.csv'``.  Applied after the extension filter.
 

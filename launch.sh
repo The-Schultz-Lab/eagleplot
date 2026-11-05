@@ -1,5 +1,5 @@
 #!/bin/bash
-# launch.sh — Start Plottle (Linux)
+# launch.sh — Start EaglePlot (Linux)
 # Run from a terminal after running ./setup.sh once:  ./launch.sh
 
 cd "$(dirname "$0")"
@@ -13,4 +13,4 @@ if [ ! -d ".venv" ]; then
 fi
 
 source .venv/bin/activate
-exec streamlit run plottle/Home.py
+exec streamlit run eagleplot/Home.py

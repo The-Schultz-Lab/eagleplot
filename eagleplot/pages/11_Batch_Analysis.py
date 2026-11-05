@@ -16,13 +16,13 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from plottle.utils.session_state import initialize_session_state
-from plottle.batch import (
+from eagleplot.utils.session_state import initialize_session_state
+from eagleplot.batch import (
     batch_statistics,
     batch_curve_fit,
     batch_peak_analysis,
 )
-from plottle.utils.user_settings import (
+from eagleplot.utils.user_settings import (
     list_workflows,
     save_workflow,
     load_workflow,

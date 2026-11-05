@@ -19,8 +19,8 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from plottle.utils import initialize_session_state
-from plottle.utils.user_settings import (
+from eagleplot.utils import initialize_session_state
+from eagleplot.utils.user_settings import (
     get_config_path,
     get_defaults,
     save_defaults,
@@ -29,8 +29,8 @@ from plottle.utils.user_settings import (
     load_preset,
     delete_preset,
 )
-from plottle.utils.plot_config import COLOR_PALETTE_NAMES, _FONT_OPTIONS
-from plottle.utils.theming import (
+from eagleplot.utils.plot_config import COLOR_PALETTE_NAMES, _FONT_OPTIONS
+from eagleplot.utils.theming import (
     STREAMLIT_DEFAULTS,
     read_theme,
     write_theme,
@@ -39,7 +39,7 @@ from plottle.utils.theming import (
 # Aliased: this page shows two different config files, and an unaliased import
 # would shadow user_settings.get_config_path() (config.json) with the theming
 # one (config.toml), silently repointing the "Config File" section below.
-from plottle.utils.theming import get_config_path as get_theme_config_path
+from eagleplot.utils.theming import get_config_path as get_theme_config_path
 
 initialize_session_state()
 
@@ -112,8 +112,8 @@ def _save_theme(theme: dict, success_message: str) -> None:
     except OSError as exc:
         st.error(
             f"Could not write the theme: {exc}\n\n"
-            f"Plottle tried to write `{get_theme_config_path()}`. If that directory is "
-            "read-only, launch Plottle from a directory you can write to, or create "
+            f"EaglePlot tried to write `{get_theme_config_path()}`. If that directory is "
+            "read-only, launch EaglePlot from a directory you can write to, or create "
             "`.streamlit/config.toml` there yourself."
         )
         return
@@ -369,7 +369,7 @@ if cfg_path.exists():
     st.download_button(
         "Download a backup of config.json",
         data=cfg_path.read_bytes(),
-        file_name="plottle_config_backup.json",
+        file_name="eagleplot_config_backup.json",
         mime="application/json",
         key="dl_config_backup",
     )

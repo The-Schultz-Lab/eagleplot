@@ -31,7 +31,7 @@ clear_session()
 Examples
 --------
 >>> import streamlit as st
->>> from plottle.utils.session_state import initialize_session_state, add_dataset
+>>> from eagleplot.utils.session_state import initialize_session_state, add_dataset
 >>> initialize_session_state()
 >>> data = np.array([1, 2, 3, 4, 5])
 >>> add_dataset('test_data.npy', data)

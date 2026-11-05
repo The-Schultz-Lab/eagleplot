@@ -14,7 +14,7 @@ Please **do not** open a public GitHub issue for security vulnerabilities.
 Use one of the following channels:
 
 - **Private vulnerability report (preferred):** Use the
-  [Report a vulnerability](https://github.com/The-Schultz-Lab/plottle/security/advisories/new)
+  [Report a vulnerability](https://github.com/The-Schultz-Lab/eagleplot/security/advisories/new)
   button on the Security tab. This keeps the report private until a fix is available.
 - **Email:** Contact the maintainer directly at the address listed on the
   [NCCU Schultz Lab GitHub profile](https://github.com/The-Schultz-Lab).
@@ -25,7 +25,7 @@ A useful report includes:
 
 - A description of the vulnerability and its potential impact
 - Steps to reproduce (minimal example if possible)
-- The version of Plottle affected
+- The version of EaglePlot affected
 - Any suggested fix or mitigation
 
 ## Response Timeline
@@ -40,9 +40,9 @@ The following behaviors are **intentional** and documented — please do not rep
 them as vulnerabilities unless you have found a bypass of the existing mitigations:
 
 - **User-provided expressions in Analysis Tools and Data Tools.** Formula and
-  curve-fit expressions are supplied as text and evaluated by Plottle.
+  curve-fit expressions are supplied as text and evaluated by EaglePlot.
 
-  `plottle.data_tools.add_formula_column` evaluates them with an **AST whitelist**
+  `eagleplot.data_tools.add_formula_column` evaluates them with an **AST whitelist**
   (`_safe_eval`): the expression is parsed, and only arithmetic, comparisons,
   `and`/`or`/`not`, conditional expressions, subscripting, literals, whitelisted
   names, and direct calls to the documented math functions are executed. Attribute
@@ -61,7 +61,7 @@ them as vulnerabilities unless you have found a bypass of the existing mitigatio
   access, an import, or any callable outside the documented list, that **is** a
   vulnerability — please report it.
 
-  Note that Plottle is designed to run on `localhost` for a single user. Binding the
+  Note that EaglePlot is designed to run on `localhost` for a single user. Binding the
   Streamlit GUI to a public interface exposes every input surface described below to
   anyone who can reach the port, and is not a supported configuration.
 
@@ -72,7 +72,7 @@ them as vulnerabilities unless you have found a bypass of the existing mitigatio
   pickle-based encoding; those entries are **refused on load**, not unpickled, and the
   loader reports what it skipped.
 
-  `plottle.io.load_pickle` / `save_pickle` remain available in the **Python API**,
+  `eagleplot.io.load_pickle` / `save_pickle` remain available in the **Python API**,
   where the caller has chosen to trust the file. `.pkl` is deliberately *not* accepted
   by the GUI's file uploader or batch folder import.
 
@@ -82,5 +82,5 @@ them as vulnerabilities unless you have found a bypass of the existing mitigatio
 
 ## Scope
 
-This policy covers the `plottle` package and its Streamlit GUI and CLI. It does not
+This policy covers the `eagleplot` package and its Streamlit GUI and CLI. It does not
 cover third-party dependencies — please report those to their respective maintainers.

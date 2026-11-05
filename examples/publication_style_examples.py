@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.plotting import (
+from eagleplot.plotting import (
     line_plot,
     scatter_plot,
     apply_publication_style,
@@ -27,7 +27,7 @@ from plottle.plotting import (
     configure_axes,
     save_figure,
 )
-from plottle.utils.plot_config import COLOR_PALETTE_NAMES
+from eagleplot.utils.plot_config import COLOR_PALETTE_NAMES
 
 OUTPUT_DIR = Path(__file__).parent / "plots"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -157,7 +157,7 @@ def example_two_column_figure():
 
 
 if __name__ == "__main__":
-    print("Plottle — Publication Style Examples")
+    print("EaglePlot — Publication Style Examples")
     print("=" * 70)
     example_publication_style()
     example_color_palettes()

@@ -16,8 +16,8 @@ matplotlib.use("Agg")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.math import calculate_statistics, check_normality
-from plottle.plotting import histogram, save_figure
+from eagleplot.math import calculate_statistics, check_normality
+from eagleplot.plotting import histogram, save_figure
 
 OUTPUT_DIR = Path(__file__).parent / "plots"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -138,7 +138,7 @@ def example_2d_array_statistics():
 
 
 if __name__ == "__main__":
-    print("Plottle — Statistics Examples")
+    print("EaglePlot — Statistics Examples")
     print("=" * 70)
     example_basic_statistics()
     example_normality_test()

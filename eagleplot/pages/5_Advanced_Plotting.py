@@ -1,6 +1,6 @@
 """Advanced Plotting Page.
 
-Provides visualizations that go beyond the 13 core plottle.plotting functions
+Provides visualizations that go beyond the 13 core eagleplot.plotting functions
 by using seaborn, plotly.graph_objects, and matplotlib directly.
 
 Tabs
@@ -25,14 +25,14 @@ import plotly.graph_objects as go
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from plottle.plotting import (
+from eagleplot.plotting import (
     interactive_histogram,
     interactive_scatter,
     interactive_line,
     interactive_heatmap,
     interactive_3d_surface,
 )
-from plottle.utils import (
+from eagleplot.utils import (
     initialize_session_state,
     get_dataset,
     get_session_summary,

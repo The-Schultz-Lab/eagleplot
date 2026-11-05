@@ -16,8 +16,8 @@ matplotlib.use("Agg")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.math import calculate_statistics
-from plottle.plotting import line_plot, apply_publication_style, save_figure, get_color_palette
+from eagleplot.math import calculate_statistics
+from eagleplot.plotting import line_plot, apply_publication_style, save_figure, get_color_palette
 
 OUTPUT_DIR = Path(__file__).parent / "plots"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -120,5 +120,5 @@ def run_spectroscopy_workflow():
 
 
 if __name__ == "__main__":
-    print("Plottle — UV-Vis Spectroscopy Workflow")
+    print("EaglePlot — UV-Vis Spectroscopy Workflow")
     run_spectroscopy_workflow()
