@@ -2,16 +2,16 @@
 
 ## Overview
 
-The Plottle CLI provides a powerful command-line interface for scientific data visualization and analysis. This guide covers all commands, options, and usage examples.
+The EaglePlot CLI provides a powerful command-line interface for scientific data visualization and analysis. This guide covers all commands, options, and usage examples.
 
 ## Installation
 
-The CLI is included in the Plottle package. No additional installation is required.
+The CLI is included in the EaglePlot package. No additional installation is required.
 
 ## Basic Usage
 
 ```bash
-plottle [OPTIONS] COMMAND [ARGS...]
+eagleplot [OPTIONS] COMMAND [ARGS...]
 ```
 
 ## Global Options
@@ -30,7 +30,7 @@ Create various types of plots from data files.
 
 **Syntax:**
 ```bash
-plottle plot --input FILE --type TYPE [OPTIONS]
+eagleplot plot --input FILE --type TYPE [OPTIONS]
 ```
 
 **Required Arguments:**
@@ -72,25 +72,25 @@ plottle plot --input FILE --type TYPE [OPTIONS]
 
 ```bash
 # Simple histogram
-plottle plot --input data.npy --type histogram --output hist.png
+eagleplot plot --input data.npy --type histogram --output hist.png
 
 # Customized histogram
-plottle plot --input data.csv --column Temperature --type histogram \
+eagleplot plot --input data.csv --column Temperature --type histogram \
     --bins 50 --title "Temperature Distribution" \
     --xlabel "Temperature (K)" --ylabel "Frequency" \
     --output temp_dist.png
 
 # Line plot with styling
-plottle plot --input timeseries.csv --type line \
+eagleplot plot --input timeseries.csv --type line \
     --title "Time Series Data" --color blue --style "--" \
     --marker o --output timeseries.png
 
 # Interactive plot
-plottle plot --input data.npy --type interactive_histogram \
+eagleplot plot --input data.npy --type interactive_histogram \
     --output interactive.html --bins 40
 
 # Scatter plot with limits
-plottle plot --input points.csv --type scatter \
+eagleplot plot --input points.csv --type scatter \
     --xlim "0,10" --ylim "0,100" --output scatter.png
 ```
 
@@ -100,7 +100,7 @@ Calculate and display statistical summary of data.
 
 **Syntax:**
 ```bash
-plottle stats --input FILE [OPTIONS]
+eagleplot stats --input FILE [OPTIONS]
 ```
 
 **Required Arguments:**
@@ -121,16 +121,16 @@ plottle stats --input FILE [OPTIONS]
 
 ```bash
 # Basic statistics
-plottle stats --input data.npy
+eagleplot stats --input data.npy
 
 # Statistics for specific column
-plottle stats --input data.csv --column Temperature
+eagleplot stats --input data.csv --column Temperature
 
 # Statistics with normality test
-plottle stats --input data.csv --column Values --normality
+eagleplot stats --input data.csv --column Values --normality
 
 # Save statistics to file
-plottle stats --input data.npy --output stats.json --normality
+eagleplot stats --input data.npy --output stats.json --normality
 ```
 
 ### 3. batch - Batch Processing
@@ -139,7 +139,7 @@ Process multiple files using a configuration file.
 
 **Syntax:**
 ```bash
-plottle batch --config FILE
+eagleplot batch --config FILE
 ```
 
 **Required Arguments:**
@@ -195,10 +195,10 @@ tasks:
 
 ```bash
 # Run batch processing
-plottle batch --config batch_config.json
+eagleplot batch --config batch_config.json
 
 # Run with verbose output
-plottle --verbose batch --config analysis_pipeline.yaml
+eagleplot --verbose batch --config analysis_pipeline.yaml
 ```
 
 ### 4. compare - Compare Datasets
@@ -207,7 +207,7 @@ Compare multiple datasets on the same plot.
 
 **Syntax:**
 ```bash
-plottle compare --inputs FILE1 FILE2 [FILE3...] [OPTIONS]
+eagleplot compare --inputs FILE1 FILE2 [FILE3...] [OPTIONS]
 ```
 
 **Required Arguments:**
@@ -228,16 +228,16 @@ plottle compare --inputs FILE1 FILE2 [FILE3...] [OPTIONS]
 
 ```bash
 # Compare with histogram
-plottle compare --inputs data1.csv data2.csv data3.csv \
+eagleplot compare --inputs data1.csv data2.csv data3.csv \
     --type histogram --output comparison.png
 
 # Compare with labels
-plottle compare --inputs trial1.npy trial2.npy trial3.npy \
+eagleplot compare --inputs trial1.npy trial2.npy trial3.npy \
     --type line --labels "Trial 1" "Trial 2" "Trial 3" \
     --title "Trial Comparison" --output trials.png
 
 # Compare specific column
-plottle compare --inputs exp1.csv exp2.csv \
+eagleplot compare --inputs exp1.csv exp2.csv \
     --column Temperature --type histogram --bins 40 \
     --output temp_comparison.png
 ```
@@ -248,7 +248,7 @@ Convert data between different file formats.
 
 **Syntax:**
 ```bash
-plottle convert --input FILE --output FILE
+eagleplot convert --input FILE --output FILE
 ```
 
 **Required Arguments:**
@@ -269,13 +269,13 @@ plottle convert --input FILE --output FILE
 
 ```bash
 # Convert pickle to CSV
-plottle convert --input data.pkl --output data.csv
+eagleplot convert --input data.pkl --output data.csv
 
 # Convert NumPy to Excel
-plottle convert --input arrays.npy --output data.xlsx
+eagleplot convert --input arrays.npy --output data.xlsx
 
 # Convert CSV to Parquet
-plottle convert --input large_data.csv --output large_data.parquet
+eagleplot convert --input large_data.csv --output large_data.parquet
 ```
 
 ## Advanced Usage
@@ -285,7 +285,7 @@ plottle convert --input large_data.csv --output large_data.parquet
 Use `--verbose` before the command for detailed logging:
 
 ```bash
-plottle --verbose plot --input data.npy --type histogram --output plot.png
+eagleplot --verbose plot --input data.npy --type histogram --output plot.png
 ```
 
 Output:
@@ -300,7 +300,7 @@ Output:
 Use `--quiet` to suppress all non-error messages:
 
 ```bash
-plottle --quiet batch --config large_pipeline.json
+eagleplot --quiet batch --config large_pipeline.json
 ```
 
 ### Chaining with Shell Commands
@@ -310,12 +310,12 @@ Use CLI in shell pipelines:
 ```bash
 # Find all .npy files and create histograms
 for file in examples/data/*.npy; do
-    plottle plot --input "$file" --type histogram \
+    eagleplot plot --input "$file" --type histogram \
         --output "plots/$(basename "$file" .npy)_hist.png"
 done
 
 # Process with logging
-plottle --verbose stats --input data.csv 2>&1 | tee analysis.log
+eagleplot --verbose stats --input data.csv 2>&1 | tee analysis.log
 ```
 
 ### Integration with Scripts
@@ -329,14 +329,14 @@ Use the CLI from shell scripts:
 echo "Running analysis pipeline..."
 
 # Step 1: Generate plots
-plottle plot --input raw_data.csv --type line --output plot1.png
-plottle plot --input raw_data.csv --type histogram --output plot2.png
+eagleplot plot --input raw_data.csv --type line --output plot1.png
+eagleplot plot --input raw_data.csv --type histogram --output plot2.png
 
 # Step 2: Calculate statistics
-plottle stats --input raw_data.csv --output stats.json --normality
+eagleplot stats --input raw_data.csv --output stats.json --normality
 
 # Step 3: Compare with reference
-plottle compare --inputs raw_data.csv reference.csv \
+eagleplot compare --inputs raw_data.csv reference.csv \
     --type line --labels "Current" "Reference" --output comparison.png
 
 echo "Analysis complete!"
@@ -353,12 +353,12 @@ The CLI provides clear error messages:
 
 **Invalid Arguments:**
 ```
-plottle/cli.py: error: argument --type: invalid choice: 'invalid_type'
+eagleplot/cli.py: error: argument --type: invalid choice: 'invalid_type'
 ```
 
 **Missing Required Arguments:**
 ```
-plottle/cli.py: error: the following arguments are required: --input
+eagleplot/cli.py: error: the following arguments are required: --input
 ```
 
 **Data Format Errors:**
@@ -400,17 +400,17 @@ When running interactively:
 
 ```bash
 # General help
-plottle --help
+eagleplot --help
 
 # Command-specific help
-plottle plot --help
-plottle stats --help
-plottle batch --help
-plottle compare --help
-plottle convert --help
+eagleplot plot --help
+eagleplot stats --help
+eagleplot batch --help
+eagleplot compare --help
+eagleplot convert --help
 
 # Show examples
-plottle --examples
+eagleplot --examples
 ```
 
 ## Troubleshooting
@@ -419,7 +419,7 @@ plottle --examples
 - **Solution**: Use `python3` instead, or ensure Python is in your PATH
 
 **Problem**: "Module not found: modules.io"
-- **Solution**: Run from the plottle directory, not the examples/ directory
+- **Solution**: Run from the eagleplot directory, not the examples/ directory
 
 **Problem**: Plot files are too large
 - **Solution**: Reduce `--dpi` value (e.g., `--dpi 150` instead of default 300)
@@ -441,4 +441,4 @@ plottle --examples
 
 **Version**: 1.0.0
 **Last Updated**: 2026-02-12
-**Project**: Plottle
+**Project**: EaglePlot

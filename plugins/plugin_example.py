@@ -1,10 +1,10 @@
-"""Example Plottle plugin.
+"""Example EaglePlot plugin.
 
-This file demonstrates the Plottle plugin interface. Drop a plugin_*.py file
+This file demonstrates the EaglePlot plugin interface. Drop a plugin_*.py file
 into the plugins/ directory to have it auto-discovered by the app.
 
 To create a custom plot type:
-1. Define a plotting function with the standard Plottle signature:
+1. Define a plotting function with the standard EaglePlot signature:
    - Matplotlib: returns (fig, ax, info_dict)
    - Plotly: returns (fig, info_dict)
 2. Add it to the list returned by get_plot_types().
@@ -12,7 +12,7 @@ To create a custom plot type:
 
 PLUGIN_NAME = "Example Plugin"
 PLUGIN_VERSION = "1.0.0"
-PLUGIN_DESCRIPTION = "Demonstrates the Plottle plugin interface (no custom plots added)."
+PLUGIN_DESCRIPTION = "Demonstrates the EaglePlot plugin interface (no custom plots added)."
 
 
 def get_plot_types() -> list[dict]:

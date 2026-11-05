@@ -1,4 +1,4 @@
-"""Integration tests for the Plottle toolkit.
+"""Integration tests for the EaglePlot toolkit.
 
 Tests end-to-end pipelines that exercise multiple modules together:
 - io + math:              save → load → analyse
@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.io import (
+from eagleplot.io import (
     save_pickle,
     load_pickle,
     save_numpy,
@@ -33,12 +33,12 @@ from plottle.io import (
     save_data,
     load_data,
 )
-from plottle.math import (
+from eagleplot.math import (
     calculate_statistics,
     fit_linear,
     fit_polynomial,
 )
-from plottle.plotting import (
+from eagleplot.plotting import (
     histogram,
     line_plot,
     scatter_plot,

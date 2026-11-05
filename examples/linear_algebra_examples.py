@@ -16,8 +16,8 @@ matplotlib.use("Agg")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.math import compute_eigenvalues, solve_linear_system, matrix_decomposition
-from plottle.plotting import heatmap, save_figure
+from eagleplot.math import compute_eigenvalues, solve_linear_system, matrix_decomposition
+from eagleplot.plotting import heatmap, save_figure
 
 OUTPUT_DIR = Path(__file__).parent / "plots"
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -122,7 +122,7 @@ def example_svd():
 
 
 if __name__ == "__main__":
-    print("Plottle — Linear Algebra Examples")
+    print("EaglePlot — Linear Algebra Examples")
     print("=" * 70)
     example_eigenvalues()
     example_solve_linear_system()

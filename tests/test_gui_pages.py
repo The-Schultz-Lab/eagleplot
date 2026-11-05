@@ -16,7 +16,7 @@ import pytest
 
 from streamlit.testing.v1 import AppTest
 
-_PACKAGE_ROOT = Path(__file__).resolve().parent.parent / "plottle"
+_PACKAGE_ROOT = Path(__file__).resolve().parent.parent / "eagleplot"
 _HOME = _PACKAGE_ROOT / "Home.py"
 _PAGES = sorted(p for p in (_PACKAGE_ROOT / "pages").glob("*.py") if not p.name.startswith("_"))
 _ALL_SCRIPTS = [_HOME] + _PAGES

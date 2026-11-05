@@ -1,12 +1,37 @@
 # Changelog
 
-All notable changes to Plottle are documented in this file.
+All notable changes to EaglePlot (called Plottle until 3.0) are documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
 ## [Unreleased]
+
+---
+
+## [3.0.0] - 2026-11-05
+
+**Plottle is now EaglePlot.** PyPI does not accept the name `plottle` (it counts as too
+similar to an existing project), so 3.0.0 is the first release on PyPI, under the new name.
+Nothing else about the toolkit changes in this release.
+
+### ⚠️ Changed: name, import path and command
+
+- **Install:** `pip install eagleplot` (with extras: `pip install "eagleplot[formats,nist]"`).
+- **Import:** `import eagleplot` / `from eagleplot.io import load_data`. Code that imports
+  `plottle` must be updated; there is no `plottle` compatibility package.
+- **Command:** `eagleplot`, replacing `plottle`. From a source checkout:
+  `python -m eagleplot.cli`, and the GUI is `streamlit run eagleplot/Home.py`.
+- **Setting:** `EAGLEPLOT_ALLOW_FOLDER_LOAD` replaces `PLOTTLE_ALLOW_FOLDER_LOAD`. The old
+  name still works for now and shows a deprecation warning.
+- **Links:** the repository is `The-Schultz-Lab/eagleplot` and the documentation is at
+  https://the-schultz-lab.github.io/eagleplot/.
+
+### Still works
+
+- Session files saved by Plottle 2.x load unchanged.
+- Saved defaults and presets (`config.json`) stay where they were.
 
 ---
 
@@ -326,9 +351,10 @@ Initial development release. Stages 0–6 complete (foundation, I/O, math, basic
 
 ---
 
-[Unreleased]: https://github.com/The-Schultz-Lab/plottle/compare/v2.1.0...HEAD
-[2.1.0]: https://github.com/The-Schultz-Lab/plottle/compare/v2.0.1...v2.1.0
-[2.0.1]: https://github.com/The-Schultz-Lab/plottle/compare/v2.0.0...v2.0.1
-[2.0.0]: https://github.com/The-Schultz-Lab/plottle/releases/tag/v2.0.0
-[1.0.0]: https://github.com/The-Schultz-Lab/plottle/releases/tag/v1.0.0
-[0.1.0]: https://github.com/The-Schultz-Lab/plottle/releases/tag/v0.1.0
+[Unreleased]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.1.0...v3.0.0
+[2.1.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.0.1...v2.1.0
+[2.0.1]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.0.0...v2.0.1
+[2.0.0]: https://github.com/The-Schultz-Lab/eagleplot/releases/tag/v2.0.0
+[1.0.0]: https://github.com/The-Schultz-Lab/eagleplot/releases/tag/v1.0.0
+[0.1.0]: https://github.com/The-Schultz-Lab/eagleplot/releases/tag/v0.1.0

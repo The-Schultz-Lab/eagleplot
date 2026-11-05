@@ -1,4 +1,4 @@
-# GUI Tutorial — Plottle
+# GUI Tutorial — EaglePlot
 
 This guide walks through the Streamlit app page by page, then shows a complete end-to-end
 workflow: upload data → analyze → plot → export.
@@ -9,7 +9,7 @@ workflow: upload data → analyze → plot → export.
 
 ```bash
 # Activate your virtual environment first, then:
-streamlit run plottle/Home.py
+streamlit run eagleplot/Home.py
 ```
 
 Open `http://localhost:8501` in your browser. The sidebar on the left lists all pages.

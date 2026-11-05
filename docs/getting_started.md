@@ -1,4 +1,4 @@
-# Getting Started — Plottle
+# Getting Started — EaglePlot
 
 NCCU Department of Chemistry and Biochemistry
 
@@ -6,7 +6,7 @@ NCCU Department of Chemistry and Biochemistry
 
 ## What Is This Tool?
 
-Plottle is a Python toolkit plus Streamlit GUI that makes scientific data visualization straightforward for computational chemists and physical scientists. It wraps Matplotlib, Seaborn, and Plotly behind a clean API and an interactive point-and-click interface.
+EaglePlot is a Python toolkit plus Streamlit GUI that makes scientific data visualization straightforward for computational chemists and physical scientists. It wraps Matplotlib, Seaborn, and Plotly behind a clean API and an interactive point-and-click interface.
 
 You can use it two ways:
 
@@ -22,8 +22,8 @@ You can use it two ways:
 ### Step 1 — Clone the repository
 
 ```bash
-git clone https://github.com/The-Schultz-Lab/plottle.git
-cd plottle
+git clone https://github.com/The-Schultz-Lab/eagleplot.git
+cd eagleplot
 ```
 
 ### Step 2 — Create a virtual environment
@@ -46,14 +46,14 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### Step 4 — Install Plottle
+### Step 4 — Install EaglePlot
 
 ```bash
 pip install -e ".[formats,nist]"
 ```
 
 The `formats` extra adds HDF5 and NetCDF support; `nist` adds the NIST WebBook
-lookup. The editable install is also what puts the `plottle` command on your PATH.
+lookup. The editable install is also what puts the `eagleplot` command on your PATH.
 
 ### Step 5 — Verify
 
@@ -74,7 +74,7 @@ launch.bat
 ### Any platform
 
 ```bash
-streamlit run plottle/Home.py
+streamlit run eagleplot/Home.py
 ```
 
 Open `http://localhost:8501` in your browser. Use the sidebar to navigate between pages.
@@ -96,9 +96,9 @@ Open `http://localhost:8501` in your browser. Use the sidebar to navigate betwee
 import numpy as np
 import sys
 
-sys.path.insert(0, "path/to/plottle")
+sys.path.insert(0, "path/to/eagleplot")
 
-from plottle.plotting import line_plot, save_figure
+from eagleplot.plotting import line_plot, save_figure
 
 # Simulate absorbance vs. wavelength
 wavelength = np.linspace(400, 800, 200)
@@ -120,10 +120,10 @@ save_figure(fig, "spectrum.png", dpi=300)
 
 ## Loading Data
 
-The `plottle.io` module supports eight common formats.
+The `eagleplot.io` module supports eight common formats.
 
 ```python
-from plottle.io import load_data, save_data
+from eagleplot.io import load_data, save_data
 
 # Auto-detect format from extension
 df = load_data("experiment.csv")  # → pandas DataFrame
@@ -149,7 +149,7 @@ Supported extensions:
 ## Computing Statistics
 
 ```python
-from plottle.math import calculate_statistics
+from eagleplot.math import calculate_statistics
 
 stats = calculate_statistics(arr)
 print(f"Mean: {stats['mean']:.4f}")
@@ -164,7 +164,7 @@ Returns: `mean`, `median`, `std`, `var`, `min`, `max`, `q1`, `q3`, `iqr`, `range
 ## Curve Fitting
 
 ```python
-from plottle.math import fit_linear, fit_polynomial
+from eagleplot.math import fit_linear, fit_polynomial
 
 # Beer-Lambert: A = ε·c·l  →  linear fit
 result = fit_linear(concentration, absorbance)
@@ -201,7 +201,7 @@ y_fit = poly["predict"](x)  # call the returned predict function
 ## Saving Figures
 
 ```python
-from plottle.plotting import save_figure
+from eagleplot.plotting import save_figure
 
 save_figure(fig, "plot.png", dpi=300)  # high-res raster
 save_figure(fig, "plot.svg")  # vector (no dpi needed)
@@ -236,9 +236,9 @@ save_figure(fig, "plot.pdf")  # vector, publication-ready
 ### Beer-Lambert calibration curve
 
 ```python
-from plottle.io import load_dataframe
-from plottle.math import fit_linear
-from plottle.plotting import scatter_plot, save_figure
+from eagleplot.io import load_dataframe
+from eagleplot.math import fit_linear
+from eagleplot.plotting import scatter_plot, save_figure
 import numpy as np
 
 df = load_dataframe("calibration.csv")  # columns: concentration, absorbance
@@ -262,7 +262,7 @@ save_figure(fig, "calibration.png", dpi=300)
 ### Comparing multiple spectra
 
 ```python
-from plottle.plotting import line_plot
+from eagleplot.plotting import line_plot
 
 fig, ax = line_plot(
     wavelength,

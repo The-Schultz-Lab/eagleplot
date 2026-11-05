@@ -1,1 +1,1 @@
-"""Test suite for Plottle package."""
+"""Test suite for EaglePlot package."""

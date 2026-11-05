@@ -1,4 +1,4 @@
-"""Generate example datasets for every plot type in the Plottle app.
+"""Generate example datasets for every plot type in the EaglePlot app.
 
 Run once from the example-data/Artificial/ directory (or anywhere — paths are
 resolved relative to this file):
@@ -13,7 +13,7 @@ import pandas as pd
 from pathlib import Path
 
 rng = np.random.default_rng(42)
-OUT = Path(__file__).resolve().parent / "plottle" / "example-data" / "Artificial"
+OUT = Path(__file__).resolve().parent / "eagleplot" / "example-data" / "Artificial"
 OUT.mkdir(parents=True, exist_ok=True)
 
 

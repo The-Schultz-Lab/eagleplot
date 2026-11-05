@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plottle — Scientific Data Visualization for Python</title>
+  <title>EaglePlot — Scientific Data Visualization for Python</title>
   <meta name="description" content="A general-purpose Python toolkit for scientific data visualization and analysis. 27 plot types, 14-page Streamlit GUI, 18 file formats, and a full Python API.">
-  <meta property="og:title" content="Plottle">
+  <meta property="og:title" content="EaglePlot">
   <meta property="og:description" content="Scientific data visualization for Python — Matplotlib, Seaborn, and Plotly behind one clean API and a point-and-click GUI.">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary">
@@ -386,14 +386,14 @@
 <!-- ── Navigation ──────────────────────────────────────────────────────── -->
 <nav class="nav" role="navigation">
   <div class="nav__inner">
-    <a class="nav__logo" href="#">Plottle</a>
-    <span class="nav__badge">v2.1.0 &middot; MIT</span>
+    <a class="nav__logo" href="#">EaglePlot</a>
+    <span class="nav__badge">v3.0.0 &middot; MIT</span>
     <a class="nav__link" href="#features">Features</a>
     <a class="nav__link" href="#install">Install</a>
     <a class="nav__link" href="#api">API</a>
     <a class="nav__link" href="#gui">GUI</a>
     <a class="nav__link" href="#docs">Docs</a>
-    <a class="btn btn--ghost" href="https://github.com/The-Schultz-Lab/plottle">GitHub &rarr;</a>
+    <a class="btn btn--ghost" href="https://github.com/The-Schultz-Lab/eagleplot">GitHub &rarr;</a>
   </div>
 </nav>
 
@@ -414,7 +414,7 @@
           figures in minutes.
         </p>
         <div class="hero__actions">
-          <a class="btn btn--primary" href="https://github.com/The-Schultz-Lab/plottle">
+          <a class="btn btn--primary" href="https://github.com/The-Schultz-Lab/eagleplot">
             View on GitHub
           </a>
           <a class="btn btn--outline" href="#install">Get started</a>
@@ -717,8 +717,8 @@
         <span class="code-block__dot code-block__dot--green"></span>
         <span class="code-block__label">bash</span>
       </div>
-      <pre><code>git clone https://github.com/The-Schultz-Lab/plottle.git
-cd plottle
+      <pre><code>git clone https://github.com/The-Schultz-Lab/eagleplot.git
+cd eagleplot
 
 <span class="c"># Windows — double-click setup.bat, then launch.bat</span>
 <span class="c"># macOS   — double-click setup.command, then launch.command</span>
@@ -733,8 +733,8 @@ streamlit run modules/Home.py</code></pre>
 
     <div class="callout callout--info" style="margin-top:1.25rem;">
       <strong>Try it instantly:</strong>
-      launch Plottle in your browser with no installation via
-      <a href="https://mybinder.org/v2/gh/The-Schultz-Lab/plottle/main" target="_blank" rel="noopener">Binder</a>.
+      launch EaglePlot in your browser with no installation via
+      <a href="https://mybinder.org/v2/gh/The-Schultz-Lab/eagleplot/main" target="_blank" rel="noopener">Binder</a>.
     </div>
 
   </div>
@@ -745,7 +745,7 @@ streamlit run modules/Home.py</code></pre>
   <div class="container--narrow">
     <h2 class="section__title">Python API</h2>
     <p class="section__subtitle">
-      Use Plottle from scripts or Jupyter notebooks for reproducible, programmatic analysis.
+      Use EaglePlot from scripts or Jupyter notebooks for reproducible, programmatic analysis.
     </p>
 
     <div class="code-block">
@@ -755,8 +755,8 @@ streamlit run modules/Home.py</code></pre>
         <span class="code-block__dot code-block__dot--green"></span>
         <span class="code-block__label">python</span>
       </div>
-      <pre><code><span class="k">from</span> plottle.io <span class="k">import</span> load_data
-<span class="k">from</span> plottle.plotting <span class="k">import</span> line_plot, save_figure
+      <pre><code><span class="k">from</span> eagleplot.io <span class="k">import</span> load_data
+<span class="k">from</span> eagleplot.plotting <span class="k">import</span> line_plot, save_figure
 <span class="k">import</span> numpy <span class="k">as</span> np
 
 <span class="c"># Simulate a UV-Vis absorption spectrum</span>
@@ -789,43 +789,43 @@ df = load_data(<span class="s">'results.csv'</span>)      <span class="c"># CSV<
         </thead>
         <tbody>
           <tr>
-            <td><code>plottle.io</code></td>
+            <td><code>eagleplot.io</code></td>
             <td><code>load_data()</code> / <code>save_data()</code> &mdash; auto-detects format from extension</td>
           </tr>
           <tr>
-            <td><code>plottle.plotting</code></td>
+            <td><code>eagleplot.plotting</code></td>
             <td>27 plot functions; Matplotlib returns <code>(fig, ax, info)</code>, Plotly returns <code>(fig, info)</code></td>
           </tr>
           <tr>
-            <td><code>plottle.math</code></td>
+            <td><code>eagleplot.math</code></td>
             <td>25 functions &mdash; statistics, curve fitting, hypothesis tests, optimization, linear algebra</td>
           </tr>
           <tr>
-            <td><code>plottle.signal</code></td>
+            <td><code>eagleplot.signal</code></td>
             <td>16 functions &mdash; smoothing, filtering, FFT, derivatives, baseline correction, interpolation</td>
           </tr>
           <tr>
-            <td><code>plottle.peaks</code></td>
+            <td><code>eagleplot.peaks</code></td>
             <td>Find, integrate, FWHM, fit (Gaussian / Lorentzian / Voigt / pseudo-Voigt)</td>
           </tr>
           <tr>
-            <td><code>plottle.spectroscopy</code></td>
+            <td><code>eagleplot.spectroscopy</code></td>
             <td>18 functions &mdash; IR/Raman, UV-Vis, NMR, mass spectrometry</td>
           </tr>
           <tr>
-            <td><code>plottle.nist</code></td>
+            <td><code>eagleplot.nist</code></td>
             <td>NIST WebBook integration &mdash; fetch IR spectra by CAS number</td>
           </tr>
           <tr>
-            <td><code>plottle.data_tools</code></td>
+            <td><code>eagleplot.data_tools</code></td>
             <td>12 non-destructive DataFrame operations (normalize, pivot, merge, resample, &hellip;)</td>
           </tr>
           <tr>
-            <td><code>plottle.annotations</code></td>
+            <td><code>eagleplot.annotations</code></td>
             <td>7 overlay types &mdash; hline, vline, span, text, rectangle, ellipse</td>
           </tr>
           <tr>
-            <td><code>plottle.report</code></td>
+            <td><code>eagleplot.report</code></td>
             <td>PDF report generation via <code>matplotlib.PdfPages</code></td>
           </tr>
         </tbody>
@@ -943,19 +943,19 @@ df = load_data(<span class="s">'results.csv'</span>)      <span class="c"># CSV<
         <span class="code-block__label">bash</span>
       </div>
       <pre><code><span class="c"># Generate a scatter plot from any supported file format</span>
-plottle plot data.csv --plot scatter --x-column x --y-column y
+eagleplot plot data.csv --plot scatter --x-column x --y-column y
 
 <span class="c"># Descriptive statistics summary</span>
-plottle stats data.csv
+eagleplot stats data.csv
 
 <span class="c"># Batch processing from a JSON config</span>
-plottle batch config.json --verbose
+eagleplot batch config.json --verbose
 
 <span class="c"># Side-by-side comparison of two datasets</span>
-plottle compare before.csv after.csv --plot line --output comparison.png
+eagleplot compare before.csv after.csv --plot line --output comparison.png
 
 <span class="c"># Convert between supported formats</span>
-plottle convert spectrum.jdx spectrum.csv</code></pre>
+eagleplot convert spectrum.jdx spectrum.csv</code></pre>
     </div>
   </div>
 </section>
@@ -975,7 +975,7 @@ plottle convert spectrum.jdx spectrum.csv</code></pre>
           <a href="getting-started.html">Getting Started</a>
         </div>
         <p class="feature-card__body">
-          Install Plottle, load your first dataset, and make your first plot.
+          Install EaglePlot, load your first dataset, and make your first plot.
         </p>
       </div>
 
@@ -995,7 +995,7 @@ plottle convert spectrum.jdx spectrum.csv</code></pre>
           <a href="cli-guide.html">CLI Guide</a>
         </div>
         <p class="feature-card__body">
-          The five <code>plottle</code> subcommands, with worked examples.
+          The five <code>eagleplot</code> subcommands, with worked examples.
         </p>
       </div>
 
@@ -1038,16 +1038,16 @@ plottle convert spectrum.jdx spectrum.csv</code></pre>
   <div class="container">
     <div class="footer__inner">
       <div>
-        <div class="footer__name">Plottle</div>
+        <div class="footer__name">EaglePlot</div>
         <span class="footer__copy">
           MIT License &middot; Copyright 2026 The Schultz Lab, North Carolina Central University
         </span>
       </div>
       <nav class="footer__links" aria-label="Footer links">
         <a href="https://github.com/The-Schultz-Lab" target="_blank" rel="noopener">Schultz Lab</a>
-        <a href="https://github.com/The-Schultz-Lab/plottle" target="_blank" rel="noopener">Repository</a>
-        <a href="https://mybinder.org/v2/gh/The-Schultz-Lab/plottle/main" target="_blank" rel="noopener">Try on Binder</a>
-        <a href="https://github.com/The-Schultz-Lab/plottle/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
+        <a href="https://github.com/The-Schultz-Lab/eagleplot" target="_blank" rel="noopener">Repository</a>
+        <a href="https://mybinder.org/v2/gh/The-Schultz-Lab/eagleplot/main" target="_blank" rel="noopener">Try on Binder</a>
+        <a href="https://github.com/The-Schultz-Lab/eagleplot/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
       </nav>
     </div>
   </div>

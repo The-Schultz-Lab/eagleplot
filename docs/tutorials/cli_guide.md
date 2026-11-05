@@ -1,4 +1,4 @@
-# CLI Tutorial — Plottle
+# CLI Tutorial — EaglePlot
 
 This guide walks through all five CLI commands with copy-pasteable examples. No GUI or
 Jupyter required — everything runs from a terminal.
@@ -15,7 +15,7 @@ Jupyter required — everything runs from a terminal.
 source .venv/bin/activate
 
 # Verify the CLI is available
-plottle --help
+eagleplot --help
 ```
 
 ---
@@ -27,7 +27,7 @@ The `plot` command reads a CSV (or any supported format) and produces a figure.
 ### Quickest example — scatter from CSV
 
 ```bash
-plottle plot examples/data/experimental_data.csv \
+eagleplot plot examples/data/experimental_data.csv \
     --plot scatter \
     --x-column x \
     --y-column y \
@@ -48,7 +48,7 @@ plottle plot examples/data/experimental_data.csv \
 ### Publication-quality line plot
 
 ```bash
-plottle plot examples/data/experimental_data.csv \
+eagleplot plot examples/data/experimental_data.csv \
     --plot line \
     --x-column wavelength \
     --y-column absorbance \
@@ -62,7 +62,7 @@ plottle plot examples/data/experimental_data.csv \
 ### Histogram of a single column
 
 ```bash
-plottle plot examples/data/experimental_data.csv \
+eagleplot plot examples/data/experimental_data.csv \
     --plot histogram \
     --y-column signal \
     --title "Signal Distribution" \
@@ -74,7 +74,7 @@ plottle plot examples/data/experimental_data.csv \
 ## Command 2 — `stats`: Compute Summary Statistics
 
 ```bash
-plottle stats examples/data/experimental_data.csv
+eagleplot stats examples/data/experimental_data.csv
 ```
 
 Output example:
@@ -95,13 +95,13 @@ Statistics for experimental_data.csv
 ### Stats for a specific column
 
 ```bash
-plottle stats examples/data/experimental_data.csv --column absorbance
+eagleplot stats examples/data/experimental_data.csv --column absorbance
 ```
 
 ### Normality test
 
 ```bash
-plottle stats examples/data/experimental_data.csv --normality
+eagleplot stats examples/data/experimental_data.csv --normality
 ```
 
 ---
@@ -112,16 +112,16 @@ Convert between any of the eight supported formats:
 
 ```bash
 # CSV  →  pickle (preserves dtypes)
-plottle convert examples/data/experimental_data.csv output/data.pkl
+eagleplot convert examples/data/experimental_data.csv output/data.pkl
 
 # CSV  →  NumPy binary
-plottle convert examples/data/experimental_data.csv output/data.npy
+eagleplot convert examples/data/experimental_data.csv output/data.npy
 
 # NumPy  →  CSV
-plottle convert examples/data/auto_test.npy output/array.csv
+eagleplot convert examples/data/auto_test.npy output/array.csv
 
 # Excel  →  Parquet (smaller, faster to load)
-plottle convert examples/data/experimental_data.xlsx output/data.parquet
+eagleplot convert examples/data/experimental_data.xlsx output/data.parquet
 ```
 
 Supported extensions: `.csv`, `.xlsx`, `.tsv`, `.json`, `.npy`, `.npz`, `.pkl`, `.parquet`
@@ -133,7 +133,7 @@ Supported extensions: `.csv`, `.xlsx`, `.tsv`, `.json`, `.npy`, `.npz`, `.pkl`, 
 Compare two or more files on the same axes:
 
 ```bash
-plottle compare \
+eagleplot compare \
     examples/data/experimental_data.csv \
     examples/data/md_analysis.csv \
     --plot line \
@@ -146,7 +146,7 @@ Each file becomes a separate series. Labels default to the filenames; use `--lab
 override:
 
 ```bash
-plottle compare file1.csv file2.csv \
+eagleplot compare file1.csv file2.csv \
     --plot scatter \
     --labels "Experiment A" "Experiment B" \
     --output output/comparison.png
@@ -188,9 +188,9 @@ For reproducible multi-plot workflows, define all jobs in a JSON config file.
 ### Running a batch job
 
 ```bash
-plottle batch examples/batch_config.json
+eagleplot batch examples/batch_config.json
 # With verbose output:
-plottle batch examples/batch_config.json --verbose
+eagleplot batch examples/batch_config.json --verbose
 ```
 
 A full example config is at [examples/batch_config.json](../../examples/batch_config.json).

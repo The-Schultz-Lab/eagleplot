@@ -15,7 +15,7 @@ import sys
 
 # Import functions to test
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from plottle.math import (
+from eagleplot.math import (
     # Statistics
     calculate_mean,
     calculate_median,
@@ -288,7 +288,9 @@ class TestCurveFitting:
         x = np.linspace(0, 1, 10)
         y = np.ones(10)
 
-        with patch("plottle.math.optimize.curve_fit", side_effect=RuntimeError("did not converge")):
+        with patch(
+            "eagleplot.math.optimize.curve_fit", side_effect=RuntimeError("did not converge")
+        ):
             with pytest.raises(RuntimeError, match="Exponential fit failed"):
                 fit_exponential(x, y)
 
@@ -341,7 +343,9 @@ class TestCurveFitting:
         x = np.linspace(0, 1, 10)
         y = x
 
-        with patch("plottle.math.optimize.curve_fit", side_effect=RuntimeError("did not converge")):
+        with patch(
+            "eagleplot.math.optimize.curve_fit", side_effect=RuntimeError("did not converge")
+        ):
             with pytest.raises(RuntimeError, match="Custom fit failed"):
                 fit_custom(x, y, linear, p0=[1, 0])
 

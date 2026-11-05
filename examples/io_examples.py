@@ -1,9 +1,9 @@
 """Examples for using the io module.
 
-This script demonstrates how to use the plottle io module
+This script demonstrates how to use the eagleplot io module
 to load and save data in various formats.
 
-Run this script from the plottle directory:
+Run this script from the eagleplot directory:
     python examples/io_examples.py
 """
 
@@ -12,10 +12,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# Add parent directory to path to import plottle
+# Add parent directory to path to import eagleplot
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.io import (
+from eagleplot.io import (
     load_pickle,
     save_pickle,
     load_numpy,
@@ -247,7 +247,7 @@ def main():
     print("PLOTTING HELPER - I/O MODULE EXAMPLES")
     print("=" * 70)
     print("\nThis script demonstrates the data I/O capabilities of the")
-    print("plottle package for scientific computing.\n")
+    print("eagleplot package for scientific computing.\n")
 
     try:
         # Run all examples

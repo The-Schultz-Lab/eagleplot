@@ -1,27 +1,27 @@
-# Contributing to Plottle
+# Contributing to EaglePlot
 
-Thanks for helping improve Plottle. Bug reports, feature ideas, documentation fixes and
+Thanks for helping improve EaglePlot. Bug reports, feature ideas, documentation fixes and
 code are all welcome.
 
 ## Reporting bugs and requesting features
 
-Open an [issue](https://github.com/The-Schultz-Lab/plottle/issues/new/choose) and pick the
+Open an [issue](https://github.com/The-Schultz-Lab/eagleplot/issues/new/choose) and pick the
 bug or feature template. For a bug, the most useful things to include are:
 
 - what you did (the page, button or command, and the data file type),
 - what happened, including the full error message or traceback,
 - what you expected, and
-- your Plottle version (`plottle --version`), Python version and operating system.
+- your EaglePlot version (`eagleplot --version`), Python version and operating system.
 
 **Security problems** should not go in a public issue. See [SECURITY.md](SECURITY.md).
 
 ## Setting up a development environment
 
-Plottle supports Python 3.9 and later (except 3.9.7).
+EaglePlot supports Python 3.9 and later (except 3.9.7).
 
 ```bash
-git clone https://github.com/The-Schultz-Lab/plottle.git
-cd plottle
+git clone https://github.com/The-Schultz-Lab/eagleplot.git
+cd eagleplot
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -e ".[dev,formats,nist]"

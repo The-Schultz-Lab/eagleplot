@@ -3,7 +3,7 @@ requires = ["setuptools>=78.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "plottle"
+name = "eagleplot"
 dynamic = ["version"]
 description = "A general-purpose Python toolkit for scientific data visualization and analysis"
 readme = "README.md"
@@ -48,7 +48,7 @@ formats = [
     "xarray>=0.20.0",
     "netcdf4>=1.6.0",
 ]
-# NIST WebBook IR fetching (plottle.nist). Imported lazily with a helpful
+# NIST WebBook IR fetching (eagleplot.nist). Imported lazily with a helpful
 # message, so it is genuinely optional rather than a hard dependency.
 nist = [
     "requests>=2.28.0",
@@ -68,7 +68,7 @@ test = [
     "pytest-cov>=4.1.0",
 ]
 dev = [
-    "plottle[test]",
+    "eagleplot[test]",
     # ruff and mypy are pinned exactly: both gate CI, and both add new checks in
     # minor releases, so an unpinned floor means CI can turn red with no code
     # change. Dependabot's `dev-tools` group bumps these. See audit A-10.
@@ -83,28 +83,28 @@ dev = [
 ]
 # Everything a user (not a contributor) might want, in one extra.
 all = [
-    "plottle[formats,nist]",
+    "eagleplot[formats,nist]",
 ]
 
 [project.scripts]
-plottle = "plottle.cli:main"
+eagleplot = "eagleplot.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/The-Schultz-Lab/plottle"
-Repository = "https://github.com/The-Schultz-Lab/plottle"
-Documentation = "https://nccu-schultz-lab.github.io/plottle/"
-"Bug Tracker" = "https://github.com/The-Schultz-Lab/plottle/issues"
-Changelog = "https://github.com/The-Schultz-Lab/plottle/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/The-Schultz-Lab/eagleplot"
+Repository = "https://github.com/The-Schultz-Lab/eagleplot"
+Documentation = "https://the-schultz-lab.github.io/eagleplot/"
+"Bug Tracker" = "https://github.com/The-Schultz-Lab/eagleplot/issues"
+Changelog = "https://github.com/The-Schultz-Lab/eagleplot/blob/main/CHANGELOG.md"
 
-# Single source of truth: plottle/__init__.py. See audit A-26.
+# Single source of truth: eagleplot/__init__.py. See audit A-26.
 [tool.setuptools.dynamic]
-version = {attr = "plottle.__version__"}
+version = {attr = "eagleplot.__version__"}
 
 # Runtime assets must be declared explicitly or the wheel ships only .py files,
 # leaving a pip-installed GUI with no logo, theme, example data or gallery.
 # See audit A-09 / mediator G-012.
 [tool.setuptools.package-data]
-plottle = [
+eagleplot = [
     "assets/*.png",
     "assets/*.ico",
     "gallery/*.png",
@@ -115,7 +115,7 @@ plottle = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["plottle*"]
+include = ["eagleplot*"]
 
 [tool.ruff]
 line-length = 100
@@ -130,8 +130,8 @@ select = ["E", "F", "W", "FA102"]
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"plottle/pages/*.py" = ["E402"]
-"plottle/Home.py" = ["E402"]
+"eagleplot/pages/*.py" = ["E402"]
+"eagleplot/Home.py" = ["E402"]
 
 [tool.black]
 line-length = 100
@@ -145,6 +145,6 @@ explicit_package_bases = true
 
 [tool.coverage.run]
 omit = [
-    "plottle/Home.py",
-    "plottle/pages/*",
+    "eagleplot/Home.py",
+    "eagleplot/pages/*",
 ]

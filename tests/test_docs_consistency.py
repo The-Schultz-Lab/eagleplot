@@ -16,10 +16,10 @@ from pathlib import Path
 
 import pytest
 
-from plottle.utils.plot_config import PLOT_TYPES
+from eagleplot.utils.plot_config import PLOT_TYPES
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_PACKAGE_ROOT = _REPO_ROOT / "plottle"
+_PACKAGE_ROOT = _REPO_ROOT / "eagleplot"
 
 # Files that state the plot-type count in prose, and must therefore stay in step
 # with PLOT_TYPES.
@@ -34,11 +34,11 @@ _FILES_STATING_THE_COUNT = [
 class TestPlotTypeCatalogue:
     def test_every_plot_type_resolves_to_a_callable(self):
         """A PLOT_TYPES key with no matching function is a dead GUI menu entry."""
-        import plottle.plotting as plotting
+        import eagleplot.plotting as plotting
 
         missing = sorted(k for k in PLOT_TYPES if not callable(getattr(plotting, k, None)))
         assert not missing, (
-            f"PLOT_TYPES lists entries with no callable in plottle.plotting: {missing}"
+            f"PLOT_TYPES lists entries with no callable in eagleplot.plotting: {missing}"
         )
 
     def test_every_entry_has_a_label_and_category(self):
@@ -110,7 +110,7 @@ class TestVersionShownOnDocsSite:
     def test_nav_badge_matches_package_version(self):
         # The landing page hard-codes the version in its nav badge; it drifted once
         # already (audit A-26 covered six other copies).
-        from plottle import __version__
+        from eagleplot import __version__
 
         html = (_REPO_ROOT / "docs" / "index.html").read_text(encoding="utf-8")
         badge = re.search(r'class="nav__badge">v([0-9][^ <&]*)', html)

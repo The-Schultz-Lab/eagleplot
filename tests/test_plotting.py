@@ -19,7 +19,7 @@ import shutil
 
 # Import functions to test
 sys.path.insert(0, str(Path(__file__).parent.parent))
-from plottle.plotting import (
+from eagleplot.plotting import (
     # Figure management
     create_figure,
     configure_axes,

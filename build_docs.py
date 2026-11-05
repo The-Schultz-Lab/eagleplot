@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build the static documentation site into ``docs/_site/``.
 
-Plottle's docs used to contain two disconnected systems: a full Sphinx setup that
+EaglePlot's docs used to contain two disconnected systems: a full Sphinx setup that
 CI never built, and a hand-written ``docs/index.html`` that linked to none of the
 markdown guides. The published site was therefore a single marketing page, with
 seven markdown files and an entire API reference deployed but unreachable except
@@ -37,7 +37,7 @@ _ROOT = Path(__file__).resolve().parent
 _DOCS = _ROOT / "docs"
 _SITE = _DOCS / "_site"
 
-REPO_URL = "https://github.com/The-Schultz-Lab/plottle"
+REPO_URL = "https://github.com/The-Schultz-Lab/eagleplot"
 
 
 @dataclass(frozen=True)
@@ -62,7 +62,7 @@ PAGES: List[Page] = [
         _DOCS / "getting_started.md",
         "getting-started",
         "Getting Started",
-        "Install Plottle, load your first dataset, and make your first plot.",
+        "Install EaglePlot, load your first dataset, and make your first plot.",
     ),
     Page(
         _DOCS / "tutorials" / "gui_guide.md",
@@ -74,7 +74,7 @@ PAGES: List[Page] = [
         _DOCS / "tutorials" / "cli_guide.md",
         "cli-guide",
         "CLI Guide",
-        "The five `plottle` subcommands, with worked examples.",
+        "The five `eagleplot` subcommands, with worked examples.",
     ),
     Page(
         _DOCS / "cheatsheet.md",
@@ -214,7 +214,7 @@ def _nav_html(current_slug: str = "") -> str:
         )
     return f"""<nav class="nav" role="navigation">
   <div class="nav__inner">
-    <a class="nav__logo" href="index.html">Plottle</a>
+    <a class="nav__logo" href="index.html">EaglePlot</a>
     {"".join(links)}
     <span class="nav__spacer"></span>
     <a class="btn--ghost" href="{REPO_URL}">GitHub &rarr;</a>
@@ -225,7 +225,7 @@ def _nav_html(current_slug: str = "") -> str:
 def _footer_html() -> str:
     return f"""<footer class="footer">
   <div class="footer__inner">
-    <div>Plottle &middot; NCCU Department of Chemistry and Biochemistry</div>
+    <div>EaglePlot &middot; NCCU Department of Chemistry and Biochemistry</div>
     <div>
       <a href="{REPO_URL}">GitHub</a> &nbsp;&middot;&nbsp;
       <a href="{REPO_URL}/blob/main/LICENSE">MIT License</a> &nbsp;&middot;&nbsp;
@@ -271,7 +271,7 @@ def _render(page: Page, body_html: str) -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{page.title} — Plottle</title>
+<title>{page.title} — EaglePlot</title>
 <meta name="description" content="{page.blurb}">
 <meta name="theme-color" content="#1a0c0e">
 <link rel="stylesheet" href="docs.css">
@@ -279,7 +279,7 @@ def _render(page: Page, body_html: str) -> str:
 <body>
 {_nav_html(page.slug)}
 <main class="wrap">
-<p class="crumb"><a href="index.html">Plottle</a> &rsaquo; {page.title}</p>
+<p class="crumb"><a href="index.html">EaglePlot</a> &rsaquo; {page.title}</p>
 {body_html}
 </main>
 {_footer_html()}

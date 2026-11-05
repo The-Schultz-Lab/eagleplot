@@ -1,9 +1,9 @@
 """Examples for using the plotting module.
 
-This script demonstrates how to use the plottle plotting module
+This script demonstrates how to use the eagleplot plotting module
 to create publication-quality scientific visualizations.
 
-Run this script from the plottle directory:
+Run this script from the eagleplot directory:
     python examples/plotting_examples.py
 """
 
@@ -15,10 +15,10 @@ import matplotlib
 matplotlib.use("Agg")  # Use non-interactive backend
 import matplotlib.pyplot as plt
 
-# Add parent directory to path to import plottle
+# Add parent directory to path to import eagleplot
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.plotting import (
+from eagleplot.plotting import (
     # Figure management
     configure_axes,
     save_figure,
@@ -474,7 +474,7 @@ def example_practical_workflow():
     )
 
     # Add linear fit line
-    from plottle.math import fit_linear
+    from eagleplot.math import fit_linear
 
     fit_result = fit_linear(t_positive, log_C)
     y_fit = fit_result["slope"] * t_positive + fit_result["intercept"]
@@ -506,7 +506,7 @@ def main():
     print("PLOTTING HELPER - PLOTTING MODULE EXAMPLES")
     print("=" * 70)
     print("\nThis script demonstrates the plotting capabilities of the")
-    print("plottle package for scientific visualization.\n")
+    print("eagleplot package for scientific visualization.\n")
     print(f"{CHECK} Using non-interactive backend (Agg)")
     print(f"{CHECK} All plots will be saved to examples/plots/")
 

@@ -1,4 +1,4 @@
-"""Tests for plottle/nist.py — NIST WebBook integration."""
+"""Tests for eagleplot/nist.py — NIST WebBook integration."""
 
 import pytest
 import pandas as pd
@@ -8,7 +8,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.nist import (
+from eagleplot.nist import (
     get_compound_url,
     get_ir_jcamp_url,
     search_url,
@@ -97,7 +97,7 @@ class TestFetchIRSpectrum:
         mock.text = text
         return mock
 
-    @patch("plottle.io.load_jcamp", return_value=_FAKE_DF.copy())
+    @patch("eagleplot.io.load_jcamp", return_value=_FAKE_DF.copy())
     @patch("requests.get")
     def test_basic(self, mock_get, mock_jcamp):
         mock_get.return_value = self._mock_response(_FAKE_JCAMP)
@@ -107,7 +107,7 @@ class TestFetchIRSpectrum:
         assert len(df) > 0
         assert df.attrs.get("nist_cas") == "64-17-5"
 
-    @patch("plottle.io.load_jcamp", return_value=_FAKE_DF.copy())
+    @patch("eagleplot.io.load_jcamp", return_value=_FAKE_DF.copy())
     @patch("requests.get")
     def test_attrs_set(self, mock_get, mock_jcamp):
         mock_get.return_value = self._mock_response(_FAKE_JCAMP)
@@ -127,21 +127,21 @@ class TestFetchIRSpectrum:
         with pytest.raises(RuntimeError, match="No IR spectrum found"):
             fetch_ir_spectrum("99-99-9")
 
-    @patch("plottle.io.load_jcamp", return_value=_FAKE_DF.copy())
+    @patch("eagleplot.io.load_jcamp", return_value=_FAKE_DF.copy())
     @patch("requests.get")
     def test_returns_dataframe(self, mock_get, mock_jcamp):
         mock_get.return_value = self._mock_response(_FAKE_JCAMP)
         df = fetch_ir_spectrum("64-17-5")
         assert isinstance(df, pd.DataFrame)
 
-    @patch("plottle.io.load_jcamp", return_value=_FAKE_DF.copy())
+    @patch("eagleplot.io.load_jcamp", return_value=_FAKE_DF.copy())
     @patch("requests.get")
     def test_nist_url_attr_contains_cas(self, mock_get, mock_jcamp):
         mock_get.return_value = self._mock_response(_FAKE_JCAMP)
         df = fetch_ir_spectrum("64-17-5")
         assert "64-17-5" in df.attrs["nist_url"]
 
-    @patch("plottle.io.load_jcamp", return_value=_FAKE_DF.copy())
+    @patch("eagleplot.io.load_jcamp", return_value=_FAKE_DF.copy())
     @patch("requests.get")
     def test_index_passed_to_url(self, mock_get, mock_jcamp):
         mock_get.return_value = self._mock_response(_FAKE_JCAMP)

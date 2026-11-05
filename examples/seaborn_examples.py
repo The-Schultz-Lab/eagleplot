@@ -17,7 +17,7 @@ matplotlib.use("Agg")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from plottle.plotting import (
+from eagleplot.plotting import (
     distribution_plot,
     box_plot,
     regression_plot,
@@ -135,7 +135,7 @@ def example_regression_plot():
 
 
 if __name__ == "__main__":
-    print("Plottle — Seaborn Statistical Plot Examples")
+    print("EaglePlot — Seaborn Statistical Plot Examples")
     print("=" * 70)
     example_distribution_plots()
     example_box_and_violin()

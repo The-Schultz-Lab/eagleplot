@@ -47,19 +47,19 @@ jobs:
       - name: mypy check
         run: |
           mypy \
-            plottle/io.py \
-            plottle/math.py \
-            plottle/plotting.py \
-            plottle/signal.py \
-            plottle/peaks.py \
-            plottle/data_tools.py \
-            plottle/annotations.py \
-            plottle/batch.py \
-            plottle/report.py \
-            plottle/plugin_loader.py \
-            plottle/spectroscopy.py \
-            plottle/nist.py \
-            plottle/cli.py \
+            eagleplot/io.py \
+            eagleplot/math.py \
+            eagleplot/plotting.py \
+            eagleplot/signal.py \
+            eagleplot/peaks.py \
+            eagleplot/data_tools.py \
+            eagleplot/annotations.py \
+            eagleplot/batch.py \
+            eagleplot/report.py \
+            eagleplot/plugin_loader.py \
+            eagleplot/spectroscopy.py \
+            eagleplot/nist.py \
+            eagleplot/cli.py \
             --ignore-missing-imports --no-strict-optional --explicit-package-bases
 
   test:
@@ -125,7 +125,7 @@ jobs:
         shell: bash
         run: |
           if [ "$COVERAGE_CELL" = "true" ]; then
-            pytest tests/ --cov=plottle --cov-report=xml --cov-report=term-missing
+            pytest tests/ --cov=eagleplot --cov-report=xml --cov-report=term-missing
           else
             pytest tests/
           fi

@@ -1,14 +1,18 @@
-# Plottle
+# EaglePlot
 
-[![Tests](https://github.com/The-Schultz-Lab/plottle/actions/workflows/tests.yml/badge.svg)](https://github.com/The-Schultz-Lab/plottle/actions/workflows/tests.yml)
-[![PyPI](https://img.shields.io/pypi/v/plottle)](https://pypi.org/project/plottle/)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/The-Schultz-Lab/plottle/main)
+[![Tests](https://github.com/The-Schultz-Lab/eagleplot/actions/workflows/tests.yml/badge.svg)](https://github.com/The-Schultz-Lab/eagleplot/actions/workflows/tests.yml)
+[![PyPI](https://img.shields.io/pypi/v/eagleplot)](https://pypi.org/project/eagleplot/)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/The-Schultz-Lab/eagleplot/main)
 
 A general-purpose Python toolkit for scientific data visualization and analysis, developed for research and teaching in computational science at North Carolina Central University.
 
+> **EaglePlot was called Plottle until version 3.0.** If you used Plottle, change
+> `import plottle` / `from plottle.… import …` to `eagleplot`, and run the `eagleplot`
+> command instead of `plottle`. Session files saved by Plottle still load.
+
 ## Overview
 
-Plottle provides a unified interface for scientific data work:
+EaglePlot provides a unified interface for scientific data work:
 
 - **Data I/O** — 18 file formats (CSV, Excel, TSV, JSON, Parquet, NumPy, Pickle, JCAMP-DX, HDF5, NetCDF, SPC, ASC, mzML/mzXML, and more)
 - **Mathematical analysis** — statistics, curve fitting, signal processing, peak analysis, hypothesis testing, optimization, linear algebra
@@ -24,25 +28,25 @@ Plottle provides a unified interface for scientific data work:
 #### 1 — Clone and enter the repository
 
 ```bash
-git clone https://github.com/The-Schultz-Lab/plottle.git
-cd plottle
+git clone https://github.com/The-Schultz-Lab/eagleplot.git
+cd eagleplot
 ```
 
 #### 2 — Set up and launch (double-click, no terminal needed)
 
 **Windows:**
 1. Double-click **`setup.bat`** — creates the virtual environment and installs all dependencies.
-2. Double-click **`launch.bat`** — starts Plottle. Use this every time you want to open the app.
+2. Double-click **`launch.bat`** — starts EaglePlot. Use this every time you want to open the app.
 
 **macOS:**
 1. Double-click **`setup.command`** — creates the virtual environment and installs all dependencies.
    *(If macOS asks "Are you sure you want to open it?", click Open.)*
-2. Double-click **`launch.command`** — starts Plottle. Use this every time you want to open the app.
+2. Double-click **`launch.command`** — starts EaglePlot. Use this every time you want to open the app.
 
 **Linux:**
 1. Run **`./setup.sh`** in a terminal — creates the virtual environment and installs all dependencies.
    *(On Debian/Ubuntu you may first need `sudo apt install python3-venv`.)*
-2. Run **`./launch.sh`** — starts Plottle.
+2. Run **`./launch.sh`** — starts EaglePlot.
 
 After the app starts, open **`http://localhost:8501`** in your browser (Streamlit usually opens it automatically).
 
@@ -57,23 +61,23 @@ python -m venv .venv
 # macOS / Linux
 source .venv/bin/activate
 
-# Install Plottle and its dependencies. The editable install is what puts the
-# `plottle` command on your PATH.
+# Install EaglePlot and its dependencies. The editable install is what puts the
+# `eagleplot` command on your PATH.
 pip install -e ".[formats,nist]"
 
-streamlit run plottle/Home.py
+streamlit run eagleplot/Home.py
 ```
 
 #### 3 — Or use the CLI
 
 ```bash
-plottle --help
-plottle plot data.csv --plot scatter --x-column x --y-column y
-plottle stats data.csv
+eagleplot --help
+eagleplot plot data.csv --plot scatter --x-column x --y-column y
+eagleplot stats data.csv
 ```
 
-The `plottle` command comes from the `pip install` above. From a source checkout
-without installing, use `python -m plottle.cli` instead.
+The `eagleplot` command comes from the `pip install` above. From a source checkout
+without installing, use `python -m eagleplot.cli` instead.
 
 ## GUI Pages
 
@@ -104,25 +108,25 @@ without installing, use `python -m plottle.cli` instead.
 
 ## CLI
 
-Plottle includes a command-line interface with 5 subcommands:
+EaglePlot includes a command-line interface with 5 subcommands:
 
 ```bash
-plottle plot    <file> --plot <type> --x-column X --y-column Y [--output out.png]
-plottle stats  <file>
-plottle batch  <config.json> [--verbose]
-plottle compare <file1> <file2> --plot line [--output comparison.png]
-plottle convert <input> <output>
+eagleplot plot    <file> --plot <type> --x-column X --y-column Y [--output out.png]
+eagleplot stats  <file>
+eagleplot batch  <config.json> [--verbose]
+eagleplot compare <file1> <file2> --plot line [--output comparison.png]
+eagleplot convert <input> <output>
 ```
 
 See the [CLI Tutorial](docs/tutorials/cli_guide.md) for full usage and examples.
 
 ## Python API
 
-Plottle's modules can be used directly in scripts or Jupyter notebooks:
+EaglePlot's modules can be used directly in scripts or Jupyter notebooks:
 
 ```python
-from plottle.io import load_data
-from plottle.plotting import line_plot, save_figure
+from eagleplot.io import load_data
+from eagleplot.plotting import line_plot, save_figure
 import numpy as np
 
 wavelength = np.linspace(400, 800, 200)
@@ -143,18 +147,18 @@ save_figure(fig, "spectrum.png", dpi=300)
 
 | Module | Description |
 | --- | --- |
-| `plottle.io` | `load_data()` / `save_data()` — auto-detects format from extension |
-| `plottle.math` | 25 functions — statistics, curve fitting, hypothesis tests, optimization, linear algebra |
-| `plottle.plotting` | 27 plot types; Matplotlib → `(fig, ax, info)`, Plotly → `(fig, info)` |
-| `plottle.signal` | 16 functions — smoothing, filtering, FFT, derivatives, baseline correction, interpolation |
-| `plottle.peaks` | 5 functions — find, integrate, FWHM, fit (Gaussian/Lorentzian/Voigt/pseudo-Voigt) |
-| `plottle.data_tools` | 12 non-destructive DataFrame operations |
-| `plottle.spectroscopy` | 18 functions — IR/Raman, UV-Vis, NMR, MS |
-| `plottle.nist` | NIST WebBook integration — fetch IR spectra by CAS number |
-| `plottle.batch` | Batch load, statistics, curve fit, peak analysis |
-| `plottle.annotations` | 7 overlay types (hline, vline, hspan, vspan, text, rectangle, ellipse) |
-| `plottle.report` | PDF report generation via `matplotlib.PdfPages` |
-| `plottle.molecular` | CPK atom data, Gaussian/ORCA/Molden parsers, Plotly 3D molecule builder |
+| `eagleplot.io` | `load_data()` / `save_data()` — auto-detects format from extension |
+| `eagleplot.math` | 25 functions — statistics, curve fitting, hypothesis tests, optimization, linear algebra |
+| `eagleplot.plotting` | 27 plot types; Matplotlib → `(fig, ax, info)`, Plotly → `(fig, info)` |
+| `eagleplot.signal` | 16 functions — smoothing, filtering, FFT, derivatives, baseline correction, interpolation |
+| `eagleplot.peaks` | 5 functions — find, integrate, FWHM, fit (Gaussian/Lorentzian/Voigt/pseudo-Voigt) |
+| `eagleplot.data_tools` | 12 non-destructive DataFrame operations |
+| `eagleplot.spectroscopy` | 18 functions — IR/Raman, UV-Vis, NMR, MS |
+| `eagleplot.nist` | NIST WebBook integration — fetch IR spectra by CAS number |
+| `eagleplot.batch` | Batch load, statistics, curve fit, peak analysis |
+| `eagleplot.annotations` | 7 overlay types (hline, vline, hspan, vspan, text, rectangle, ellipse) |
+| `eagleplot.report` | PDF report generation via `matplotlib.PdfPages` |
+| `eagleplot.molecular` | CPK atom data, Gaussian/ORCA/Molden parsers, Plotly 3D molecule builder |
 
 ## Plugin System
 
@@ -181,7 +185,7 @@ See [`plugins/plugin_example.py`](plugins/plugin_example.py) for the starter tem
 
 | Package | Purpose |
 | --- | --- |
-| `statsmodels` | Two-way ANOVA (`anova_twoway` in `plottle.math`) |
+| `statsmodels` | Two-way ANOVA (`anova_twoway` in `eagleplot.math`) |
 | `pymzml` | mzML/mzXML mass spectrometry files |
 | `jcamp` | Alternative JCAMP-DX parser |
 
@@ -190,8 +194,8 @@ See [`requirements.txt`](requirements.txt) for pinned version ranges.
 ## Project Structure
 
 ```text
-plottle/                            ← repository root
-├── plottle/                        ← the installable package
+eagleplot/                            ← repository root
+├── eagleplot/                        ← the installable package
 │   ├── Home.py                     ← Streamlit entry point
 │   ├── cli.py                      ← CLI entry point (5 subcommands)
 │   ├── io.py                       ← 18-format data loader/saver
@@ -216,7 +220,7 @@ plottle/                            ← repository root
 ├── plugins/                        ← plugin_example.py starter template
 ├── examples/                       ← 15+ standalone scripts + batch_config.json
 ├── docs/                           ← tutorials, cheatsheet, site built by build_docs.py
-├── generate_gallery.py             ← regenerates plottle/gallery/
+├── generate_gallery.py             ← regenerates eagleplot/gallery/
 ├── requirements.txt
 ├── pyproject.toml
 ├── setup.bat / .command / .sh      ← First-run setup (Windows / macOS / Linux)
