@@ -8,6 +8,21 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **Quick Plot is much faster and easier to use.**
+  - Settings sit on the left and the plot on the right, so you see each change as you
+    make it. The plot stays in view while the settings scroll.
+  - **Live preview:** the plot redraws as you change settings (toggle it off if you prefer).
+    **Generate Plot** still saves the plot to the plot history.
+  - Changing a setting now updates only the settings and plot area, not the whole page.
+    In a test with a line plot, the time from a change to seeing it on the plot fell from
+    about 1.3 s to about 0.6 s.
+  - Downloads are created only when you ask for one. Before, every click re-created the
+    plot as PNG at 150, 300 and 600 dpi, SVG and PDF, whether or not you were downloading.
+    The export panel now has one format menu and one **Download** button.
+  - A marker appears as soon as you click a point on an interactive plot.
+
 ---
 
 ## [3.0.0] - 2026-11-05
