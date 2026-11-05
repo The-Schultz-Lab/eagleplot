@@ -22,6 +22,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
     plot as PNG at 150, 300 and 600 dpi, SVG and PDF, whether or not you were downloading.
     The export panel now has one format menu and one **Download** button.
   - A marker appears as soon as you click a point on an interactive plot.
+- **Export Results is much faster.** It used to re-create every saved plot as PNG (150 and
+  300 dpi), SVG and PDF, and re-save the dataset as CSV and JSON, on every click: 1.2 s per
+  click with three saved plots, now 0.03 s. Files are now created only when you download them.
+- **PDF report:** on current Streamlit it is one click, and the report is built when you
+  press **Download PDF Report**. On older Streamlit the download button no longer
+  disappears after the next click.
+- **Batch Analysis:** results stay on screen after you run a tool. Before, they disappeared
+  at the next click, including when you clicked **Download CSV**.
+- **Molecular Viz:** the HTML and frequency-table exports are one click (Streamlit 1.52+),
+  instead of "Export", then "Download", with the button disappearing afterwards.
 
 ---
 
