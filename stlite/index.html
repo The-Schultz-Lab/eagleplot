@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Plottle in the browser</title>
+    <link rel="icon" href="./plottle-icon.png" />
+    <link rel="stylesheet" href="./stlite/stlite.css" />
+    <style>
+      :root { --bg: #1b1b1b; --fg: #f4f4f4; --muted: #b9b9b9; --accent: #e0a3a3; }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+      #loading {
+        position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 14px; padding: 16px; text-align: center;
+        font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      #loading img { width: 72px; height: 72px; }
+      #loading small { color: var(--muted); max-width: 32rem; }
+      #loading .bar { width: min(320px, 80vw); height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+      #loading .bar i { display: block; width: 30%; height: 100%; background: var(--accent); animation: slide 1.2s ease-in-out infinite; }
+      @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(330%); } }
+      @media (prefers-reduced-motion: reduce) { #loading .bar i { animation: none; width: 100%; } }
+    </style>
+  </head>
+  <body>
+    <div id="loading" role="status" aria-live="polite">
+      <img src="./plottle-icon.png" alt="" />
+      <div>Starting Plottle…</div>
+      <div class="bar" aria-hidden="true"><i></i></div>
+      <small>
+        Plottle runs entirely in your browser: your data never leaves this computer.
+        The first visit downloads Python and the scientific libraries (tens of MB);
+        later visits start from the browser cache.
+      </small>
+    </div>
+    <div id="root"></div>
+    <script src="./site-config.js"></script>
+    <script type="module">
+      import { mount } from "./stlite/stlite.js";
+
+      const cfg = window.PLOTTLE_STLITE;
+      const abs = (p) => new URL(p, window.location.href).href;
+
+      const t0 = performance.now();
+      window.__plottleStart = t0;
+
+      mount(
+        {
+          entrypoint: "plottle/Home.py",
+          archives: [{ url: abs("./plottle-app.zip"), format: "zip", options: {} }],
+          // Binary packages come from the Pyodide distribution; pure-Python ones are
+          // bundled with the site as wheels, so nothing is fetched from PyPI at runtime.
+          requirements: [...cfg.pyodidePackages, ...cfg.wheels.map(abs)],
+          streamlitConfig: cfg.streamlitConfig,
+          ...(cfg.pyodideUrl ? { pyodideUrl: abs(cfg.pyodideUrl) } : {}),
+        },
+        document.getElementById("root"),
+      );
+
+      // Hide the splash once Streamlit has drawn its first element.
+      const obs = new MutationObserver(() => {
+        if (document.querySelector('[data-testid="stSidebar"], [data-testid="stMain"]')) {
+          document.getElementById("loading").remove();
+          window.__plottleReadyMs = performance.now() - t0;
+          obs.disconnect();
+        }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
+    </script>
+  </body>
+</html>

@@ -1431,6 +1431,26 @@ def _close_if_unreferenced(fig) -> None:
     plt.close(fig)
 
 
+def _show_plot_png(png: bytes) -> None:
+    """Display the rendered plot.
+
+    In the browser build (stlite, ``sys.platform == "emscripten"``) the PNG is embedded
+    in the page as a data URI. ``st.image`` would serve it as a separate media file from
+    the single Python worker, and when edits come quickly a newer run can discard that
+    file before the browser fetches it, leaving the previous plot on screen.
+    """
+    if sys.platform == "emscripten":
+        import base64
+
+        b64 = base64.b64encode(png).decode("ascii")
+        st.html(
+            f'<img data-qp-plot="1" alt="Plot" src="data:image/png;base64,{b64}" '
+            'style="width:100%;height:auto;border-radius:0.5rem;">'
+        )
+    else:
+        st.image(png, width="stretch")
+
+
 def _store_figure(fig, is_plotly: bool, config: dict, plot_type: str, *, new_plot: bool):
     """Make *fig* the displayed figure.
 
@@ -1737,9 +1757,9 @@ def _plot_workspace(plot_type: str, data, dataset_name: str) -> None:
                         f"Could not convert figure to Plotly: {_conv_err}. "
                         "Showing static version instead."
                     )
-                    st.image(st.session_state.qp_mpl_png, width="stretch")
+                    _show_plot_png(st.session_state.qp_mpl_png)
             else:
-                st.image(st.session_state.qp_mpl_png, width="stretch")
+                _show_plot_png(st.session_state.qp_mpl_png)
 
             # ── Zoom / Axis Range ─────────────────────────────────────────────────
             if not st.session_state.qp_show_plotly_version:

@@ -8,6 +8,7 @@ same feature lets any visitor list and read files on the *server*. See audit A-1
 from __future__ import annotations
 
 import os
+import sys
 from typing import Mapping, Optional
 
 #: Environment variable that overrides the folder-loading default.
@@ -43,6 +44,11 @@ def folder_loading_allowed(env_value: Optional[str], client_ip: Optional[str]) -
             return True
         if value in _FALSE:
             return False
+    if sys.platform == "emscripten":
+        # Running in the browser (stlite / Pyodide): there is no user disk to read,
+        # only the page's in-memory file system, and Streamlit reports every client
+        # as local. Files have to come in through the uploader.
+        return False
     return client_ip is None
 
 
