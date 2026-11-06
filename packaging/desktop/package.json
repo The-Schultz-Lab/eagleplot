@@ -6,6 +6,10 @@
   "author": "Schultz Lab, North Carolina Central University",
   "license": "MIT",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/The-Schultz-Lab/eagleplot.git"
+  },
   "main": "./build/electron/main.js",
   "scripts": {
     "dump": "dump-stlite-desktop-artifacts",
@@ -20,7 +24,10 @@
   },
   "stlite": {
     "desktop": {
-      "files": ["eagleplot", ".streamlit"],
+      "files": [
+        "eagleplot",
+        ".streamlit"
+      ],
       "entrypoint": "eagleplot/Home.py",
       "dependencies": [
         "numpy",
@@ -44,28 +51,37 @@
   "build": {
     "appId": "edu.nccu.schultzlab.eagleplot",
     "productName": "EaglePlot",
-    "files": ["build/**/*"],
+    "files": [
+      "build/**/*"
+    ],
     "directories": {
       "buildResources": "assets",
       "output": "dist"
     },
     "artifactName": "EaglePlot-${version}-${os}-${arch}.${ext}",
     "win": {
-      "target": ["nsis"]
+      "target": [
+        "nsis"
+      ]
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false
     },
     "mac": {
-      "target": ["dmg"],
+      "target": [
+        "dmg"
+      ],
       "category": "public.app-category.education",
       "identity": "-",
       "hardenedRuntime": false
     },
     "linux": {
-      "target": ["AppImage"],
-      "category": "Science"
+      "target": [
+        "AppImage"
+      ],
+      "category": "Science",
+      "executableName": "eagleplot"
     }
   }
 }

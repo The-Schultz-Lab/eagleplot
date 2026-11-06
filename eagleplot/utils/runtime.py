@@ -74,6 +74,11 @@ class Capabilities:
     #: The user can add a missing optional package with ``pip install``. Not in the
     #: browser or desktop builds, whose packages are fixed when the site is built.
     pip_install: bool = True
+    #: ``st.download_button(data=callable)`` works (the file is built on click). Under
+    #: stlite these requests go to the placeholder origin https://stlite.invalid; the
+    #: browser build routes them to Python (packaging/web/index.html), but the desktop
+    #: build uses stlite's own page, where they fail, so files are prepared in advance.
+    on_click_downloads: bool = True
 
 
 def _browser_storage_is_persistent(environ: Mapping[str, str]) -> bool:
@@ -109,6 +114,7 @@ def compute_capabilities(platform: str, environ: Mapping[str, str]) -> Capabilit
             native_speed=False,
             app_config_file=False,
             pip_install=False,
+            on_click_downloads=False,
         )
     return Capabilities(  # browser
         local_folders=False,

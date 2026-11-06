@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **A desktop app for Windows, macOS and Linux** (`packaging/desktop/`): the same app
+  in its own window, with Python and every package included, so it needs no Python
+  install and no network. Installers are built for every release and need no admin
+  rights. Settings are kept between sessions. Links open in your web browser. They are
+  not code-signed yet: the first launch shows a warning (see `packaging/desktop/README.md`).
+  Loading whole folders is not available in the desktop app yet.
+
 ### Changed
 
 - **The EaglePlot logo is now in NCCU maroon and gray** (it was blue): the same disc, bars

@@ -41,6 +41,8 @@ class TestComputeCapabilities:
             native_speed=False,
             app_config_file=False,
             pip_install=False,
+            # stlite's own page (no index.html workaround) can't fetch on-click downloads.
+            on_click_downloads=False,
         )
 
     def test_browser_settings_persist_when_the_site_mounts_a_config_dir(self):

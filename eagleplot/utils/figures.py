@@ -51,7 +51,9 @@ def lazy_download_supported(version: Optional[str] = None) -> bool:
     return (major, minor) >= (1, 52)
 
 
-LAZY_DOWNLOAD = lazy_download_supported()
+#: Downloads are built on click: Streamlit supports it, and so does this runtime (not the
+#: desktop build; see ``Capabilities.on_click_downloads``).
+LAZY_DOWNLOAD = lazy_download_supported() and capabilities().on_click_downloads
 
 
 def figure_bytes(fig: Any, fmt: str, dpi: Optional[int] = None) -> bytes:
