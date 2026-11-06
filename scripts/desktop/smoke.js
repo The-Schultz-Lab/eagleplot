@@ -123,7 +123,8 @@ const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if
   await app.evaluate(({ session }, dir) => {
     global.__downloads = [];
     session.defaultSession.on('will-download', (_event, item) => {
-      const target = require('path').join(dir, item.getFilename() || 'download');
+      // No require() in this context: join the path by hand.
+      const target = `${dir}${process.platform === 'win32' ? '\\' : '/'}${item.getFilename() || 'download'}`;
       item.setSavePath(target);
       item.once('done', (_e, state) => global.__downloads.push({ target, state, bytes: item.getTotalBytes() }));
     });
