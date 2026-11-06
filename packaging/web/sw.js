@@ -32,11 +32,15 @@ self.addEventListener('activate', (event) => {
   })());
 });
 
-async function networkFirst(request) {
+// Responses are handed to the page at once and written to the cache in the background
+// (event.waitUntil): awaiting the cache write first delayed every download until it had
+// been copied in full, which made start-up ~3 s slower.
+async function networkFirst(event) {
+  const request = event.request;
   const cache = await caches.open(APP_CACHE);
   try {
     const response = await fetch(request);
-    if (response.ok) await cache.put(request, response.clone());
+    if (response.ok) event.waitUntil(cache.put(request, response.clone()));
     return response;
   } catch (err) {
     const cached = await cache.match(request, { ignoreSearch: true });
@@ -50,12 +54,13 @@ async function networkFirst(request) {
   }
 }
 
-async function cacheFirst(request) {
+async function cacheFirst(event) {
+  const request = event.request;
   const cache = await caches.open(CDN_CACHE);
   const cached = await cache.match(request);
   if (cached) return cached;
   const response = await fetch(request);
-  if (response.ok) await cache.put(request, response.clone());
+  if (response.ok) event.waitUntil(cache.put(request, response.clone()));
   return response;
 }
 
@@ -88,8 +93,8 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin === self.location.origin) {
-    if (url.href.startsWith(self.registration.scope)) event.respondWith(networkFirst(request));
+    if (url.href.startsWith(self.registration.scope)) event.respondWith(networkFirst(event));
   } else if (CDN_ORIGINS.includes(url.origin)) {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(cacheFirst(event));
   }
 });
