@@ -193,3 +193,10 @@ tests/*.json
 
 # Generated documentation site (build_docs.py)
 docs/_site/
+
+# Desktop app build (packaging/desktop/build_desktop.py): staged app copy, npm and outputs
+packaging/desktop/eagleplot/
+packaging/desktop/.streamlit/
+packaging/desktop/node_modules/
+packaging/desktop/build/
+packaging/desktop/dist/

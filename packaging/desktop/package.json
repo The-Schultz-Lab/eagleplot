@@ -1,0 +1,71 @@
+{
+  "name": "eagleplot-desktop",
+  "productName": "EaglePlot",
+  "version": "0.0.0",
+  "description": "EaglePlot desktop app: the Streamlit GUI on Pyodide in Electron, fully offline.",
+  "author": "Schultz Lab, North Carolina Central University",
+  "license": "MIT",
+  "private": true,
+  "main": "./build/electron/main.js",
+  "scripts": {
+    "dump": "dump-stlite-desktop-artifacts",
+    "serve": "electron .",
+    "app:dir": "electron-builder --dir",
+    "app:dist": "electron-builder"
+  },
+  "devDependencies": {
+    "@stlite/desktop": "0.105.1",
+    "electron": "45.0.0",
+    "electron-builder": "26.18.0"
+  },
+  "stlite": {
+    "desktop": {
+      "files": ["eagleplot", ".streamlit"],
+      "entrypoint": "eagleplot/Home.py",
+      "dependencies": [
+        "numpy",
+        "pandas",
+        "matplotlib",
+        "pyyaml",
+        "pillow",
+        "scipy",
+        "seaborn",
+        "plotly",
+        "openpyxl",
+        "jcamp"
+      ],
+      "nodeJsWorker": true,
+      "nodefsMountpoints": {
+        "/home/pyodide/.eagleplot": "{{userData}}"
+      },
+      "embed": true
+    }
+  },
+  "build": {
+    "appId": "edu.nccu.schultzlab.eagleplot",
+    "productName": "EaglePlot",
+    "files": ["build/**/*"],
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "artifactName": "EaglePlot-${version}-${os}-${arch}.${ext}",
+    "win": {
+      "target": ["nsis"]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
+    },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.education",
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Science"
+    }
+  }
+}
