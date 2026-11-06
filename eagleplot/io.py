@@ -389,15 +389,28 @@ def load_jcamp(filepath: Union[str, Path]) -> pd.DataFrame:
     1/CM
     """
     try:
-        from jcamp import JCAMP_reader as _jcamp_read
+        import jcamp as _jcamp
     except ImportError:
-        try:
-            from jcamp import jcamp_read as _jcamp_read  # type: ignore[no-redef]
-        except ImportError:
-            raise ImportError(
-                "The `jcamp` package is required to load JCAMP-DX files. "
-                "Install it with: pip install jcamp"
-            )
+        raise ImportError(
+            "The `jcamp` package is required to load JCAMP-DX files. "
+            "Install it with: pip install jcamp"
+        )
+    # The reader has been renamed over jcamp's history: readfile (1.3+),
+    # jcamp_readfile (1.2), JCAMP_reader (older). Only looking for the old names
+    # made every .jdx upload fail with jcamp 1.3 installed.
+    _jcamp_read = next(
+        (
+            getattr(_jcamp, name)
+            for name in ("readfile", "jcamp_readfile", "JCAMP_reader")
+            if hasattr(_jcamp, name)
+        ),
+        None,
+    )
+    if _jcamp_read is None:
+        raise ImportError(
+            f"Unsupported jcamp version {getattr(_jcamp, '__version__', '?')}: no "
+            "JCAMP-DX file reader found. Install it with: pip install --upgrade jcamp"
+        )
 
     filepath = Path(filepath)
     if not filepath.exists():

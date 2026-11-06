@@ -53,6 +53,8 @@ PYODIDE_PACKAGES = ["numpy", "scipy", "pandas", "matplotlib", "pyyaml", "pillow"
 # Pure-Python packages bundled with the site as wheels: the remaining pyproject.toml
 # dependencies (seaborn, plotly + narwhals, openpyxl + et-xmlfile), and two Streamlit
 # dependencies that are not in the Pyodide distribution (python-multipart, itsdangerous).
+# Also jcamp (13 KB) for JCAMP-DX (.jdx) uploads: the browser build can't fetch from NIST,
+# so users download the .jdx from the NIST page and load it (Spectroscopy page).
 # Streamlit itself comes with stlite.
 PURE_WHEELS = [
     "seaborn>=0.12.0",
@@ -62,6 +64,7 @@ PURE_WHEELS = [
     "et-xmlfile",
     "python-multipart>=0.0.10,<1",
     "itsdangerous>=2.1.2,<3",
+    "jcamp>=1.2",
 ]
 
 # Emscripten home directory in stlite; the app zip is unpacked here and it is the cwd.
@@ -195,6 +198,10 @@ def main(argv: Optional[List[str]] = None) -> None:
     n_files = build_app_zip(out / "eagleplot-app.zip")
     wheels = download_wheels(out / "wheels")
     shutil.copy(HERE / "index.html", out / "index.html")
+    # Streamlit pages have their own paths (…/settings). A reload or bookmark there asks
+    # the static host for a file that doesn't exist; GitHub Pages then serves 404.html,
+    # so make that the app too (it opens on Home).
+    shutil.copy(HERE / "index.html", out / "404.html")
     shutil.copy(REPO / APP_PACKAGE / "assets" / "logo.png", out / "eagleplot-icon.png")
 
     pyodide_url: str = args.pyodide_url or PYODIDE_CDN_URL
