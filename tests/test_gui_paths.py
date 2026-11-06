@@ -95,6 +95,7 @@ class TestPackagedAssetsArePresent:
         [
             "assets/logo.png",
             "assets/logo.ico",
+            "assets/icon.png",
             "assets/nccu-horiz-logo.png",
             "assets/nccu-wings.png",
             "gallery/manifest.json",

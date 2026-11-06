@@ -1,5 +1,12 @@
 # EaglePlot
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/The-Schultz-Lab/eagleplot/main/brand/lockup-dark.svg">
+    <img alt="EaglePlot" src="https://raw.githubusercontent.com/The-Schultz-Lab/eagleplot/main/brand/lockup-light.svg" width="420">
+  </picture>
+</p>
+
 [![Tests](https://github.com/The-Schultz-Lab/eagleplot/actions/workflows/tests.yml/badge.svg)](https://github.com/The-Schultz-Lab/eagleplot/actions/workflows/tests.yml)
 [![PyPI](https://img.shields.io/pypi/v/eagleplot)](https://pypi.org/project/eagleplot/)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/The-Schultz-Lab/eagleplot/main)

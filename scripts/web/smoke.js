@@ -13,7 +13,9 @@
 // any page shows a Streamlit exception or an uncaught page error (DIR defaults to
 // build/web-smoke, which git ignores).
 //
-// It also checks two things the browser build promises:
+// It also checks three things the browser build promises:
+// - The loading splash shows a step while the app starts, reaches its last step (stlite's
+//   loadFinished event) and is gone once the app is up.
 // - An on-click download (Quick Plot, PNG 300 dpi, built by a callable) arrives and leaves
 //   the app running. Under stlite these go through a workaround in index.html.
 // - Data never leaves the browser: every request goes to the site's own origin, or to an
@@ -156,6 +158,24 @@ async function checkDownload(page, base, events, results) {
   console.log(`${r.pageErrors.length ? 'FAIL' : 'ok  '} download  ${download.suggestedFilename()} ${bytes} bytes, app ${alive ? 'still running' : 'GONE'}`);
 }
 
+async function checkSplash(page, firstStep, results) {
+  const gone = await page
+    .waitForFunction(() => !document.getElementById('loading'), null, { timeout: 10000 })
+    .then(() => true, () => false);
+  const state = await page.evaluate(() => ({
+    stage: window.eaglePlotSplash ? window.eaglePlotSplash.stage : null,
+    readyMs: window.eaglePlotReadyMs,
+  }));
+  const errors = [];
+  if (!firstStep) errors.push('splash: no step shown while the app was starting');
+  if (state.stage !== 3) errors.push(`splash: reached step ${state.stage}, expected 3 (did stlite's loadFinished event fire?)`);
+  if (!gone) errors.push('splash: #loading still in the page after the app started');
+  if (typeof state.readyMs !== 'number') errors.push('splash: window.eaglePlotReadyMs not set');
+  results.push({ phase: 'splash', page: '-', label: 'Loading splash', exceptions: [], errorAlerts: [],
+    consoleErrors: [], failedRequests: [], pageErrors: errors });
+  console.log(`${errors.length ? 'FAIL' : 'ok  '} splash    first step "${firstStep}", last step ${state.stage + 1} of 4, ${gone ? 'removed' : 'STILL SHOWN'}`);
+}
+
 async function loadExample(page, base, example, events, results) {
   const dataPath = new URL('data-upload', base).pathname;
   const ms = await openPage(page, dataPath);
@@ -214,11 +234,16 @@ function exampleLabel(file) {
   const base = opts.url;
   const t0 = Date.now();
   await page.goto(base);
+  // The splash draws its first step from an inline script, before stlite loads.
+  const splashStep = await page
+    .waitForFunction(() => document.querySelector('#loading #ep-step small')?.parentElement.textContent, null, { timeout: 30000 })
+    .then((h) => h.jsonValue(), () => null);
   await page.waitForSelector(SIDEBAR_LINKS, { timeout: opts.bootTimeout * 1000 });
   await settle(page);
   const bootMs = Date.now() - t0;
   console.log(`booted in ${(bootMs / 1000).toFixed(1)} s`);
   results.push({ phase: 'boot', page: new URL(base).pathname, label: 'Boot', ms: bootMs, ...(await collect(page, events)) });
+  await checkSplash(page, splashStep, results);
 
   const pages = await sidebarPages(page);
   console.log(`${pages.length} pages in the sidebar: ${pages.map((p) => p.label).join(', ')}`);

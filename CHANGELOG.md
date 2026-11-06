@@ -24,6 +24,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **New logo: the EaglePlot eagle.** An athletic-style eagle head in NCCU maroon and gray
+  replaces the blue bar-chart icon on the Home page, in the sidebar, as the browser-tab icon
+  (now the head on a maroon tile) and in `logo.ico`. SVG masters and lockups with the
+  wordmark are in `brand/`.
+- **A new loading screen for the web app.** The eagle head assembles itself from six pieces
+  that fly in from the edges of the screen, then waits with a blinking eye while Python
+  loads. Below it, four real steps (downloading Python, installing the science libraries,
+  starting EaglePlot, opening your workspace) replace the endlessly sliding bar. The note
+  about the 45 MB download appears only on a first visit. If loading fails, the screen says
+  why and offers **Reload** instead of sliding forever. With reduced motion turned on in
+  the system settings, the head appears already assembled.
 - **A "Get started" Home page.** With no data loaded, Home offers three example datasets,
   each a single click away from a plot in Quick Plot, plus buttons to upload a file or
   browse all examples, instead of "Datasets 0 · Plots 0 · Analyses 0".
