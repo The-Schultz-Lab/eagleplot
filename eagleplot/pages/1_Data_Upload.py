@@ -97,6 +97,7 @@ from eagleplot.utils import (  # noqa: E402
 from eagleplot.batch import scan_directory, batch_load_files  # noqa: E402
 from eagleplot.io import downsample_for_preview  # noqa: E402
 from eagleplot.utils.access import folder_loading_allowed_here  # noqa: E402
+from eagleplot.utils.host_folders import local_folder  # noqa: E402
 from eagleplot.utils.runtime import capabilities, missing_package_message  # noqa: E402
 
 _LARGE_FILE_BYTES = 50 * 1024 * 1024  # 50 MB — warn above this
@@ -351,7 +352,9 @@ with tab3:
                 try:
                     _exts = _batch_exts if _batch_exts else None
                     _pat = _batch_pattern.strip() if _batch_pattern.strip() else None
-                    _found = scan_directory(_batch_folder, extensions=_exts, pattern=_pat)
+                    _found = scan_directory(
+                        local_folder(_batch_folder), extensions=_exts, pattern=_pat
+                    )
 
                     if not _found:
                         st.info("No matching files found in that directory.")
@@ -401,7 +404,7 @@ with tab3:
                                         st.error(f"`{_ename}`: {missing_package_message(_emsg)}")
 
                 except NotADirectoryError as _e:
-                    st.error(f"Not a valid directory: {_e}")
+                    st.error(str(_e))
                 except Exception as _e:
                     st.error(f"Batch import error: {_e}")
 

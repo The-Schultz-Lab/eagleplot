@@ -6,7 +6,7 @@ EaglePlot runs in three places:
 * **browser**: stlite, i.e. Streamlit on Pyodide/WebAssembly (``sys.platform ==
   "emscripten"``), served as a static web app;
 * **desktop**: the same stlite build inside Electron, which sets
-  ``EAGLEPLOT_DESKTOP=1``.
+  ``EAGLEPLOT_DESKTOP=1`` (or is recognised from Electron, see ``_running_in_electron``).
 
 Pages should branch on *what is possible* (:class:`Capabilities`), never on *which
 build this is*, so a capability can change in one build without touching the pages.
@@ -104,9 +104,9 @@ def compute_capabilities(platform: str, environ: Mapping[str, str]) -> Capabilit
         )
     if desktop:
         return Capabilities(
-            # Folder import needs the user's typed paths (C:\Users\…) mapped onto the
-            # folders the desktop build mounts: roadmap D5.2. Off until then.
-            local_folders=False,
+            # A typed folder is mounted from the host when it's read
+            # (eagleplot.utils.host_folders, roadmap D5.2).
+            local_folders=True,
             # Python runs in a Node.js worker, where Pyodide's requests support (built on
             # the browser's XMLHttpRequest) doesn't work; NIST links out instead.
             outbound_http=False,

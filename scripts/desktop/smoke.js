@@ -8,6 +8,7 @@
 // Checks, with a fresh user-data folder:
 // - the app starts and shows Home, with no exception and no page error;
 // - it runs as the desktop build (Settings: no theme form, settings persist);
+// - Batch Import reads a folder on the computer (a typed path, mounted on demand);
 // - one click from Home's example gives a plot;
 // - settings saved in one run are there after a restart;
 // - an https link goes to the system browser (shell.openExternal), not nowhere;
@@ -151,6 +152,34 @@ const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if
   }
   check((await page.locator('[data-testid="stSidebar"]').count()) > 0, 'the app is still running after the download');
   check((await page.locator('[data-testid="stException"]').count()) === 0, 'no Streamlit exception');
+
+  // Batch Import from a folder on the computer (roadmap D5.2). After Home's example:
+  // Home only offers the examples while no data is loaded.
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'eagleplot-folder-'));
+  for (const [name, k] of [['smoke_a.csv', 2], ['smoke_b.csv', 3]]) {
+    fs.writeFileSync(path.join(dataDir, name), 'x,y\n' + [1, 2, 3, 4].map((x) => `${x},${k * x}`).join('\n') + '\n');
+  }
+  fs.writeFileSync(path.join(dataDir, 'notes.txt'), 'not data');
+  await nav(page, 'data-upload');
+  await page.getByRole('tab', { name: 'Batch Import' }).click();
+  await page.waitForTimeout(800);
+  await page.getByRole('textbox', { name: 'Folder path' }).fill(dataDir);
+  await page.getByRole('textbox', { name: 'Folder path' }).press('Enter');
+  await page.waitForTimeout(1000);
+  await page.getByRole('button', { name: 'Load All Files' }).click();
+  await waitForText(page, '3 dataset(s) loaded');
+  t = await mainText(page);
+  // One dataset from Home's example, two from the folder (notes.txt isn't data).
+  check(t.includes('3 dataset(s) loaded'), `Batch Import loads a folder on the computer (${dataDir})`);
+  await page.getByRole('tab', { name: 'Batch Import' }).click();
+  await page.getByRole('textbox', { name: 'Folder path' }).fill(path.join(dataDir, 'missing'));
+  await page.getByRole('textbox', { name: 'Folder path' }).press('Enter');
+  await page.waitForTimeout(1000);
+  await page.getByRole('button', { name: 'Scan Directory' }).click();
+  await waitForText(page, 'can open');
+  check((await mainText(page)).includes('Not a folder EaglePlot can open'), 'Batch Import: a missing folder gets a clear message');
+  await page.screenshot({ path: path.join(out, 'batch-import.png') });
+
   await app.close();
 
   // ── Restart: settings persist ──

@@ -34,9 +34,9 @@ class TestComputeCapabilities:
         )
 
     def test_desktop(self):
-        # Folder import comes with D5.2 (path mapping); NIST needs browser XHR, not in Node.
+        # Typed folders are mounted from the host (D5.2); NIST needs browser XHR, not Node.
         assert DESKTOP == runtime.Capabilities(
-            local_folders=False,
+            local_folders=True,
             outbound_http=False,
             persistent_storage=True,
             native_speed=False,
@@ -93,12 +93,11 @@ class TestFolderLoading:
         self._with_platform(monkeypatch, "emscripten")
         assert access.folder_loading_allowed_here({"PLOTTLE_ALLOW_FOLDER_LOAD": "1"}) is False
 
-    def test_desktop_does_not_load_folders_yet(self, monkeypatch):
-        """Until D5.2 maps the user's paths onto the mounted folders."""
+    def test_desktop_loads_folders(self, monkeypatch):
+        """The desktop app reads the user's own disk (D5.2): no server, no IP check."""
         self._with_platform(monkeypatch, "emscripten")
-        assert access.folder_loading_allowed_here({"EAGLEPLOT_DESKTOP": "1"}) is False
-        env = {"EAGLEPLOT_DESKTOP": "1", "EAGLEPLOT_ALLOW_FOLDER_LOAD": "1"}
-        assert access.folder_loading_allowed_here(env) is False
+        monkeypatch.setattr(access, "_client_ip", lambda: "203.0.113.5")
+        assert access.folder_loading_allowed_here({"EAGLEPLOT_DESKTOP": "1"}) is True
 
     def test_server_follows_the_usual_rules(self, monkeypatch):
         self._with_platform(monkeypatch, "linux")
