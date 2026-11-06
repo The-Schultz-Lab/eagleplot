@@ -145,8 +145,8 @@ class TestRedraws:
         assert _images(dashboard) == len(MPL_CELLS)
         assert work["figures"] == 0, "a plain rerun regenerated cells"
         assert _cell_figs(dashboard) == figs
-        # The only encoding left is st.pyplot showing the three cached figures.
-        assert len(work["savefig"]) == len(MPL_CELLS)
+        # Since D2.3 the display PNGs are cached with the figures: nothing is re-encoded.
+        assert work["savefig"] == []
         assert work["pdfpages"] == 0
 
     def test_changing_one_cell_rebuilds_only_that_cell(self, dashboard, work):
@@ -159,6 +159,7 @@ class TestRedraws:
         assert after[1].axes[0].get_title() == "Temperatures"
         assert all(after[i] is before[i] for i in (0, 2, 3))
         assert work["figures"] == 1  # the histogram's one new figure
+        assert work["savefig"] == [("png", figures.DISPLAY_DPI)]  # and its display PNG
         assert dashboard.session_state["dash_fig_version"] > version
 
     def test_generate_redraws_every_cell(self, dashboard):
@@ -181,6 +182,26 @@ class TestRedraws:
         cells = dashboard.session_state["dash_cells"]
         assert [cells[i]["fig"].axes[0].get_xlim() for i in (0, 1)] == own
 
+    def test_new_axis_limits_re_encode_only_the_panels_they_change(self, dashboard, work):
+        # Sharing x across row 0 widens cell 1 to cell 0's range (which already covers
+        # cell 1's), and leaves cell 3 (alone in its row) as it is. Only cell 1's
+        # cached display PNG may be replaced.
+        def shown():
+            cache = dashboard.session_state
+            return {i: cache[f"_eagleplot_png::dash_cell_{i}"]["png"] for i in MPL_CELLS}
+
+        before = shown()
+        work["reset"]()
+        dashboard.checkbox(key="dash_sharex").check().run()
+        assert work["savefig"] == [("png", figures.DISPLAY_DPI)]
+        shared = shown()
+        assert shared[1] != before[1]
+        assert shared[0] is before[0] and shared[3] is before[3]
+        work["reset"]()
+        dashboard.checkbox(key="dash_sharex").uncheck().run()
+        assert work["savefig"] == [("png", figures.DISPLAY_DPI)]
+        assert shown()[1] == before[1]  # back to the panel's own limits
+
 
 class TestExports:
     def test_a_plain_rerun_builds_no_export(self, dashboard, work):
@@ -189,10 +210,9 @@ class TestExports:
         dashboard.select_slider(key="dash_export_dpi").set_value(300).run()
         assert work["pdfpages"] == 0
         assert work["figures"] == 0
-        # Only st.pyplot's display renders (PNG at 200 dpi; two reruns × three panels):
-        # no 300 dpi combined PNG, no PDF.
-        assert set(work["savefig"]) == {("png", 200)}
-        assert len(work["savefig"]) == 2 * len(MPL_CELLS)
+        # No 300 dpi combined PNG, no PDF, and (D2.3) the unchanged panels' display
+        # PNGs come from the cache: nothing is encoded at all.
+        assert work["savefig"] == []
 
     def test_on_click_downloads_are_offered_without_building(self, dashboard):
         if not figures.LAZY_DOWNLOAD:
@@ -227,7 +247,7 @@ class TestExports:
         work["reset"]()
         dashboard.run()
         assert work["pdfpages"] == 0
-        assert len(work["savefig"]) == len(MPL_CELLS)  # display only, nothing rebuilt
+        assert work["savefig"] == []  # nothing rebuilt, display PNGs cached (D2.3)
         assert _has_download_button(dashboard, "dash_dl_pdf")
         assert _has_download_button(dashboard, "dash_dl_png")
 

@@ -14,6 +14,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from eagleplot.utils.session_state import initialize_session_state, add_dataset
+from eagleplot.utils.figures import show_figure
 from eagleplot.spectroscopy import (
     absorbance_to_transmittance,
     apply_line_broadening,
@@ -130,7 +131,7 @@ with tab_ir:
                 ax.set_xlabel(wn_col)
                 ax.set_ylabel(result_label)
                 ax.set_title("Converted Spectrum")
-                st.pyplot(fig, width="stretch")
+                show_figure(fig)
                 plt.close(fig)
                 out_df = pd.DataFrame({wn_col: wn_arr, result_label: result_arr})
                 _save(out_df, f"conv_{ab_col_ir}")
@@ -181,7 +182,7 @@ with tab_ir:
                 axes[1].plot(wn_arr, result_arr, color="darkorange")
                 axes[1].set_title("ATR Corrected")
                 axes[1].set_xlabel(wn_col)
-                st.pyplot(fig, width="stretch")
+                show_figure(fig)
                 plt.close(fig)
                 out_df = pd.DataFrame({wn_col: wn_arr, f"{ab_col_ir}_atr": result_arr})
                 _save(out_df, f"atr_{ab_col_ir}")
@@ -204,7 +205,7 @@ with tab_ir:
                 ax.set_xlabel(wn_col)
                 ax.set_ylabel("Difference")
                 ax.set_title(f"{ab_col_ir} − {scale:.2f}×{ref_col}")
-                st.pyplot(fig, width="stretch")
+                show_figure(fig)
                 plt.close(fig)
                 out_df = pd.DataFrame({wn_col: wn_arr, "difference": result_arr})
                 _save(out_df, f"sub_{ab_col_ir}")
@@ -231,7 +232,7 @@ with tab_ir:
             ax.plot(wn_arr, result_arr, label="Cleaned")
             ax.set_xlabel(wn_col)
             ax.legend()
-            st.pyplot(fig, width="stretch")
+            show_figure(fig)
             plt.close(fig)
             out_df = pd.DataFrame({wn_col: wn_arr, f"{ab_col_ir}_cleaned": result_arr})
             _save(out_df, f"cr_{ab_col_ir}")
@@ -313,7 +314,7 @@ with tab_ir:
                     ax_nist.set_ylabel("Intensity")
                     ax_nist.set_title(f"IR Spectrum: {title}")
                     ax_nist.invert_xaxis()
-                    st.pyplot(fig_nist, use_container_width=False)
+                    show_figure(fig_nist)
                     plt.close(fig_nist)
                 except ImportError as e:
                     st.warning(str(e))
@@ -388,7 +389,7 @@ with tab_nmr:
                 ax.set_xlabel("Frequency (Hz)")
                 ax.set_ylabel("Intensity")
                 ax.set_title("NMR Spectrum (FFT)")
-                st.pyplot(fig, width="stretch")
+                show_figure(fig)
                 plt.close(fig)
                 out_df = pd.DataFrame({"frequency_hz": freq_hz, "spectrum": spectrum})
                 _save(out_df, f"fft_{fid_col}")
@@ -437,7 +438,7 @@ with tab_nmr:
             ax.set_xlabel("Chemical Shift (ppm)")
             ax.set_ylabel("Intensity")
             ax.set_title(f"NMR Peaks ({result['n_peaks']} found)")
-            st.pyplot(fig, width="stretch")
+            show_figure(fig)
             plt.close(fig)
             if result["n_peaks"] > 0:
                 pk_df = pd.DataFrame(
@@ -619,7 +620,7 @@ with tab_uv:
                 eps = result["epsilon"]
                 ax.set_title(f"ε = {eps:.2f} L·mol⁻¹·cm⁻¹ | R² = {r2:.4f}")
                 ax.legend()
-                st.pyplot(fig, width="stretch")
+                show_figure(fig)
                 plt.close(fig)
                 lin_str = "✅ Linear" if result["linearity_ok"] else "⚠️ Non-linear"
                 st.info(f"**ε = {eps:.4g} L·mol⁻¹·cm⁻¹** | **R² = {r2:.5f}** | {lin_str}")
@@ -683,7 +684,7 @@ with tab_uv:
                     ax2.set_ylabel("ε (L·mol⁻¹·cm⁻¹)")
                     ax.legend(loc="upper left")
                     ax2.legend(loc="upper right")
-                    st.pyplot(fig, width="stretch")
+                    show_figure(fig)
                     plt.close(fig)
             except Exception as exc:
                 st.error(str(exc))

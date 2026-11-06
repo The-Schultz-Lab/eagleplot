@@ -40,7 +40,7 @@ from eagleplot.utils import (
     get_dataset,
     get_session_summary,
 )
-from eagleplot.utils.figures import download_payload
+from eagleplot.utils.figures import download_payload, show_figure
 
 initialize_session_state()
 
@@ -236,7 +236,7 @@ def _corr_tab(data, dataset_name) -> None:
                             pad=12,
                         )
                         fig.tight_layout()
-                        st.pyplot(fig)
+                        show_figure(fig)
                         plt.close(fig)
                     except Exception as exc:
                         st.error(f"Error: {exc}")
@@ -327,7 +327,7 @@ def _dist_tab(data, dataset_name) -> None:
                     ax.set_title(f"Overlaid {dist_kind}s — {dataset_name}", pad=10)
                     ax.legend(framealpha=0.8)
                     fig.tight_layout()
-                    st.pyplot(fig)
+                    show_figure(fig)
                     plt.close(fig)
                 except Exception as exc:
                     st.error(f"Error: {exc}")
@@ -418,7 +418,7 @@ def _cat_tab(data, dataset_name) -> None:
                     if cat_hue:
                         ax.legend(title=cat_hue, bbox_to_anchor=(1.01, 1), loc="upper left")
                     fig.tight_layout()
-                    st.pyplot(fig)
+                    show_figure(fig)
                     plt.close(fig)
                 except Exception as exc:
                     st.error(f"Error: {exc}")

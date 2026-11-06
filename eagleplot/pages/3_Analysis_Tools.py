@@ -82,7 +82,7 @@ from eagleplot.utils import (
     add_analysis_result,
     get_session_summary,
 )
-from eagleplot.utils.figures import download_payload
+from eagleplot.utils.figures import download_payload, show_figure
 
 initialize_session_state()
 
@@ -558,7 +558,7 @@ def _curve_fit_panel(data, dataset_name: str) -> None:
                                 y_label,
                                 f"Linear Fit: {equation}",
                             )
-                            st.pyplot(fig)
+                            show_figure(fig)
                             plt.close(fig)
 
                         add_analysis_result(
@@ -618,7 +618,7 @@ def _curve_fit_panel(data, dataset_name: str) -> None:
                                 y_label,
                                 f"Polynomial Fit (degree {degree})",
                             )
-                            st.pyplot(fig)
+                            show_figure(fig)
                             plt.close(fig)
 
                         add_analysis_result(
@@ -665,7 +665,7 @@ def _curve_fit_panel(data, dataset_name: str) -> None:
                                 y_label,
                                 "Exponential Fit",
                             )
-                            st.pyplot(fig)
+                            show_figure(fig)
                             plt.close(fig)
 
                         add_analysis_result(
@@ -720,7 +720,7 @@ def _curve_fit_panel(data, dataset_name: str) -> None:
                                 y_label,
                                 "Custom Fit",
                             )
-                            st.pyplot(fig)
+                            show_figure(fig)
                             plt.close(fig)
 
                         add_analysis_result(
@@ -1143,7 +1143,7 @@ def _smooth_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
             ax.legend()
             ax.grid(True, alpha=0.3)
             fig.tight_layout()
-            st.pyplot(fig)
+            show_figure(fig)
             plt.close(fig)
 
             with st.expander("Smoothed data table"):
@@ -1275,7 +1275,7 @@ def _filter_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
             ax.legend()
             ax.grid(True, alpha=0.3)
             fig.tight_layout()
-            st.pyplot(fig)
+            show_figure(fig)
             plt.close(fig)
 
             add_analysis_result(
@@ -1337,7 +1337,7 @@ def _fft_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
             ax.set_title(f"{ylabel_fft} Spectrum")
             ax.grid(True, alpha=0.3)
             fig.tight_layout()
-            st.pyplot(fig)
+            show_figure(fig)
             plt.close(fig)
 
             # Dominant frequency (skip DC at index 0)
@@ -1427,7 +1427,7 @@ def _derivative_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
                 ax2.grid(True, alpha=0.3)
 
             fig.tight_layout()
-            st.pyplot(fig)
+            show_figure(fig)
             plt.close(fig)
 
             add_analysis_result(
@@ -1533,7 +1533,7 @@ def _baseline_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
             ax2.grid(True, alpha=0.3)
 
             fig.tight_layout()
-            st.pyplot(fig)
+            show_figure(fig)
             plt.close(fig)
 
             add_analysis_result(
@@ -1633,7 +1633,7 @@ def _interpolate_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
             ax.legend()
             ax.grid(True, alpha=0.3)
             fig.tight_layout()
-            st.pyplot(fig)
+            show_figure(fig)
             plt.close(fig)
 
             with st.expander("Interpolated data (first 100 rows)"):
@@ -1992,7 +1992,7 @@ def _peak_fit_panel(data, dataset_name: str, x_col_pk, y_col_pk) -> None:
             ax_res.grid(True, alpha=0.3)
 
             fig.tight_layout()
-            st.pyplot(fig)
+            show_figure(fig)
             plt.close(fig)
 
             # ── Parameter table ───────────────────────────────────

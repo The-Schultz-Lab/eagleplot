@@ -2627,7 +2627,7 @@ def get_plot_config_widgets(plot_type: str, data: Any) -> Dict:
     >>> col = config.get('_data_col')      # None -> use full array
     >>> plot_data = arr if col is None else df[col]
     >>> fig, ax, info = histogram(plot_data, **get_plot_kwargs(config))
-    >>> st.pyplot(fig)
+    >>> show_figure(fig)  # eagleplot.utils.figures
     """
     if plot_type not in _WIDGET_FUNCS:
         st.error(f"Unknown plot type: '{plot_type}'")
