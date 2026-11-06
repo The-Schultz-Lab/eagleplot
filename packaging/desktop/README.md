@@ -52,6 +52,11 @@ The app recognises the desktop build from Electron (`eagleplot.utils.runtime`), 
   navigation; `build_desktop.py` patches its Electron main process so that http(s) links
   go to `shell.openExternal` and everything else stays blocked. If a new @stlite/desktop
   changes that code, the build stops with a message saying so.
+- **Downloads are prepared in advance** (`Capabilities.on_click_downloads` is off):
+  stlite's own page sends Streamlit's on-click downloads to the placeholder origin
+  `https://stlite.invalid`, where they fail. Prepared downloads go through Python and work.
+  Streamlit still checks each download button's URL at that origin once; the request
+  can't resolve (`.invalid` is reserved) and nothing depends on it.
 - **Python runs in a Node.js worker** (`nodeJsWorker`), which is needed to mount host
   folders. It runs only EaglePlot's own code; keep it that way (no pickle loading, no
   user-supplied Python).
