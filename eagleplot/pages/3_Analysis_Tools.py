@@ -83,6 +83,7 @@ from eagleplot.utils import (
     get_session_summary,
 )
 from eagleplot.utils.figures import download_payload, show_figure
+from eagleplot.utils import runtime
 
 initialize_session_state()
 
@@ -2318,7 +2319,9 @@ def _statistical_tests_panel(data, dataset_name: str) -> None:
 
         if not _has_sm:
             st.warning(
-                "Two-way ANOVA requires statsmodels. Install it with: `pip install statsmodels`"
+                runtime.missing_package_message(
+                    "Two-way ANOVA requires statsmodels. Install it with: `pip install statsmodels`"
+                )
             )
         elif not isinstance(data, pd.DataFrame):
             st.warning("Two-way ANOVA requires a tabular (DataFrame) dataset.")

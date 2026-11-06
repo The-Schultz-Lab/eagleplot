@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from eagleplot.utils.session_state import initialize_session_state, add_dataset
 from eagleplot.utils.figures import show_figure
+from eagleplot.utils import runtime
 from eagleplot.spectroscopy import (
     absorbance_to_transmittance,
     apply_line_broadening,
@@ -295,7 +296,14 @@ with tab_ir:
         nist_page_url = _nist_url(nist_cas) if nist_cas.strip() else ""
         if nist_page_url:
             st.markdown(f"NIST page: [{nist_cas}]({nist_page_url})")
-        if st.button("Fetch IR spectrum from NIST", key="nist_fetch_btn", type="primary"):
+        if not runtime.capabilities().outbound_http:
+            # The browser build can't reach NIST (no CORS headers): link out instead.
+            st.info(
+                "This version of EaglePlot can't download from NIST directly. Open the NIST "
+                "page above, download the IR spectrum as a JCAMP-DX file (.jdx), and load it "
+                "on the **Data Upload** page."
+            )
+        elif st.button("Fetch IR spectrum from NIST", key="nist_fetch_btn", type="primary"):
             if not nist_cas.strip():
                 st.warning("Please enter a CAS Registry Number.")
             else:
@@ -317,7 +325,7 @@ with tab_ir:
                     show_figure(fig_nist)
                     plt.close(fig_nist)
                 except ImportError as e:
-                    st.warning(str(e))
+                    st.warning(runtime.missing_package_message(str(e)))
                 except RuntimeError as e:
                     st.error(str(e))
                 except Exception as e:

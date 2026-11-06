@@ -47,6 +47,7 @@ formats = [
     "h5py>=3.0.0",
     "xarray>=0.20.0",
     "netcdf4>=1.6.0",
+    "jcamp>=1.2",
 ]
 # NIST WebBook IR fetching (eagleplot.nist). Imported lazily with a helpful
 # message, so it is genuinely optional rather than a hard dependency.

@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from eagleplot.utils.figures import download_payload  # noqa: E402
 from eagleplot.utils.session_state import initialize_session_state
+from eagleplot.utils import runtime
 from eagleplot.batch import (
     batch_statistics,
     batch_curve_fit,
@@ -269,10 +270,16 @@ with tab_analysis:
 # ══════════════════════════════════════════════════════════════════════════════
 with tab_workflows:
     st.subheader("Workflow Presets")
-    st.info(
-        "Workflows are saved in **config.json** and persist across app restarts.  "
-        "A workflow is a named list of analysis steps stored as JSON."
-    )
+    if runtime.capabilities().persistent_storage:
+        st.info(
+            "Workflows are saved in **config.json** and persist across app restarts.  "
+            "A workflow is a named list of analysis steps stored as JSON."
+        )
+    else:
+        st.info(
+            "A workflow is a named list of analysis steps stored as JSON. In this version "
+            "of EaglePlot, saved workflows last only until you close or reload this tab."
+        )
 
     _TEMPLATE_STEPS = [
         {"operation": "batch_statistics", "params": {"columns": []}},

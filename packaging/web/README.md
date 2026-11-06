@@ -37,9 +37,10 @@ fails on any Streamlit exception or uncaught page error.
 | File | Content |
 | --- | --- |
 | `index.html` | Loading splash, the stlite mount call, and a download workaround (below) |
+| `404.html` | A copy of `index.html`, so reloading a page's own URL starts the app (below) |
 | `site-config.js` | Written by the build: entrypoint, packages, wheels, Pyodide URL, Streamlit flags, storage mount, environment |
 | `eagleplot-app.zip` | `eagleplot/` (code, assets, gallery, example data) and `.streamlit/config.toml`; entrypoint `eagleplot/Home.py` |
-| `wheels/` | Pure-Python packages not in Pyodide: seaborn, plotly, narwhals, openpyxl, et-xmlfile, and Streamlit's python-multipart and itsdangerous |
+| `wheels/` | Pure-Python packages not in Pyodide: seaborn, plotly, narwhals, openpyxl, et-xmlfile, jcamp (`.jdx` uploads), and Streamlit's python-multipart and itsdangerous |
 | `stlite/` | The `@stlite/browser` build |
 | `pyodide/` | Only with `--pyodide-dir` |
 
@@ -71,8 +72,18 @@ Serve the directory over HTTP (`python -m http.server`, GitHub Pages, any static
   URL and the session is lost. `index.html` routes those requests through the worker.
   Remove the workaround once stlite handles deferred downloads itself.
 - **Storage.** `/home/pyodide/.eagleplot` is mounted on IndexedDB (stlite
-  `idbfsMountpoints`) and survives a reload; `EAGLEPLOT_CONFIG_DIR` points at it. Other
-  files the app writes (for example `config.json` next to the app) are in memory and are
-  lost on reload.
+  `idbfsMountpoints`) and survives a reload. `EAGLEPLOT_CONFIG_DIR` points at it, so
+  `config.json` (Settings defaults, Quick Plot presets, Batch workflows) is kept in the
+  browser. Other files the app writes are in memory and are lost on reload.
+- **What the app turns off** (`eagleplot/utils/runtime.py`, `capabilities()`): folder
+  import, NIST fetching (no CORS; the page links to NIST and explains how to load the
+  downloaded `.jdx`), and the Settings theme form (the theme comes from `site-config.js`).
+  Errors about a missing optional package say it isn't in this version instead of
+  suggesting `pip install`.
+- **Reloading a page other than Home.** Each Streamlit page has its own path
+  (`…/settings`), which is not a file in the site. The build writes `404.html` as a copy
+  of `index.html`, so on GitHub Pages a reload or bookmark starts the app (on Home)
+  instead of showing a 404. `python -m http.server` has no such fallback: reload from
+  the site root when testing locally.
 - **Startup** takes about 15 s on every visit (Python start-up and imports), longer on
   the first visit over a slow network.

@@ -19,7 +19,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from eagleplot.utils import initialize_session_state
+from eagleplot.utils import initialize_session_state, runtime
 from eagleplot.utils.user_settings import (
     get_config_path,
     get_defaults,
@@ -49,91 +49,99 @@ st.caption(
     "Persistent defaults and named presets are saved to **`config.json`**. "
     "Changes take effect the next time you open Quick Plot."
 )
+if not runtime.capabilities().persistent_storage:
+    st.warning(
+        "In this version of EaglePlot, settings saved here last only until you close or "
+        "reload this tab."
+    )
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Section 0 — Theme
 # ══════════════════════════════════════════════════════════════════════════════
 
 st.markdown("## Theme")
-st.markdown(
-    "Choose a base theme and optionally customize colours. "
-    "Click **Save theme** then **restart the app** for changes to take effect."
-)
-st.caption(
-    f"Theme is saved to `{get_theme_config_path()}` — the location Streamlit reads when "
-    "launched from this directory."
-)
-
-_cur = read_theme()
-
-with st.form("theme_form"):
-    _tc1, _tc2 = st.columns(2)
-    with _tc1:
-        _base = st.selectbox(
-            "Base theme",
-            ["light", "dark"],
-            index=0 if _cur.get("base", "light") == "light" else 1,
-        )
-    with _tc2:
-        _primary = st.color_picker(
-            "Primary colour",
-            value=_cur.get("primaryColor", "#1f77b4"),
-        )
-
-    _tc3, _tc4, _tc5 = st.columns(3)
-    with _tc3:
-        _bg = st.color_picker(
-            "Background",
-            value=_cur.get("backgroundColor", "#ffffff"),
-        )
-    with _tc4:
-        _sbg = st.color_picker(
-            "Sidebar / widget background",
-            value=_cur.get("secondaryBackgroundColor", "#f0f2f6"),
-        )
-    with _tc5:
-        _text = st.color_picker(
-            "Text colour",
-            value=_cur.get("textColor", "#262730"),
-        )
-
-    _theme_submitted = st.form_submit_button("Save theme", type="primary")
-
-
-def _save_theme(theme: dict, success_message: str) -> None:
-    """Write a theme and report what actually happened.
-
-    The previous implementation returned silently when config.toml was missing --
-    the default for every pip-installed user -- while still printing a success
-    message. See audit A-18.
-    """
-    try:
-        written = write_theme(theme)
-    except OSError as exc:
-        st.error(
-            f"Could not write the theme: {exc}\n\n"
-            f"EaglePlot tried to write `{get_theme_config_path()}`. If that directory is "
-            "read-only, launch EaglePlot from a directory you can write to, or create "
-            "`.streamlit/config.toml` there yourself."
-        )
-        return
-    st.success(f"{success_message} Saved to `{written}` — restart the app to apply.")
-
-
-if _theme_submitted:
-    _save_theme(
-        {
-            "base": _base,
-            "primaryColor": _primary,
-            "backgroundColor": _bg,
-            "secondaryBackgroundColor": _sbg,
-            "textColor": _text,
-        },
-        "Theme saved.",
+if not runtime.capabilities().app_config_file:
+    st.info(
+        "In this version of EaglePlot the theme is set by the app itself and can't be changed here."
+    )
+else:
+    st.markdown(
+        "Choose a base theme and optionally customize colours. "
+        "Click **Save theme** then **restart the app** for changes to take effect."
+    )
+    st.caption(
+        f"Theme is saved to `{get_theme_config_path()}` — the location Streamlit reads when "
+        "launched from this directory."
     )
 
-if st.button("Reset theme to Streamlit default"):
-    _save_theme(dict(STREAMLIT_DEFAULTS), "Theme reset to Streamlit defaults.")
+    _cur = read_theme()
+
+    with st.form("theme_form"):
+        _tc1, _tc2 = st.columns(2)
+        with _tc1:
+            _base = st.selectbox(
+                "Base theme",
+                ["light", "dark"],
+                index=0 if _cur.get("base", "light") == "light" else 1,
+            )
+        with _tc2:
+            _primary = st.color_picker(
+                "Primary colour",
+                value=_cur.get("primaryColor", "#1f77b4"),
+            )
+
+        _tc3, _tc4, _tc5 = st.columns(3)
+        with _tc3:
+            _bg = st.color_picker(
+                "Background",
+                value=_cur.get("backgroundColor", "#ffffff"),
+            )
+        with _tc4:
+            _sbg = st.color_picker(
+                "Sidebar / widget background",
+                value=_cur.get("secondaryBackgroundColor", "#f0f2f6"),
+            )
+        with _tc5:
+            _text = st.color_picker(
+                "Text colour",
+                value=_cur.get("textColor", "#262730"),
+            )
+
+        _theme_submitted = st.form_submit_button("Save theme", type="primary")
+
+    def _save_theme(theme: dict, success_message: str) -> None:
+        """Write a theme and report what actually happened.
+
+        The previous implementation returned silently when config.toml was missing --
+        the default for every pip-installed user -- while still printing a success
+        message. See audit A-18.
+        """
+        try:
+            written = write_theme(theme)
+        except OSError as exc:
+            st.error(
+                f"Could not write the theme: {exc}\n\n"
+                f"EaglePlot tried to write `{get_theme_config_path()}`. If that directory is "
+                "read-only, launch EaglePlot from a directory you can write to, or create "
+                "`.streamlit/config.toml` there yourself."
+            )
+            return
+        st.success(f"{success_message} Saved to `{written}` — restart the app to apply.")
+
+    if _theme_submitted:
+        _save_theme(
+            {
+                "base": _base,
+                "primaryColor": _primary,
+                "backgroundColor": _bg,
+                "secondaryBackgroundColor": _sbg,
+                "textColor": _text,
+            },
+            "Theme saved.",
+        )
+
+    if st.button("Reset theme to Streamlit default"):
+        _save_theme(dict(STREAMLIT_DEFAULTS), "Theme reset to Streamlit defaults.")
 
 st.markdown("---")
 
