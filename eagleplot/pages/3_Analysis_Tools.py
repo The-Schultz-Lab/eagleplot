@@ -10,6 +10,10 @@ Tabs
 - Curve Fitting: fit_linear(), fit_polynomial(), fit_exponential(), fit_custom()
 - Optimization:  minimize_function(), find_roots()
 - Linear Algebra: compute_eigenvalues(), solve_linear_system(), matrix_decomposition()
+- Signal Processing, Peak Fitting, Statistical Tests
+
+Each tool is an ``st.fragment``: its widgets and its Run button rerun only that tool,
+not the whole page (roadmap D1.2).
 """
 
 import traceback
@@ -78,6 +82,7 @@ from eagleplot.utils import (
     add_analysis_result,
     get_session_summary,
 )
+from eagleplot.utils.figures import download_payload
 
 initialize_session_state()
 
@@ -171,6 +176,53 @@ def _fit_plot(x, y, predict_fn, x_label: str, y_label: str, title: str):
     return fig
 
 
+def _result_table(result: dict) -> None:
+    """Render a test result dict as a two-column Streamlit table."""
+    rows = []
+    for k, v in result.items():
+        if isinstance(v, list):
+            display = ", ".join(str(x) for x in v)
+        elif isinstance(v, float):
+            display = f"{v:.6g}"
+        else:
+            display = str(v)
+        rows.append({"Parameter": k, "Value": display})
+    import pandas as _pd
+
+    st.dataframe(_pd.DataFrame(rows), width="stretch", hide_index=True)
+
+    # Effect size display (Cohen's d or similar)
+    if "effect_size" in result:
+        d = result["effect_size"]
+        label = result.get("effect_size_label", "Effect size")
+        abs_d = abs(d)
+        if abs_d < 0.2:
+            magnitude = "Negligible"
+            color = "gray"
+        elif abs_d < 0.5:
+            magnitude = "Small"
+            color = "blue"
+        elif abs_d < 0.8:
+            magnitude = "Medium"
+            color = "orange"
+        else:
+            magnitude = "Large"
+            color = "red"
+        st.markdown(
+            f"**{label}:** `{d:.4f}` — "
+            f":{color}[**{magnitude}**] "
+            f"(|d| < 0.2 negligible · 0.2–0.5 small · 0.5–0.8 medium · ≥ 0.8 large)"
+        )
+
+
+def _verdict(result: dict) -> None:
+    """Show a coloured reject / fail-to-reject banner."""
+    if result.get("reject_null"):
+        st.success(f"**Reject H₀** (p = {result['p_value']:.4g} < α = {result['alpha']:.3g})")
+    else:
+        st.info(f"**Fail to reject H₀** (p = {result['p_value']:.4g} ≥ α = {result['alpha']:.3g})")
+
+
 # ── Page layout ───────────────────────────────────────────────────────────────
 
 st.title("Analysis Tools")
@@ -219,6 +271,10 @@ elif isinstance(data, np.ndarray):
     st.caption(f"NumPy array — shape {data.shape}, dtype {data.dtype}")
 
 # ── Tabs ──────────────────────────────────────────────────────────────────────
+# Every tool below runs as its own st.fragment: changing one of its settings or
+# pressing its button reruns only that tool, not the whole page (roadmap D1.2).
+# The dataset selector and the column pickers that several tools share stay
+# outside the fragments, so changing them still refreshes every tool that uses them.
 st.markdown("---")
 tab_stats, tab_dist, tab_fit, tab_opt, tab_linalg, tab_smooth, tab_peaks, tab_tests = st.tabs(
     [
@@ -236,7 +292,10 @@ tab_stats, tab_dist, tab_fit, tab_opt, tab_linalg, tab_smooth, tab_peaks, tab_te
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 1 — Statistics
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_stats:
+
+
+@st.fragment
+def _statistics_panel(data, dataset_name: str) -> None:
     st.markdown("### Descriptive Statistics")
 
     col_ref, valid = _pick_col(data, "Select column / variable", key="stats_col")
@@ -279,10 +338,17 @@ with tab_stats:
                 with st.expander("Details"):
                     st.code(traceback.format_exc())
 
+
+with tab_stats:
+    _statistics_panel(data, dataset_name)
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 2 — Distribution
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_dist:
+
+
+@st.fragment
+def _distribution_panel(data, dataset_name: str) -> None:
     st.markdown("### Distribution Analysis")
 
     col_ref_d, valid_d = _pick_col(data, "Select column / variable", key="dist_col")
@@ -380,10 +446,17 @@ with tab_dist:
                     with st.expander("Details"):
                         st.code(traceback.format_exc())
 
+
+with tab_dist:
+    _distribution_panel(data, dataset_name)
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 3 — Curve Fitting
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_fit:
+
+
+@st.fragment
+def _curve_fit_panel(data, dataset_name: str) -> None:
     st.markdown("### Curve Fitting")
 
     # Check that dataset has at least 2 numeric columns / 2 array columns
@@ -673,9 +746,120 @@ with tab_fit:
                     with st.expander("Details"):
                         st.code(traceback.format_exc())
 
+
+with tab_fit:
+    _curve_fit_panel(data, dataset_name)
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 4 — Optimization
 # ══════════════════════════════════════════════════════════════════════════════
+
+
+@st.fragment
+def _minimize_panel(dataset_name: str) -> None:
+    st.markdown("Find **x** that minimizes scalar `f(x)` where `x` is a NumPy array.")
+    min_expr = st.text_area(
+        "Objective function `f(x)`",
+        value="(x[0] - 2)**2 + (x[1] + 1)**2",
+        height=80,
+        key="min_expr",
+    )
+    min_x0 = st.text_input(
+        "Initial guess x₀ (comma-separated)",
+        value="0.0, 0.0",
+        key="min_x0",
+    )
+    min_method = st.selectbox(
+        "Method",
+        ["Nelder-Mead", "BFGS", "L-BFGS-B", "Powell"],
+        key="min_method",
+    )
+
+    if st.button("Minimize", key="min_run"):
+        try:
+            _ns = {"np": np, "numpy": np}
+            obj_func = eval(f"lambda x: {min_expr}", _ns)  # noqa: S307
+            x0 = np.array([float(v.strip()) for v in min_x0.split(",")])
+            result = minimize_function(obj_func, x0, method=min_method)
+
+            st.markdown("#### Results")
+            c1, c2, c3 = st.columns(3)
+            c1.metric("f(x*)", f"{result['fun']:.6g}")
+            c2.metric("Success", "✅" if result["success"] else "❌")
+            c3.metric("Evaluations", str(result["nfev"]))
+            st.write("**Optimal x:**", result["x"])
+            st.caption(f"Message: {result['message']}")
+
+            add_analysis_result(
+                {
+                    "type": "minimize_function",
+                    "dataset": dataset_name,
+                    "expression": min_expr,
+                    "method": min_method,
+                    "results": {
+                        "x": [float(v) for v in result["x"]],
+                        "fun": result["fun"],
+                        "success": result["success"],
+                        "nfev": result["nfev"],
+                    },
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _root_panel(dataset_name: str) -> None:
+    st.markdown("Find scalar `x` such that `f(x) = 0`.")
+    root_expr = st.text_area(
+        "Function `f(x)`",
+        value="x**3 - x - 2",
+        height=80,
+        key="root_expr",
+    )
+    rc1, rc2 = st.columns(2)
+    with rc1:
+        root_a = st.number_input("Bracket lower bound (a)", value=-10.0, key="root_a")
+    with rc2:
+        root_b = st.number_input("Bracket upper bound (b)", value=10.0, key="root_b")
+
+    if st.button("Find Root", key="root_run"):
+        try:
+            _ns = {"np": np, "numpy": np}
+            root_func = eval(f"lambda x: {root_expr}", _ns)  # noqa: S307
+            result = find_roots(root_func, bracket=(root_a, root_b))
+
+            st.markdown("#### Results")
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Root", f"{result['root']:.8g}")
+            c2.metric("Converged", "✅" if result["converged"] else "❌")
+            c3.metric("Iterations", str(result["iterations"]))
+            st.caption(f"f(root) evaluated using {int(result['function_value'])} calls.")
+
+            add_analysis_result(
+                {
+                    "type": "find_roots",
+                    "dataset": dataset_name,
+                    "expression": root_expr,
+                    "results": {
+                        "root": result["root"],
+                        "converged": result["converged"],
+                        "iterations": result["iterations"],
+                    },
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
 with tab_opt:
     st.markdown("### Optimization")
     st.info(
@@ -685,110 +869,176 @@ with tab_opt:
 
     # ── Function minimization ─────────────────────────────────────────────────
     with st.expander("Function Minimization", expanded=True):
-        st.markdown("Find **x** that minimizes scalar `f(x)` where `x` is a NumPy array.")
-        min_expr = st.text_area(
-            "Objective function `f(x)`",
-            value="(x[0] - 2)**2 + (x[1] + 1)**2",
-            height=80,
-            key="min_expr",
-        )
-        min_x0 = st.text_input(
-            "Initial guess x₀ (comma-separated)",
-            value="0.0, 0.0",
-            key="min_x0",
-        )
-        min_method = st.selectbox(
-            "Method",
-            ["Nelder-Mead", "BFGS", "L-BFGS-B", "Powell"],
-            key="min_method",
-        )
-
-        if st.button("Minimize", key="min_run"):
-            try:
-                _ns = {"np": np, "numpy": np}
-                obj_func = eval(f"lambda x: {min_expr}", _ns)  # noqa: S307
-                x0 = np.array([float(v.strip()) for v in min_x0.split(",")])
-                result = minimize_function(obj_func, x0, method=min_method)
-
-                st.markdown("#### Results")
-                c1, c2, c3 = st.columns(3)
-                c1.metric("f(x*)", f"{result['fun']:.6g}")
-                c2.metric("Success", "✅" if result["success"] else "❌")
-                c3.metric("Evaluations", str(result["nfev"]))
-                st.write("**Optimal x:**", result["x"])
-                st.caption(f"Message: {result['message']}")
-
-                add_analysis_result(
-                    {
-                        "type": "minimize_function",
-                        "dataset": dataset_name,
-                        "expression": min_expr,
-                        "method": min_method,
-                        "results": {
-                            "x": [float(v) for v in result["x"]],
-                            "fun": result["fun"],
-                            "success": result["success"],
-                            "nfev": result["nfev"],
-                        },
-                    }
-                )
-                st.success("Results saved to analysis history.")
-
-            except Exception as exc:
-                st.error(f"Error: {exc}")
-                with st.expander("Details"):
-                    st.code(traceback.format_exc())
+        _minimize_panel(dataset_name)
 
     # ── Root finding ──────────────────────────────────────────────────────────
     with st.expander("Root Finding (Brent's Method)"):
-        st.markdown("Find scalar `x` such that `f(x) = 0`.")
-        root_expr = st.text_area(
-            "Function `f(x)`",
-            value="x**3 - x - 2",
-            height=80,
-            key="root_expr",
-        )
-        rc1, rc2 = st.columns(2)
-        with rc1:
-            root_a = st.number_input("Bracket lower bound (a)", value=-10.0, key="root_a")
-        with rc2:
-            root_b = st.number_input("Bracket upper bound (b)", value=10.0, key="root_b")
-
-        if st.button("Find Root", key="root_run"):
-            try:
-                _ns = {"np": np, "numpy": np}
-                root_func = eval(f"lambda x: {root_expr}", _ns)  # noqa: S307
-                result = find_roots(root_func, bracket=(root_a, root_b))
-
-                st.markdown("#### Results")
-                c1, c2, c3 = st.columns(3)
-                c1.metric("Root", f"{result['root']:.8g}")
-                c2.metric("Converged", "✅" if result["converged"] else "❌")
-                c3.metric("Iterations", str(result["iterations"]))
-                st.caption(f"f(root) evaluated using {int(result['function_value'])} calls.")
-
-                add_analysis_result(
-                    {
-                        "type": "find_roots",
-                        "dataset": dataset_name,
-                        "expression": root_expr,
-                        "results": {
-                            "root": result["root"],
-                            "converged": result["converged"],
-                            "iterations": result["iterations"],
-                        },
-                    }
-                )
-                st.success("Results saved to analysis history.")
-
-            except Exception as exc:
-                st.error(f"Error: {exc}")
-                with st.expander("Details"):
-                    st.code(traceback.format_exc())
+        _root_panel(dataset_name)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 5 — Linear Algebra
 # ══════════════════════════════════════════════════════════════════════════════
+
+
+@st.fragment
+def _eigen_panel(_mat: np.ndarray, dataset_name: str) -> None:
+    _nrows, _ncols_m = _mat.shape
+    show_evecs = st.checkbox("Include eigenvectors", value=False, key="eig_vecs")
+
+    if st.button("Compute Eigenvalues", key="eig_run"):
+        try:
+            if _nrows != _ncols_m:
+                st.error(f"Matrix must be square — got {_nrows} × {_ncols_m}.")
+            else:
+                result = compute_eigenvalues(_mat, eigenvectors=show_evecs)
+                evals = result["eigenvalues"]
+
+                st.markdown("#### Eigenvalues")
+                edf = pd.DataFrame(
+                    {
+                        "Index": list(range(len(evals))),
+                        "Real Part": evals.real,
+                        "Imaginary Part": evals.imag,
+                        "Magnitude": np.abs(evals),
+                    }
+                )
+                st.dataframe(edf, width="stretch")
+
+                if show_evecs and "eigenvectors" in result:
+                    st.markdown("#### Eigenvectors (columns)")
+                    st.dataframe(
+                        pd.DataFrame(
+                            result["eigenvectors"].real,
+                            columns=[f"v{i}" for i in range(_ncols_m)],
+                        ),
+                        width="stretch",
+                    )
+
+                add_analysis_result(
+                    {
+                        "type": "eigenvalues",
+                        "dataset": dataset_name,
+                        "results": {
+                            "eigenvalues_real": [float(v) for v in evals.real],
+                            "eigenvalues_imag": [float(v) for v in evals.imag],
+                        },
+                    }
+                )
+                st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _solve_panel(_mat: np.ndarray, dataset_name: str) -> None:
+    _nrows, _ncols_m = _mat.shape
+    st.markdown("The dataset matrix is **A**. Enter **b** as a comma-separated vector.")
+    b_str = st.text_input(
+        "Right-hand side vector b",
+        placeholder=f"{', '.join(['1.0'] * min(_nrows, 5))}{' ...' if _nrows > 5 else ''}",
+        key="linalg_b",
+    )
+
+    if st.button("Solve", key="linalg_solve"):
+        try:
+            if _nrows != _ncols_m:
+                st.error(f"A must be square — got {_nrows} × {_ncols_m}.")
+            elif not b_str.strip():
+                st.warning("Enter the b vector first.")
+            else:
+                b_vec = np.array([float(v.strip()) for v in b_str.split(",")])
+                if len(b_vec) != _nrows:
+                    st.error(f"b must have {_nrows} element(s), got {len(b_vec)}.")
+                else:
+                    result = solve_linear_system(_mat, b_vec)
+
+                    st.markdown("#### Solution vector x")
+                    sol_df = pd.DataFrame({"Component": range(len(result["x"])), "x": result["x"]})
+                    st.dataframe(sol_df, width="stretch")
+
+                    c1, c2 = st.columns(2)
+                    c1.metric("Residual ‖Ax−b‖", f"{result['residual']:.4e}")
+                    c2.metric("Condition number", f"{result['condition_number']:.4g}")
+
+                    if result["condition_number"] > 1e10:
+                        st.warning(
+                            "High condition number — matrix is nearly singular; "
+                            "solution may be inaccurate."
+                        )
+
+                    add_analysis_result(
+                        {
+                            "type": "solve_linear_system",
+                            "dataset": dataset_name,
+                            "results": {
+                                "x": [float(v) for v in result["x"]],
+                                "residual": result["residual"],
+                                "condition_number": result["condition_number"],
+                            },
+                        }
+                    )
+                    st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _decomposition_panel(_mat: np.ndarray, dataset_name: str) -> None:
+    _DECOMP_LABELS = {
+        "svd": "SVD — Singular Value Decomposition",
+        "qr": "QR Decomposition",
+        "lu": "LU Decomposition",
+        "cholesky": "Cholesky (positive-definite matrices only)",
+    }
+    decomp_method = st.selectbox(
+        "Method",
+        list(_DECOMP_LABELS.keys()),
+        format_func=lambda m: _DECOMP_LABELS[m],
+        key="decomp_method",
+    )
+
+    if st.button("Decompose", key="decomp_run"):
+        try:
+            result = matrix_decomposition(_mat, method=decomp_method)
+
+            st.markdown(f"#### {decomp_method.upper()} Result")
+            for key_name, arr_val in result.items():
+                if isinstance(arr_val, np.ndarray) and arr_val.ndim == 2:
+                    st.markdown(f"**{key_name}** — shape {arr_val.shape[0]} × {arr_val.shape[1]}:")
+                    st.dataframe(
+                        pd.DataFrame(arr_val.real),
+                        width="stretch",
+                    )
+                elif isinstance(arr_val, np.ndarray) and arr_val.ndim == 1:
+                    st.markdown(f"**{key_name}** (singular values / diagonal):")
+                    st.write(arr_val.real)
+
+            add_analysis_result(
+                {
+                    "type": "matrix_decomposition",
+                    "dataset": dataset_name,
+                    "method": decomp_method,
+                    "results": {
+                        k: [float(v) for v in vv.real.flatten()]
+                        for k, vv in result.items()
+                        if isinstance(vv, np.ndarray)
+                    },
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
 with tab_linalg:
     st.markdown("### Linear Algebra")
     st.info(
@@ -808,165 +1058,616 @@ with tab_linalg:
     if _mat_ok:
         # ── Eigenvalues ───────────────────────────────────────────────────────
         with st.expander("Eigenvalues & Eigenvectors", expanded=True):
-            show_evecs = st.checkbox("Include eigenvectors", value=False, key="eig_vecs")
-
-            if st.button("Compute Eigenvalues", key="eig_run"):
-                try:
-                    if _nrows != _ncols_m:
-                        st.error(f"Matrix must be square — got {_nrows} × {_ncols_m}.")
-                    else:
-                        result = compute_eigenvalues(_mat, eigenvectors=show_evecs)
-                        evals = result["eigenvalues"]
-
-                        st.markdown("#### Eigenvalues")
-                        edf = pd.DataFrame(
-                            {
-                                "Index": list(range(len(evals))),
-                                "Real Part": evals.real,
-                                "Imaginary Part": evals.imag,
-                                "Magnitude": np.abs(evals),
-                            }
-                        )
-                        st.dataframe(edf, width="stretch")
-
-                        if show_evecs and "eigenvectors" in result:
-                            st.markdown("#### Eigenvectors (columns)")
-                            st.dataframe(
-                                pd.DataFrame(
-                                    result["eigenvectors"].real,
-                                    columns=[f"v{i}" for i in range(_ncols_m)],
-                                ),
-                                width="stretch",
-                            )
-
-                        add_analysis_result(
-                            {
-                                "type": "eigenvalues",
-                                "dataset": dataset_name,
-                                "results": {
-                                    "eigenvalues_real": [float(v) for v in evals.real],
-                                    "eigenvalues_imag": [float(v) for v in evals.imag],
-                                },
-                            }
-                        )
-                        st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _eigen_panel(_mat, dataset_name)
 
         # ── Solve Ax = b ──────────────────────────────────────────────────────
         with st.expander("Solve Linear System Ax = b"):
-            st.markdown("The dataset matrix is **A**. Enter **b** as a comma-separated vector.")
-            b_str = st.text_input(
-                "Right-hand side vector b",
-                placeholder=f"{', '.join(['1.0'] * min(_nrows, 5))}{' ...' if _nrows > 5 else ''}",
-                key="linalg_b",
-            )
-
-            if st.button("Solve", key="linalg_solve"):
-                try:
-                    if _nrows != _ncols_m:
-                        st.error(f"A must be square — got {_nrows} × {_ncols_m}.")
-                    elif not b_str.strip():
-                        st.warning("Enter the b vector first.")
-                    else:
-                        b_vec = np.array([float(v.strip()) for v in b_str.split(",")])
-                        if len(b_vec) != _nrows:
-                            st.error(f"b must have {_nrows} element(s), got {len(b_vec)}.")
-                        else:
-                            result = solve_linear_system(_mat, b_vec)
-
-                            st.markdown("#### Solution vector x")
-                            sol_df = pd.DataFrame(
-                                {"Component": range(len(result["x"])), "x": result["x"]}
-                            )
-                            st.dataframe(sol_df, width="stretch")
-
-                            c1, c2 = st.columns(2)
-                            c1.metric("Residual ‖Ax−b‖", f"{result['residual']:.4e}")
-                            c2.metric("Condition number", f"{result['condition_number']:.4g}")
-
-                            if result["condition_number"] > 1e10:
-                                st.warning(
-                                    "High condition number — matrix is nearly singular; "
-                                    "solution may be inaccurate."
-                                )
-
-                            add_analysis_result(
-                                {
-                                    "type": "solve_linear_system",
-                                    "dataset": dataset_name,
-                                    "results": {
-                                        "x": [float(v) for v in result["x"]],
-                                        "residual": result["residual"],
-                                        "condition_number": result["condition_number"],
-                                    },
-                                }
-                            )
-                            st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _solve_panel(_mat, dataset_name)
 
         # ── Matrix decomposition ──────────────────────────────────────────────
         with st.expander("Matrix Decomposition"):
-            _DECOMP_LABELS = {
-                "svd": "SVD — Singular Value Decomposition",
-                "qr": "QR Decomposition",
-                "lu": "LU Decomposition",
-                "cholesky": "Cholesky (positive-definite matrices only)",
-            }
-            decomp_method = st.selectbox(
-                "Method",
-                list(_DECOMP_LABELS.keys()),
-                format_func=lambda m: _DECOMP_LABELS[m],
-                key="decomp_method",
-            )
-
-            if st.button("Decompose", key="decomp_run"):
-                try:
-                    result = matrix_decomposition(_mat, method=decomp_method)
-
-                    st.markdown(f"#### {decomp_method.upper()} Result")
-                    for key_name, arr_val in result.items():
-                        if isinstance(arr_val, np.ndarray) and arr_val.ndim == 2:
-                            st.markdown(
-                                f"**{key_name}** — shape {arr_val.shape[0]} × {arr_val.shape[1]}:"
-                            )
-                            st.dataframe(
-                                pd.DataFrame(arr_val.real),
-                                width="stretch",
-                            )
-                        elif isinstance(arr_val, np.ndarray) and arr_val.ndim == 1:
-                            st.markdown(f"**{key_name}** (singular values / diagonal):")
-                            st.write(arr_val.real)
-
-                    add_analysis_result(
-                        {
-                            "type": "matrix_decomposition",
-                            "dataset": dataset_name,
-                            "method": decomp_method,
-                            "results": {
-                                k: [float(v) for v in vv.real.flatten()]
-                                for k, vv in result.items()
-                                if isinstance(vv, np.ndarray)
-                            },
-                        }
-                    )
-                    st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _decomposition_panel(_mat, dataset_name)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 6 — Signal Processing
 # ══════════════════════════════════════════════════════════════════════════════
+
+
+@st.fragment
+def _smooth_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
+    st.markdown("#### Smoothing")
+    sp_smooth_method = st.radio(
+        "Method",
+        ["Moving Average", "Savitzky-Golay", "Gaussian"],
+        horizontal=True,
+        key="sp_smooth_method",
+    )
+
+    sp_ma_window = 11
+    sp_sg_window = 11
+    sp_sg_poly = 3
+    sp_gauss_sigma = 2.0
+
+    if sp_smooth_method == "Moving Average":
+        sp_ma_window = st.slider("Window size (points)", 3, 101, 11, 2, key="sp_ma_window")
+    elif sp_smooth_method == "Savitzky-Golay":
+        c1, c2 = st.columns(2)
+        with c1:
+            sp_sg_window = st.slider("Window length (odd)", 5, 101, 11, 2, key="sp_sg_window")
+            if sp_sg_window % 2 == 0:
+                sp_sg_window += 1
+        with c2:
+            sp_sg_poly = int(
+                st.number_input(
+                    "Polynomial order",
+                    min_value=1,
+                    max_value=min(sp_sg_window - 1, 6),
+                    value=min(3, sp_sg_window - 1),
+                    key="sp_sg_poly",
+                )
+            )
+    else:
+        sp_gauss_sigma = st.number_input(
+            "Sigma (std deviation, index units)",
+            min_value=0.1,
+            value=2.0,
+            step=0.5,
+            key="sp_gauss_sigma",
+        )
+
+    show_raw_sp = st.checkbox("Show original signal", value=True, key="sp_smooth_show_raw")
+
+    if st.button("Apply Smoothing", type="primary", key="sp_smooth_run"):
+        try:
+            y_sp = _to_1d(data, col_ref_sp)
+            x_sp = _to_1d(data, x_col_sp) if x_col_sp is not None else np.arange(len(y_sp))
+
+            if sp_smooth_method == "Moving Average":
+                y_out = smooth_moving_average(y_sp, int(sp_ma_window))
+                label = f"Moving Average (window={sp_ma_window})"
+            elif sp_smooth_method == "Savitzky-Golay":
+                y_out = smooth_savitzky_golay(y_sp, int(sp_sg_window), int(sp_sg_poly))
+                label = f"Savitzky-Golay (window={sp_sg_window}, order={sp_sg_poly})"
+            else:
+                y_out = smooth_gaussian(y_sp, float(sp_gauss_sigma))
+                label = f"Gaussian (σ={sp_gauss_sigma})"
+
+            fig, ax = plt.subplots(figsize=(8, 4))
+            if show_raw_sp:
+                ax.plot(x_sp, y_sp, alpha=0.4, lw=1, color="#888888", label="Original")
+            ax.plot(x_sp, y_out, lw=2, color="#d62728", label=label)
+            col_name = str(col_ref_sp) if col_ref_sp is not None else "Value"
+            ax.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
+            ax.set_ylabel(col_name)
+            ax.set_title("Smoothed Signal")
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            with st.expander("Smoothed data table"):
+                st.dataframe(
+                    pd.DataFrame({"X": x_sp, "Original": y_sp, "Smoothed": y_out}),
+                    width="stretch",
+                )
+
+            add_analysis_result(
+                {
+                    "type": "smoothing",
+                    "dataset": dataset_name,
+                    "column": str(col_ref_sp),
+                    "method": label,
+                    "results": {"smoothed": [float(v) for v in y_out]},
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _filter_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
+    st.markdown("#### Butterworth Filter")
+    st.caption("Zero-phase IIR filter (sosfiltfilt) — no phase distortion.")
+
+    sp_flt_type = st.selectbox(
+        "Filter type",
+        ["Low-pass", "High-pass", "Band-pass", "Band-stop"],
+        key="sp_flt_type",
+    )
+    sp_flt_order = st.slider("Filter order", 1, 10, 4, key="sp_flt_order")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        sp_flt_fs = st.number_input(
+            "Sampling frequency (fs)",
+            min_value=0.001,
+            value=1.0,
+            step=0.1,
+            format="%.4g",
+            key="sp_flt_fs",
+        )
+
+    # Defaults (overwritten by widgets below)
+    sp_flt_cutoff = 0.3
+    sp_flt_low = 0.1
+    sp_flt_high = 0.4
+
+    if sp_flt_type in ("Band-pass", "Band-stop"):
+        col_a, col_b = st.columns(2)
+        with col_a:
+            sp_flt_low = st.number_input(
+                "Low cut-off (Hz)",
+                min_value=1e-6,
+                value=0.1,
+                step=0.01,
+                format="%.4g",
+                key="sp_flt_low",
+            )
+        with col_b:
+            sp_flt_high = st.number_input(
+                "High cut-off (Hz)",
+                min_value=1e-6,
+                value=0.4,
+                step=0.01,
+                format="%.4g",
+                key="sp_flt_high",
+            )
+    else:
+        with c2:
+            sp_flt_cutoff = st.number_input(
+                "Cut-off frequency (Hz)",
+                min_value=1e-6,
+                value=0.3,
+                step=0.01,
+                format="%.4g",
+                key="sp_flt_cutoff",
+            )
+
+    show_raw_flt = st.checkbox("Show original signal", value=True, key="sp_flt_show_raw")
+
+    if st.button("Apply Filter", type="primary", key="sp_flt_run"):
+        try:
+            y_sp = _to_1d(data, col_ref_sp)
+            x_sp = _to_1d(data, x_col_sp) if x_col_sp is not None else np.arange(len(y_sp))
+
+            if sp_flt_type == "Low-pass":
+                y_out = filter_lowpass(
+                    y_sp, float(sp_flt_cutoff), float(sp_flt_fs), int(sp_flt_order)
+                )
+                label = f"Low-pass (fc={sp_flt_cutoff} Hz, order={sp_flt_order})"
+            elif sp_flt_type == "High-pass":
+                y_out = filter_highpass(
+                    y_sp, float(sp_flt_cutoff), float(sp_flt_fs), int(sp_flt_order)
+                )
+                label = f"High-pass (fc={sp_flt_cutoff} Hz, order={sp_flt_order})"
+            elif sp_flt_type == "Band-pass":
+                y_out = filter_bandpass(
+                    y_sp,
+                    float(sp_flt_low),
+                    float(sp_flt_high),
+                    float(sp_flt_fs),
+                    int(sp_flt_order),
+                )
+                label = f"Band-pass ({sp_flt_low}–{sp_flt_high} Hz, order={sp_flt_order})"
+            else:
+                y_out = filter_bandstop(
+                    y_sp,
+                    float(sp_flt_low),
+                    float(sp_flt_high),
+                    float(sp_flt_fs),
+                    int(sp_flt_order),
+                )
+                label = f"Band-stop ({sp_flt_low}–{sp_flt_high} Hz, order={sp_flt_order})"
+
+            fig, ax = plt.subplots(figsize=(8, 4))
+            if show_raw_flt:
+                ax.plot(x_sp, y_sp, alpha=0.4, lw=1, color="#888888", label="Original")
+            ax.plot(x_sp, y_out, lw=2, color="#1f77b4", label=label)
+            col_name = str(col_ref_sp) if col_ref_sp is not None else "Value"
+            ax.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
+            ax.set_ylabel(col_name)
+            ax.set_title("Filtered Signal")
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            add_analysis_result(
+                {
+                    "type": "filter",
+                    "dataset": dataset_name,
+                    "column": str(col_ref_sp),
+                    "method": label,
+                    "results": {"filtered": [float(v) for v in y_out]},
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _fft_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
+    st.markdown("#### FFT / Power Spectrum")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        sp_fft_dt = st.number_input(
+            "Sample spacing (dt = 1/fs)",
+            min_value=1e-12,
+            value=1.0,
+            step=0.1,
+            format="%.6g",
+            key="sp_fft_dt",
+            help="Set to 1.0 for index-domain data.",
+        )
+    with c2:
+        sp_fft_plot = st.selectbox(
+            "Display",
+            ["Amplitude spectrum", "Power spectrum"],
+            key="sp_fft_plot",
+        )
+
+    if st.button("Compute FFT", type="primary", key="sp_fft_run"):
+        try:
+            y_sp = _to_1d(data, col_ref_sp)
+            result_fft = sig_fft(y_sp, dt=float(sp_fft_dt))
+
+            freqs_fft = result_fft["frequencies"]
+            if "Power" in sp_fft_plot:
+                yplot = result_fft["power"]
+                ylabel_fft = "Power"
+            else:
+                yplot = result_fft["amplitudes"]
+                ylabel_fft = "Amplitude"
+
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.plot(freqs_fft, yplot, lw=1.5, color="#2ca02c")
+            ax.set_xlabel("Frequency")
+            ax.set_ylabel(ylabel_fft)
+            ax.set_title(f"{ylabel_fft} Spectrum")
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            # Dominant frequency (skip DC at index 0)
+            dom_idx = int(np.argmax(result_fft["amplitudes"][1:]) + 1)
+            dom_freq = float(freqs_fft[dom_idx])
+            c1, c2, c3 = st.columns(3)
+            c1.metric("N points", result_fft["n"])
+            c2.metric("Dominant frequency", f"{dom_freq:.4g}")
+            c3.metric(
+                "Period",
+                f"{1.0 / dom_freq:.4g}" if dom_freq != 0 else "—",
+            )
+
+            with st.expander("Top-10 frequency components"):
+                top_idx = np.argsort(result_fft["amplitudes"])[::-1][:10]
+                st.dataframe(
+                    pd.DataFrame(
+                        {
+                            "Frequency": freqs_fft[top_idx],
+                            "Amplitude": result_fft["amplitudes"][top_idx],
+                            "Power": result_fft["power"][top_idx],
+                            "Phase (rad)": result_fft["phases"][top_idx],
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            add_analysis_result(
+                {
+                    "type": "fft",
+                    "dataset": dataset_name,
+                    "column": str(col_ref_sp),
+                    "dt": float(sp_fft_dt),
+                    "results": {
+                        "dominant_frequency": dom_freq,
+                        "n": result_fft["n"],
+                    },
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _derivative_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
+    st.markdown("#### Numerical Derivative")
+    st.caption("Central-difference approximation via numpy.gradient.")
+
+    sp_deriv_order = st.radio("Derivative order", [1, 2], horizontal=True, key="sp_deriv_order")
+    show_raw_drv = st.checkbox("Show original signal", value=True, key="sp_deriv_show_raw")
+
+    if st.button("Compute Derivative", type="primary", key="sp_deriv_run"):
+        try:
+            y_sp = _to_1d(data, col_ref_sp)
+            x_arr = _to_1d(data, x_col_sp) if x_col_sp is not None else None
+            x_axis = x_arr if x_arr is not None else np.arange(len(y_sp))
+
+            dy = sig_derivative(y_sp, x=x_arr, order=int(sp_deriv_order))
+            ord_label = "1st" if sp_deriv_order == 1 else "2nd"
+            label = f"{ord_label} derivative"
+
+            if show_raw_drv:
+                fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5), sharex=True)
+                col_name = str(col_ref_sp) if col_ref_sp is not None else "Signal"
+                ax1.plot(x_axis, y_sp, lw=1.5, color="#888888")
+                ax1.set_ylabel(col_name)
+                ax1.set_title("Original")
+                ax1.grid(True, alpha=0.3)
+                ax2.plot(x_axis, dy, lw=1.5, color="#9467bd")
+                ax2.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
+                drv_sym = "dy/dx" if sp_deriv_order == 1 else "d²y/dx²"
+                ax2.set_ylabel(drv_sym)
+                ax2.set_title(label.capitalize())
+                ax2.grid(True, alpha=0.3)
+            else:
+                fig, ax2 = plt.subplots(figsize=(8, 4))
+                ax2.plot(x_axis, dy, lw=1.5, color="#9467bd", label=label)
+                ax2.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
+                drv_sym = "dy/dx" if sp_deriv_order == 1 else "d²y/dx²"
+                ax2.set_ylabel(drv_sym)
+                ax2.set_title(label.capitalize())
+                ax2.legend()
+                ax2.grid(True, alpha=0.3)
+
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            add_analysis_result(
+                {
+                    "type": "derivative",
+                    "dataset": dataset_name,
+                    "column": str(col_ref_sp),
+                    "order": int(sp_deriv_order),
+                    "results": {"derivative": [float(v) for v in dy]},
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _baseline_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
+    st.markdown("#### Baseline Correction")
+    st.markdown("Estimate and subtract a background baseline from the signal.")
+
+    sp_bl_method = st.radio(
+        "Method",
+        ["Polynomial", "Rolling Ball", "ALS (Asymmetric Least Squares)"],
+        key="sp_bl_method",
+    )
+
+    sp_bl_degree = 3
+    sp_bl_radius = 50
+    sp_bl_lam = 1e5
+    sp_bl_p = 0.01
+
+    if sp_bl_method == "Polynomial":
+        sp_bl_degree = st.slider("Polynomial degree", 1, 10, 3, key="sp_bl_poly_deg")
+        if x_col_sp is None:
+            st.info("Tip: select an X column above for physical x-axis fitting.")
+    elif sp_bl_method == "Rolling Ball":
+        sp_bl_radius = st.slider("Ball radius (samples)", 5, 500, 50, key="sp_bl_rb_radius")
+    else:
+        c1, c2 = st.columns(2)
+        with c1:
+            sp_bl_lam = st.number_input(
+                "Smoothness λ",
+                min_value=1.0,
+                value=1e5,
+                step=1e4,
+                format="%.2e",
+                key="sp_bl_lam",
+            )
+        with c2:
+            sp_bl_p = st.number_input(
+                "Asymmetry p",
+                min_value=0.001,
+                max_value=0.5,
+                value=0.01,
+                step=0.005,
+                format="%.4f",
+                key="sp_bl_p",
+            )
+
+    show_raw_bl = st.checkbox("Show original signal", value=True, key="sp_bl_show_raw")
+
+    if st.button("Correct Baseline", type="primary", key="sp_bl_run"):
+        try:
+            y_sp = _to_1d(data, col_ref_sp)
+            x_sp = _to_1d(data, x_col_sp) if x_col_sp is not None else np.arange(len(y_sp))
+
+            if sp_bl_method == "Polynomial":
+                bl_vals, y_corr = baseline_polynomial(y_sp, x_sp, int(sp_bl_degree))
+                label = f"Polynomial baseline (degree={sp_bl_degree})"
+            elif sp_bl_method == "Rolling Ball":
+                bl_vals, y_corr = baseline_rolling_ball(y_sp, int(sp_bl_radius))
+                label = f"Rolling ball (radius={sp_bl_radius})"
+            else:
+                bl_vals, y_corr = baseline_als(y_sp, lam=float(sp_bl_lam), p=float(sp_bl_p))
+                label = f"ALS (λ={sp_bl_lam:.0e}, p={sp_bl_p})"
+
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
+            if show_raw_bl:
+                ax1.plot(x_sp, y_sp, lw=1, color="#888888", alpha=0.7, label="Original")
+            ax1.plot(
+                x_sp,
+                bl_vals,
+                lw=2,
+                color="#ff7f0e",
+                ls="--",
+                label="Baseline",
+            )
+            ax1.plot(x_sp, y_corr, lw=1.5, color="#1f77b4", label="Corrected")
+            col_name = str(col_ref_sp) if col_ref_sp is not None else "Signal"
+            ax1.set_ylabel(col_name)
+            ax1.set_title(label)
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+
+            ax2.plot(x_sp, y_corr, lw=1.5, color="#1f77b4")
+            ax2.axhline(0, color="red", lw=0.8, ls="--")
+            ax2.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
+            ax2.set_ylabel("Corrected signal")
+            ax2.grid(True, alpha=0.3)
+
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            add_analysis_result(
+                {
+                    "type": "baseline_correction",
+                    "dataset": dataset_name,
+                    "column": str(col_ref_sp),
+                    "method": label,
+                    "results": {"corrected": [float(v) for v in y_corr]},
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _interpolate_panel(data, dataset_name: str, col_ref_sp, x_col_sp) -> None:
+    st.markdown("#### Interpolation")
+    st.markdown("Resample the signal to a new, uniform x-grid.")
+
+    if x_col_sp is None:
+        st.info(
+            "No X column selected above. Select one in the "
+            "'X-axis column' expander to interpolate on a physical grid. "
+            "Index coordinates are used when no X column is set."
+        )
+
+    sp_interp_method = st.selectbox(
+        "Method",
+        ["cubic", "linear", "quadratic", "nearest"],
+        key="sp_interp_method",
+    )
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        sp_interp_n = int(
+            st.number_input(
+                "Output points",
+                min_value=10,
+                value=500,
+                step=10,
+                key="sp_interp_n",
+            )
+        )
+    sp_use_data_bounds = st.checkbox(
+        "Use data x-range as bounds", value=True, key="sp_interp_auto_bounds"
+    )
+    if not sp_use_data_bounds:
+        with c2:
+            sp_interp_start = st.number_input("X start", value=0.0, key="sp_interp_start")
+        with c3:
+            sp_interp_end = st.number_input("X end", value=1.0, key="sp_interp_end")
+
+    if st.button("Interpolate", type="primary", key="sp_interp_run"):
+        try:
+            y_sp = _to_1d(data, col_ref_sp)
+            x_sp = (
+                _to_1d(data, x_col_sp)
+                if x_col_sp is not None
+                else np.arange(len(y_sp), dtype=float)
+            )
+
+            if sp_use_data_bounds:
+                x_start = float(x_sp.min())
+                x_stop = float(x_sp.max())
+            else:
+                x_start = float(sp_interp_start)
+                x_stop = float(sp_interp_end)
+
+            x_new = np.linspace(x_start, x_stop, sp_interp_n)
+            y_new = sig_interpolate(x_sp, y_sp, x_new, method=sp_interp_method)
+
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.scatter(
+                x_sp,
+                y_sp,
+                s=12,
+                alpha=0.5,
+                color="#333333",
+                label=f"Original ({len(x_sp)} pts)",
+                zorder=3,
+            )
+            ax.plot(
+                x_new,
+                y_new,
+                lw=1.5,
+                color="#2ca02c",
+                label=f"{sp_interp_method} ({sp_interp_n} pts)",
+            )
+            col_name = str(col_ref_sp) if col_ref_sp is not None else "Signal"
+            ax.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
+            ax.set_ylabel(col_name)
+            ax.set_title("Interpolated Signal")
+            ax.legend()
+            ax.grid(True, alpha=0.3)
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            with st.expander("Interpolated data (first 100 rows)"):
+                st.dataframe(
+                    pd.DataFrame(
+                        {
+                            "X_new": x_new[:100],
+                            "Y_interp": y_new[:100],
+                        }
+                    ),
+                    width="stretch",
+                )
+
+            add_analysis_result(
+                {
+                    "type": "interpolation",
+                    "dataset": dataset_name,
+                    "column": str(col_ref_sp),
+                    "method": sp_interp_method,
+                    "results": {
+                        "n_input": int(len(x_sp)),
+                        "n_output": sp_interp_n,
+                        "x_range": [x_start, x_stop],
+                    },
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
 with tab_smooth:
     st.markdown("### Signal Processing")
     st.markdown(
@@ -994,600 +1695,361 @@ with tab_smooth:
 
         # ── Smooth ───────────────────────────────────────────────────────────
         with sub_smooth:
-            st.markdown("#### Smoothing")
-            sp_smooth_method = st.radio(
-                "Method",
-                ["Moving Average", "Savitzky-Golay", "Gaussian"],
-                horizontal=True,
-                key="sp_smooth_method",
-            )
-
-            sp_ma_window = 11
-            sp_sg_window = 11
-            sp_sg_poly = 3
-            sp_gauss_sigma = 2.0
-
-            if sp_smooth_method == "Moving Average":
-                sp_ma_window = st.slider("Window size (points)", 3, 101, 11, 2, key="sp_ma_window")
-            elif sp_smooth_method == "Savitzky-Golay":
-                c1, c2 = st.columns(2)
-                with c1:
-                    sp_sg_window = st.slider(
-                        "Window length (odd)", 5, 101, 11, 2, key="sp_sg_window"
-                    )
-                    if sp_sg_window % 2 == 0:
-                        sp_sg_window += 1
-                with c2:
-                    sp_sg_poly = int(
-                        st.number_input(
-                            "Polynomial order",
-                            min_value=1,
-                            max_value=min(sp_sg_window - 1, 6),
-                            value=min(3, sp_sg_window - 1),
-                            key="sp_sg_poly",
-                        )
-                    )
-            else:
-                sp_gauss_sigma = st.number_input(
-                    "Sigma (std deviation, index units)",
-                    min_value=0.1,
-                    value=2.0,
-                    step=0.5,
-                    key="sp_gauss_sigma",
-                )
-
-            show_raw_sp = st.checkbox("Show original signal", value=True, key="sp_smooth_show_raw")
-
-            if st.button("Apply Smoothing", type="primary", key="sp_smooth_run"):
-                try:
-                    y_sp = _to_1d(data, col_ref_sp)
-                    x_sp = _to_1d(data, x_col_sp) if x_col_sp is not None else np.arange(len(y_sp))
-
-                    if sp_smooth_method == "Moving Average":
-                        y_out = smooth_moving_average(y_sp, int(sp_ma_window))
-                        label = f"Moving Average (window={sp_ma_window})"
-                    elif sp_smooth_method == "Savitzky-Golay":
-                        y_out = smooth_savitzky_golay(y_sp, int(sp_sg_window), int(sp_sg_poly))
-                        label = f"Savitzky-Golay (window={sp_sg_window}, order={sp_sg_poly})"
-                    else:
-                        y_out = smooth_gaussian(y_sp, float(sp_gauss_sigma))
-                        label = f"Gaussian (σ={sp_gauss_sigma})"
-
-                    fig, ax = plt.subplots(figsize=(8, 4))
-                    if show_raw_sp:
-                        ax.plot(x_sp, y_sp, alpha=0.4, lw=1, color="#888888", label="Original")
-                    ax.plot(x_sp, y_out, lw=2, color="#d62728", label=label)
-                    col_name = str(col_ref_sp) if col_ref_sp is not None else "Value"
-                    ax.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
-                    ax.set_ylabel(col_name)
-                    ax.set_title("Smoothed Signal")
-                    ax.legend()
-                    ax.grid(True, alpha=0.3)
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                    plt.close(fig)
-
-                    with st.expander("Smoothed data table"):
-                        st.dataframe(
-                            pd.DataFrame({"X": x_sp, "Original": y_sp, "Smoothed": y_out}),
-                            width="stretch",
-                        )
-
-                    add_analysis_result(
-                        {
-                            "type": "smoothing",
-                            "dataset": dataset_name,
-                            "column": str(col_ref_sp),
-                            "method": label,
-                            "results": {"smoothed": [float(v) for v in y_out]},
-                        }
-                    )
-                    st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _smooth_panel(data, dataset_name, col_ref_sp, x_col_sp)
 
         # ── Filter ───────────────────────────────────────────────────────────
         with sub_filter:
-            st.markdown("#### Butterworth Filter")
-            st.caption("Zero-phase IIR filter (sosfiltfilt) — no phase distortion.")
-
-            sp_flt_type = st.selectbox(
-                "Filter type",
-                ["Low-pass", "High-pass", "Band-pass", "Band-stop"],
-                key="sp_flt_type",
-            )
-            sp_flt_order = st.slider("Filter order", 1, 10, 4, key="sp_flt_order")
-
-            c1, c2 = st.columns(2)
-            with c1:
-                sp_flt_fs = st.number_input(
-                    "Sampling frequency (fs)",
-                    min_value=0.001,
-                    value=1.0,
-                    step=0.1,
-                    format="%.4g",
-                    key="sp_flt_fs",
-                )
-
-            # Defaults (overwritten by widgets below)
-            sp_flt_cutoff = 0.3
-            sp_flt_low = 0.1
-            sp_flt_high = 0.4
-
-            if sp_flt_type in ("Band-pass", "Band-stop"):
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    sp_flt_low = st.number_input(
-                        "Low cut-off (Hz)",
-                        min_value=1e-6,
-                        value=0.1,
-                        step=0.01,
-                        format="%.4g",
-                        key="sp_flt_low",
-                    )
-                with col_b:
-                    sp_flt_high = st.number_input(
-                        "High cut-off (Hz)",
-                        min_value=1e-6,
-                        value=0.4,
-                        step=0.01,
-                        format="%.4g",
-                        key="sp_flt_high",
-                    )
-            else:
-                with c2:
-                    sp_flt_cutoff = st.number_input(
-                        "Cut-off frequency (Hz)",
-                        min_value=1e-6,
-                        value=0.3,
-                        step=0.01,
-                        format="%.4g",
-                        key="sp_flt_cutoff",
-                    )
-
-            show_raw_flt = st.checkbox("Show original signal", value=True, key="sp_flt_show_raw")
-
-            if st.button("Apply Filter", type="primary", key="sp_flt_run"):
-                try:
-                    y_sp = _to_1d(data, col_ref_sp)
-                    x_sp = _to_1d(data, x_col_sp) if x_col_sp is not None else np.arange(len(y_sp))
-
-                    if sp_flt_type == "Low-pass":
-                        y_out = filter_lowpass(
-                            y_sp, float(sp_flt_cutoff), float(sp_flt_fs), int(sp_flt_order)
-                        )
-                        label = f"Low-pass (fc={sp_flt_cutoff} Hz, order={sp_flt_order})"
-                    elif sp_flt_type == "High-pass":
-                        y_out = filter_highpass(
-                            y_sp, float(sp_flt_cutoff), float(sp_flt_fs), int(sp_flt_order)
-                        )
-                        label = f"High-pass (fc={sp_flt_cutoff} Hz, order={sp_flt_order})"
-                    elif sp_flt_type == "Band-pass":
-                        y_out = filter_bandpass(
-                            y_sp,
-                            float(sp_flt_low),
-                            float(sp_flt_high),
-                            float(sp_flt_fs),
-                            int(sp_flt_order),
-                        )
-                        label = f"Band-pass ({sp_flt_low}–{sp_flt_high} Hz, order={sp_flt_order})"
-                    else:
-                        y_out = filter_bandstop(
-                            y_sp,
-                            float(sp_flt_low),
-                            float(sp_flt_high),
-                            float(sp_flt_fs),
-                            int(sp_flt_order),
-                        )
-                        label = f"Band-stop ({sp_flt_low}–{sp_flt_high} Hz, order={sp_flt_order})"
-
-                    fig, ax = plt.subplots(figsize=(8, 4))
-                    if show_raw_flt:
-                        ax.plot(x_sp, y_sp, alpha=0.4, lw=1, color="#888888", label="Original")
-                    ax.plot(x_sp, y_out, lw=2, color="#1f77b4", label=label)
-                    col_name = str(col_ref_sp) if col_ref_sp is not None else "Value"
-                    ax.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
-                    ax.set_ylabel(col_name)
-                    ax.set_title("Filtered Signal")
-                    ax.legend()
-                    ax.grid(True, alpha=0.3)
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                    plt.close(fig)
-
-                    add_analysis_result(
-                        {
-                            "type": "filter",
-                            "dataset": dataset_name,
-                            "column": str(col_ref_sp),
-                            "method": label,
-                            "results": {"filtered": [float(v) for v in y_out]},
-                        }
-                    )
-                    st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _filter_panel(data, dataset_name, col_ref_sp, x_col_sp)
 
         # ── FFT ──────────────────────────────────────────────────────────────
         with sub_fft:
-            st.markdown("#### FFT / Power Spectrum")
-
-            c1, c2 = st.columns(2)
-            with c1:
-                sp_fft_dt = st.number_input(
-                    "Sample spacing (dt = 1/fs)",
-                    min_value=1e-12,
-                    value=1.0,
-                    step=0.1,
-                    format="%.6g",
-                    key="sp_fft_dt",
-                    help="Set to 1.0 for index-domain data.",
-                )
-            with c2:
-                sp_fft_plot = st.selectbox(
-                    "Display",
-                    ["Amplitude spectrum", "Power spectrum"],
-                    key="sp_fft_plot",
-                )
-
-            if st.button("Compute FFT", type="primary", key="sp_fft_run"):
-                try:
-                    y_sp = _to_1d(data, col_ref_sp)
-                    result_fft = sig_fft(y_sp, dt=float(sp_fft_dt))
-
-                    freqs_fft = result_fft["frequencies"]
-                    if "Power" in sp_fft_plot:
-                        yplot = result_fft["power"]
-                        ylabel_fft = "Power"
-                    else:
-                        yplot = result_fft["amplitudes"]
-                        ylabel_fft = "Amplitude"
-
-                    fig, ax = plt.subplots(figsize=(8, 4))
-                    ax.plot(freqs_fft, yplot, lw=1.5, color="#2ca02c")
-                    ax.set_xlabel("Frequency")
-                    ax.set_ylabel(ylabel_fft)
-                    ax.set_title(f"{ylabel_fft} Spectrum")
-                    ax.grid(True, alpha=0.3)
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                    plt.close(fig)
-
-                    # Dominant frequency (skip DC at index 0)
-                    dom_idx = int(np.argmax(result_fft["amplitudes"][1:]) + 1)
-                    dom_freq = float(freqs_fft[dom_idx])
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("N points", result_fft["n"])
-                    c2.metric("Dominant frequency", f"{dom_freq:.4g}")
-                    c3.metric(
-                        "Period",
-                        f"{1.0 / dom_freq:.4g}" if dom_freq != 0 else "—",
-                    )
-
-                    with st.expander("Top-10 frequency components"):
-                        top_idx = np.argsort(result_fft["amplitudes"])[::-1][:10]
-                        st.dataframe(
-                            pd.DataFrame(
-                                {
-                                    "Frequency": freqs_fft[top_idx],
-                                    "Amplitude": result_fft["amplitudes"][top_idx],
-                                    "Power": result_fft["power"][top_idx],
-                                    "Phase (rad)": result_fft["phases"][top_idx],
-                                }
-                            ),
-                            width="stretch",
-                        )
-
-                    add_analysis_result(
-                        {
-                            "type": "fft",
-                            "dataset": dataset_name,
-                            "column": str(col_ref_sp),
-                            "dt": float(sp_fft_dt),
-                            "results": {
-                                "dominant_frequency": dom_freq,
-                                "n": result_fft["n"],
-                            },
-                        }
-                    )
-                    st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _fft_panel(data, dataset_name, col_ref_sp, x_col_sp)
 
         # ── Derivative ───────────────────────────────────────────────────────
         with sub_deriv:
-            st.markdown("#### Numerical Derivative")
-            st.caption("Central-difference approximation via numpy.gradient.")
-
-            sp_deriv_order = st.radio(
-                "Derivative order", [1, 2], horizontal=True, key="sp_deriv_order"
-            )
-            show_raw_drv = st.checkbox("Show original signal", value=True, key="sp_deriv_show_raw")
-
-            if st.button("Compute Derivative", type="primary", key="sp_deriv_run"):
-                try:
-                    y_sp = _to_1d(data, col_ref_sp)
-                    x_arr = _to_1d(data, x_col_sp) if x_col_sp is not None else None
-                    x_axis = x_arr if x_arr is not None else np.arange(len(y_sp))
-
-                    dy = sig_derivative(y_sp, x=x_arr, order=int(sp_deriv_order))
-                    ord_label = "1st" if sp_deriv_order == 1 else "2nd"
-                    label = f"{ord_label} derivative"
-
-                    if show_raw_drv:
-                        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 5), sharex=True)
-                        col_name = str(col_ref_sp) if col_ref_sp is not None else "Signal"
-                        ax1.plot(x_axis, y_sp, lw=1.5, color="#888888")
-                        ax1.set_ylabel(col_name)
-                        ax1.set_title("Original")
-                        ax1.grid(True, alpha=0.3)
-                        ax2.plot(x_axis, dy, lw=1.5, color="#9467bd")
-                        ax2.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
-                        drv_sym = "dy/dx" if sp_deriv_order == 1 else "d²y/dx²"
-                        ax2.set_ylabel(drv_sym)
-                        ax2.set_title(label.capitalize())
-                        ax2.grid(True, alpha=0.3)
-                    else:
-                        fig, ax2 = plt.subplots(figsize=(8, 4))
-                        ax2.plot(x_axis, dy, lw=1.5, color="#9467bd", label=label)
-                        ax2.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
-                        drv_sym = "dy/dx" if sp_deriv_order == 1 else "d²y/dx²"
-                        ax2.set_ylabel(drv_sym)
-                        ax2.set_title(label.capitalize())
-                        ax2.legend()
-                        ax2.grid(True, alpha=0.3)
-
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                    plt.close(fig)
-
-                    add_analysis_result(
-                        {
-                            "type": "derivative",
-                            "dataset": dataset_name,
-                            "column": str(col_ref_sp),
-                            "order": int(sp_deriv_order),
-                            "results": {"derivative": [float(v) for v in dy]},
-                        }
-                    )
-                    st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _derivative_panel(data, dataset_name, col_ref_sp, x_col_sp)
 
         # ── Baseline ─────────────────────────────────────────────────────────
         with sub_baseline:
-            st.markdown("#### Baseline Correction")
-            st.markdown("Estimate and subtract a background baseline from the signal.")
-
-            sp_bl_method = st.radio(
-                "Method",
-                ["Polynomial", "Rolling Ball", "ALS (Asymmetric Least Squares)"],
-                key="sp_bl_method",
-            )
-
-            sp_bl_degree = 3
-            sp_bl_radius = 50
-            sp_bl_lam = 1e5
-            sp_bl_p = 0.01
-
-            if sp_bl_method == "Polynomial":
-                sp_bl_degree = st.slider("Polynomial degree", 1, 10, 3, key="sp_bl_poly_deg")
-                if x_col_sp is None:
-                    st.info("Tip: select an X column above for physical x-axis fitting.")
-            elif sp_bl_method == "Rolling Ball":
-                sp_bl_radius = st.slider("Ball radius (samples)", 5, 500, 50, key="sp_bl_rb_radius")
-            else:
-                c1, c2 = st.columns(2)
-                with c1:
-                    sp_bl_lam = st.number_input(
-                        "Smoothness λ",
-                        min_value=1.0,
-                        value=1e5,
-                        step=1e4,
-                        format="%.2e",
-                        key="sp_bl_lam",
-                    )
-                with c2:
-                    sp_bl_p = st.number_input(
-                        "Asymmetry p",
-                        min_value=0.001,
-                        max_value=0.5,
-                        value=0.01,
-                        step=0.005,
-                        format="%.4f",
-                        key="sp_bl_p",
-                    )
-
-            show_raw_bl = st.checkbox("Show original signal", value=True, key="sp_bl_show_raw")
-
-            if st.button("Correct Baseline", type="primary", key="sp_bl_run"):
-                try:
-                    y_sp = _to_1d(data, col_ref_sp)
-                    x_sp = _to_1d(data, x_col_sp) if x_col_sp is not None else np.arange(len(y_sp))
-
-                    if sp_bl_method == "Polynomial":
-                        bl_vals, y_corr = baseline_polynomial(y_sp, x_sp, int(sp_bl_degree))
-                        label = f"Polynomial baseline (degree={sp_bl_degree})"
-                    elif sp_bl_method == "Rolling Ball":
-                        bl_vals, y_corr = baseline_rolling_ball(y_sp, int(sp_bl_radius))
-                        label = f"Rolling ball (radius={sp_bl_radius})"
-                    else:
-                        bl_vals, y_corr = baseline_als(y_sp, lam=float(sp_bl_lam), p=float(sp_bl_p))
-                        label = f"ALS (λ={sp_bl_lam:.0e}, p={sp_bl_p})"
-
-                    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6), sharex=True)
-                    if show_raw_bl:
-                        ax1.plot(x_sp, y_sp, lw=1, color="#888888", alpha=0.7, label="Original")
-                    ax1.plot(
-                        x_sp,
-                        bl_vals,
-                        lw=2,
-                        color="#ff7f0e",
-                        ls="--",
-                        label="Baseline",
-                    )
-                    ax1.plot(x_sp, y_corr, lw=1.5, color="#1f77b4", label="Corrected")
-                    col_name = str(col_ref_sp) if col_ref_sp is not None else "Signal"
-                    ax1.set_ylabel(col_name)
-                    ax1.set_title(label)
-                    ax1.legend()
-                    ax1.grid(True, alpha=0.3)
-
-                    ax2.plot(x_sp, y_corr, lw=1.5, color="#1f77b4")
-                    ax2.axhline(0, color="red", lw=0.8, ls="--")
-                    ax2.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
-                    ax2.set_ylabel("Corrected signal")
-                    ax2.grid(True, alpha=0.3)
-
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                    plt.close(fig)
-
-                    add_analysis_result(
-                        {
-                            "type": "baseline_correction",
-                            "dataset": dataset_name,
-                            "column": str(col_ref_sp),
-                            "method": label,
-                            "results": {"corrected": [float(v) for v in y_corr]},
-                        }
-                    )
-                    st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _baseline_panel(data, dataset_name, col_ref_sp, x_col_sp)
 
         # ── Interpolate ──────────────────────────────────────────────────────
         with sub_interp:
-            st.markdown("#### Interpolation")
-            st.markdown("Resample the signal to a new, uniform x-grid.")
-
-            if x_col_sp is None:
-                st.info(
-                    "No X column selected above. Select one in the "
-                    "'X-axis column' expander to interpolate on a physical grid. "
-                    "Index coordinates are used when no X column is set."
-                )
-
-            sp_interp_method = st.selectbox(
-                "Method",
-                ["cubic", "linear", "quadratic", "nearest"],
-                key="sp_interp_method",
-            )
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                sp_interp_n = int(
-                    st.number_input(
-                        "Output points",
-                        min_value=10,
-                        value=500,
-                        step=10,
-                        key="sp_interp_n",
-                    )
-                )
-            sp_use_data_bounds = st.checkbox(
-                "Use data x-range as bounds", value=True, key="sp_interp_auto_bounds"
-            )
-            if not sp_use_data_bounds:
-                with c2:
-                    sp_interp_start = st.number_input("X start", value=0.0, key="sp_interp_start")
-                with c3:
-                    sp_interp_end = st.number_input("X end", value=1.0, key="sp_interp_end")
-
-            if st.button("Interpolate", type="primary", key="sp_interp_run"):
-                try:
-                    y_sp = _to_1d(data, col_ref_sp)
-                    x_sp = (
-                        _to_1d(data, x_col_sp)
-                        if x_col_sp is not None
-                        else np.arange(len(y_sp), dtype=float)
-                    )
-
-                    if sp_use_data_bounds:
-                        x_start = float(x_sp.min())
-                        x_stop = float(x_sp.max())
-                    else:
-                        x_start = float(sp_interp_start)
-                        x_stop = float(sp_interp_end)
-
-                    x_new = np.linspace(x_start, x_stop, sp_interp_n)
-                    y_new = sig_interpolate(x_sp, y_sp, x_new, method=sp_interp_method)
-
-                    fig, ax = plt.subplots(figsize=(8, 4))
-                    ax.scatter(
-                        x_sp,
-                        y_sp,
-                        s=12,
-                        alpha=0.5,
-                        color="#333333",
-                        label=f"Original ({len(x_sp)} pts)",
-                        zorder=3,
-                    )
-                    ax.plot(
-                        x_new,
-                        y_new,
-                        lw=1.5,
-                        color="#2ca02c",
-                        label=f"{sp_interp_method} ({sp_interp_n} pts)",
-                    )
-                    col_name = str(col_ref_sp) if col_ref_sp is not None else "Signal"
-                    ax.set_xlabel(str(x_col_sp) if x_col_sp is not None else "Index")
-                    ax.set_ylabel(col_name)
-                    ax.set_title("Interpolated Signal")
-                    ax.legend()
-                    ax.grid(True, alpha=0.3)
-                    fig.tight_layout()
-                    st.pyplot(fig)
-                    plt.close(fig)
-
-                    with st.expander("Interpolated data (first 100 rows)"):
-                        st.dataframe(
-                            pd.DataFrame(
-                                {
-                                    "X_new": x_new[:100],
-                                    "Y_interp": y_new[:100],
-                                }
-                            ),
-                            width="stretch",
-                        )
-
-                    add_analysis_result(
-                        {
-                            "type": "interpolation",
-                            "dataset": dataset_name,
-                            "column": str(col_ref_sp),
-                            "method": sp_interp_method,
-                            "results": {
-                                "n_input": int(len(x_sp)),
-                                "n_output": sp_interp_n,
-                                "x_range": [x_start, x_stop],
-                            },
-                        }
-                    )
-                    st.success("Results saved to analysis history.")
-
-                except Exception as exc:
-                    st.error(f"Error: {exc}")
-                    with st.expander("Details"):
-                        st.code(traceback.format_exc())
+            _interpolate_panel(data, dataset_name, col_ref_sp, x_col_sp)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 7 — Peak Analysis
 # ══════════════════════════════════════════════════════════════════════════════
+
+
+@st.fragment
+def _peak_find_panel(data, dataset_name: str, x_col_pk, y_col_pk) -> None:
+    st.markdown("#### Auto Peak Detection")
+    st.caption(
+        "Adjust the thresholds below, then click **Find Peaks**. "
+        "Detected peaks are highlighted on an interactive plot."
+    )
+
+    c1, c2 = st.columns(2)
+    with c1:
+        pk_min_height = st.number_input(
+            "Min height (blank = any)",
+            value=0.0,
+            key="pk_height",
+            help="Minimum absolute peak height.",
+        )
+        pk_prominence = st.number_input(
+            "Min prominence",
+            value=0.0,
+            key="pk_prominence",
+            help="How much a peak stands out from its neighbours.",
+        )
+    with c2:
+        pk_distance = int(
+            st.number_input(
+                "Min distance (samples)",
+                min_value=1,
+                value=5,
+                step=1,
+                key="pk_distance",
+            )
+        )
+        pk_width = st.number_input(
+            "Min width (samples)",
+            value=0.0,
+            key="pk_width",
+            help="Minimum peak width at half prominence.",
+        )
+
+    if st.button("Find Peaks", type="primary", key="pk_find_run"):
+        try:
+            x_pk = _to_1d(data, x_col_pk)
+            y_pk = _to_1d(data, y_col_pk)
+
+            result_pk = pk_find_peaks(
+                y_pk,
+                x=x_pk,
+                height=float(pk_min_height) if pk_min_height > 0 else None,
+                prominence=float(pk_prominence) if pk_prominence > 0 else None,
+                distance=int(pk_distance),
+                width=float(pk_width) if pk_width > 0 else None,
+            )
+            n_found = result_pk["n_peaks"]
+
+            if n_found == 0:
+                st.warning("No peaks found — try lowering the thresholds.")
+            else:
+                st.success(f"Found **{n_found}** peak(s).")
+
+                # Compute FWHM and areas
+                fwhm_result = compute_fwhm(y_pk, x_pk, result_pk)
+                area_result = integrate_peaks(y_pk, x_pk, result_pk)
+
+                # ── Plotly interactive figure ─────────────────────
+                fig_pk = go.Figure()
+                fig_pk.add_trace(
+                    go.Scatter(
+                        x=x_pk,
+                        y=y_pk,
+                        mode="lines",
+                        name="Signal",
+                        line=dict(color="#1f77b4", width=1.5),
+                    )
+                )
+                fig_pk.add_trace(
+                    go.Scatter(
+                        x=result_pk["positions"],
+                        y=result_pk["heights"],
+                        mode="markers+text",
+                        name="Peaks",
+                        marker=dict(color="#d62728", size=10, symbol="triangle-down"),
+                        text=[f"#{i + 1}" for i in range(n_found)],
+                        textposition="top center",
+                    )
+                )
+                x_lbl_pk = str(x_col_pk) if x_col_pk is not None else "x"
+                y_lbl_pk = str(y_col_pk) if y_col_pk is not None else "y"
+                fig_pk.update_layout(
+                    xaxis_title=x_lbl_pk,
+                    yaxis_title=y_lbl_pk,
+                    title=f"Detected Peaks ({n_found})",
+                    height=400,
+                    legend=dict(orientation="h", y=-0.2),
+                )
+                st.plotly_chart(fig_pk, width="stretch")
+
+                # ── Peak report table ─────────────────────────────
+                st.markdown("#### Peak Report")
+                report_df = pd.DataFrame(
+                    {
+                        "Peak": range(1, n_found + 1),
+                        "Position": [f"{v:.4g}" for v in result_pk["positions"]],
+                        "Height": [f"{v:.4g}" for v in result_pk["heights"]],
+                        "Prominence": [f"{v:.4g}" for v in result_pk["prominences"]],
+                        "FWHM": [f"{v:.4g}" for v in fwhm_result["fwhm"]],
+                        "Area": [f"{v:.4g}" for v in area_result["areas"]],
+                    }
+                )
+                st.dataframe(report_df, width="stretch")
+
+                # CSV download: encoded on click (or once per report on old
+                # Streamlit). Downloading does not rerun the panel, so the
+                # report stays on screen.
+                report_version = st.session_state.get("_at_pk_report_version", 0) + 1
+                st.session_state["_at_pk_report_version"] = report_version
+                st.download_button(
+                    "Download peak report (CSV)",
+                    data=download_payload(
+                        lambda: report_df.to_csv(index=False).encode(),
+                        cache_name="_at_pk_csv_cache",
+                        version=report_version,
+                        key="csv",
+                    ),
+                    file_name="peak_report.csv",
+                    mime="text/csv",
+                    key="pk_csv_dl",
+                    on_click="ignore",
+                )
+
+                add_analysis_result(
+                    {
+                        "type": "peak_detection",
+                        "dataset": dataset_name,
+                        "x_col": str(x_col_pk),
+                        "y_col": str(y_col_pk),
+                        "results": {
+                            "n_peaks": n_found,
+                            "positions": [float(v) for v in result_pk["positions"]],
+                            "heights": [float(v) for v in result_pk["heights"]],
+                            "fwhm": [float(v) for v in fwhm_result["fwhm"]],
+                            "areas": [float(v) for v in area_result["areas"]],
+                        },
+                    }
+                )
+                st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
+@st.fragment
+def _peak_fit_panel(data, dataset_name: str, x_col_pk, y_col_pk) -> None:
+    st.markdown("#### Multi-Peak Model Fitting")
+
+    c1, c2 = st.columns(2)
+    with c1:
+        profile_pk = st.selectbox(
+            "Peak profile",
+            ["Gaussian", "Lorentzian", "Pseudo-Voigt", "Voigt"],
+            key="pk_profile",
+        )
+    with c2:
+        bg_pk = st.selectbox(
+            "Background",
+            ["linear", "constant", "none"],
+            key="pk_bg",
+        )
+
+    n_peaks_pk = int(
+        st.number_input(
+            "Number of peaks",
+            min_value=1,
+            max_value=8,
+            value=1,
+            step=1,
+            key="pk_n",
+        )
+    )
+
+    # Pre-read for default guesses
+    x_pk_raw = _to_1d(data, x_col_pk)
+    y_pk_raw = _to_1d(data, y_col_pk)
+    x_range_pk = float(x_pk_raw.max() - x_pk_raw.min())
+    default_centers = [
+        float(x_pk_raw.min() + (i + 1) * x_range_pk / (n_peaks_pk + 1)) for i in range(n_peaks_pk)
+    ]
+
+    st.markdown("**Initial guesses** — one row per peak:")
+    guess_rows = []
+    for i in range(n_peaks_pk):
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            ctr = st.number_input(
+                f"Peak {i + 1} — center",
+                value=default_centers[i],
+                key=f"pk_ctr_{i}",
+            )
+        with c2:
+            amp = st.number_input(
+                f"Peak {i + 1} — amplitude",
+                value=float(y_pk_raw.max()),
+                key=f"pk_amp_{i}",
+            )
+        with c3:
+            wid = st.number_input(
+                f"Peak {i + 1} — width (σ / Γ)",
+                value=float(x_range_pk / max(n_peaks_pk * 4, 1)),
+                min_value=1e-9,
+                key=f"pk_wid_{i}",
+            )
+        guess_rows.append((float(ctr), float(amp), float(wid)))
+
+    if st.button("Fit Peaks", type="primary", key="pk_fit_run"):
+        try:
+            x_pk = x_pk_raw.copy()
+            y_pk = y_pk_raw.copy()
+            model_name = profile_pk.lower().replace("-", "_")
+
+            fit_result = fit_multipeak(
+                y_pk,
+                x_pk,
+                n_peaks=n_peaks_pk,
+                model=model_name,
+                background=bg_pk,
+                initial_guesses=guess_rows,
+            )
+
+            r2_pk = fit_result["r_squared"]
+            x_lbl_pk = str(x_col_pk) if x_col_pk is not None else "x"
+            y_lbl_pk = str(y_col_pk) if y_col_pk is not None else "y"
+
+            # ── Plot ──────────────────────────────────────────────
+            fig, (ax_fit, ax_res) = plt.subplots(
+                2,
+                1,
+                figsize=(8, 6),
+                gridspec_kw={"height_ratios": [3, 1]},
+                sharex=True,
+            )
+            ax_fit.scatter(x_pk, y_pk, s=10, alpha=0.5, color="#333333", label="Data")
+            ax_fit.plot(
+                x_pk,
+                fit_result["fitted_y"],
+                "r-",
+                linewidth=2,
+                label=f"{profile_pk} fit",
+            )
+            if n_peaks_pk > 1:
+                for k, y_ind in enumerate(fit_result["individual_y"]):
+                    ax_fit.plot(x_pk, y_ind, "--", alpha=0.6, label=f"Peak {k + 1}")
+            ax_fit.set_ylabel(y_lbl_pk)
+            ax_fit.set_title(f"{profile_pk} Fit  |  R² = {r2_pk:.5f}")
+            ax_fit.legend()
+            ax_fit.grid(True, alpha=0.3)
+
+            ax_res.scatter(
+                x_pk,
+                fit_result["residuals"],
+                s=8,
+                alpha=0.5,
+                color="#555555",
+            )
+            ax_res.axhline(0, color="red", linewidth=1)
+            ax_res.set_xlabel(x_lbl_pk)
+            ax_res.set_ylabel("Residuals")
+            ax_res.grid(True, alpha=0.3)
+
+            fig.tight_layout()
+            st.pyplot(fig)
+            plt.close(fig)
+
+            # ── Parameter table ───────────────────────────────────
+            st.markdown("#### Fitted Parameters")
+            st.metric(f"R² {_r2_color(r2_pk)}", f"{r2_pk:.6f}")
+            st.dataframe(
+                pd.DataFrame(
+                    {
+                        "Parameter": fit_result["param_names"],
+                        "Value": [f"{v:.6g}" for v in fit_result["params"]],
+                        "Std Error": [f"{e:.4g}" for e in fit_result["std_errors"]],
+                    }
+                ),
+                width="stretch",
+            )
+
+            # ── Peak summary ──────────────────────────────────────
+            st.markdown("#### Peak Summary")
+            st.dataframe(
+                pd.DataFrame(
+                    [
+                        {
+                            "Peak": k + 1,
+                            "Center": f"{s['center']:.4g}",
+                            "Amplitude": f"{s['amplitude']:.4g}",
+                            "Width": f"{s['width']:.4g}",
+                            "FWHM": f"{s['fwhm']:.4g}",
+                        }
+                        for k, s in enumerate(fit_result["peak_summaries"])
+                    ]
+                ),
+                width="stretch",
+            )
+
+            add_analysis_result(
+                {
+                    "type": "peak_fitting",
+                    "dataset": dataset_name,
+                    "x_col": str(x_col_pk),
+                    "y_col": str(y_col_pk),
+                    "profile": profile_pk,
+                    "n_peaks": n_peaks_pk,
+                    "results": {
+                        "parameters": [float(v) for v in fit_result["params"]],
+                        "std_errors": [float(e) for e in fit_result["std_errors"]],
+                        "r_squared": r2_pk,
+                    },
+                }
+            )
+            st.success("Results saved to analysis history.")
+
+        except Exception as exc:
+            st.error(f"Error: {exc}")
+            with st.expander("Details"):
+                st.code(traceback.format_exc())
+
+
 with tab_peaks:
     st.markdown("### Peak Analysis")
     st.markdown(
@@ -1625,327 +2087,19 @@ with tab_peaks:
 
             # ── Find & Measure ────────────────────────────────────────────────
             with sub_find:
-                st.markdown("#### Auto Peak Detection")
-                st.caption(
-                    "Adjust the thresholds below, then click **Find Peaks**. "
-                    "Detected peaks are highlighted on an interactive plot."
-                )
-
-                c1, c2 = st.columns(2)
-                with c1:
-                    pk_min_height = st.number_input(
-                        "Min height (blank = any)",
-                        value=0.0,
-                        key="pk_height",
-                        help="Minimum absolute peak height.",
-                    )
-                    pk_prominence = st.number_input(
-                        "Min prominence",
-                        value=0.0,
-                        key="pk_prominence",
-                        help="How much a peak stands out from its neighbours.",
-                    )
-                with c2:
-                    pk_distance = int(
-                        st.number_input(
-                            "Min distance (samples)",
-                            min_value=1,
-                            value=5,
-                            step=1,
-                            key="pk_distance",
-                        )
-                    )
-                    pk_width = st.number_input(
-                        "Min width (samples)",
-                        value=0.0,
-                        key="pk_width",
-                        help="Minimum peak width at half prominence.",
-                    )
-
-                if st.button("Find Peaks", type="primary", key="pk_find_run"):
-                    try:
-                        x_pk = _to_1d(data, x_col_pk)
-                        y_pk = _to_1d(data, y_col_pk)
-
-                        result_pk = pk_find_peaks(
-                            y_pk,
-                            x=x_pk,
-                            height=float(pk_min_height) if pk_min_height > 0 else None,
-                            prominence=float(pk_prominence) if pk_prominence > 0 else None,
-                            distance=int(pk_distance),
-                            width=float(pk_width) if pk_width > 0 else None,
-                        )
-                        n_found = result_pk["n_peaks"]
-
-                        if n_found == 0:
-                            st.warning("No peaks found — try lowering the thresholds.")
-                        else:
-                            st.success(f"Found **{n_found}** peak(s).")
-
-                            # Compute FWHM and areas
-                            fwhm_result = compute_fwhm(y_pk, x_pk, result_pk)
-                            area_result = integrate_peaks(y_pk, x_pk, result_pk)
-
-                            # ── Plotly interactive figure ─────────────────────
-                            fig_pk = go.Figure()
-                            fig_pk.add_trace(
-                                go.Scatter(
-                                    x=x_pk,
-                                    y=y_pk,
-                                    mode="lines",
-                                    name="Signal",
-                                    line=dict(color="#1f77b4", width=1.5),
-                                )
-                            )
-                            fig_pk.add_trace(
-                                go.Scatter(
-                                    x=result_pk["positions"],
-                                    y=result_pk["heights"],
-                                    mode="markers+text",
-                                    name="Peaks",
-                                    marker=dict(color="#d62728", size=10, symbol="triangle-down"),
-                                    text=[f"#{i + 1}" for i in range(n_found)],
-                                    textposition="top center",
-                                )
-                            )
-                            x_lbl_pk = str(x_col_pk) if x_col_pk is not None else "x"
-                            y_lbl_pk = str(y_col_pk) if y_col_pk is not None else "y"
-                            fig_pk.update_layout(
-                                xaxis_title=x_lbl_pk,
-                                yaxis_title=y_lbl_pk,
-                                title=f"Detected Peaks ({n_found})",
-                                height=400,
-                                legend=dict(orientation="h", y=-0.2),
-                            )
-                            st.plotly_chart(fig_pk, width="stretch")
-
-                            # ── Peak report table ─────────────────────────────
-                            st.markdown("#### Peak Report")
-                            report_df = pd.DataFrame(
-                                {
-                                    "Peak": range(1, n_found + 1),
-                                    "Position": [f"{v:.4g}" for v in result_pk["positions"]],
-                                    "Height": [f"{v:.4g}" for v in result_pk["heights"]],
-                                    "Prominence": [f"{v:.4g}" for v in result_pk["prominences"]],
-                                    "FWHM": [f"{v:.4g}" for v in fwhm_result["fwhm"]],
-                                    "Area": [f"{v:.4g}" for v in area_result["areas"]],
-                                }
-                            )
-                            st.dataframe(report_df, width="stretch")
-
-                            # CSV download
-                            csv_bytes = report_df.to_csv(index=False).encode()
-                            st.download_button(
-                                "Download peak report (CSV)",
-                                data=csv_bytes,
-                                file_name="peak_report.csv",
-                                mime="text/csv",
-                                key="pk_csv_dl",
-                            )
-
-                            add_analysis_result(
-                                {
-                                    "type": "peak_detection",
-                                    "dataset": dataset_name,
-                                    "x_col": str(x_col_pk),
-                                    "y_col": str(y_col_pk),
-                                    "results": {
-                                        "n_peaks": n_found,
-                                        "positions": [float(v) for v in result_pk["positions"]],
-                                        "heights": [float(v) for v in result_pk["heights"]],
-                                        "fwhm": [float(v) for v in fwhm_result["fwhm"]],
-                                        "areas": [float(v) for v in area_result["areas"]],
-                                    },
-                                }
-                            )
-                            st.success("Results saved to analysis history.")
-
-                    except Exception as exc:
-                        st.error(f"Error: {exc}")
-                        with st.expander("Details"):
-                            st.code(traceback.format_exc())
+                _peak_find_panel(data, dataset_name, x_col_pk, y_col_pk)
 
             # ── Fit Peaks ─────────────────────────────────────────────────────
             with sub_fit:
-                st.markdown("#### Multi-Peak Model Fitting")
-
-                c1, c2 = st.columns(2)
-                with c1:
-                    profile_pk = st.selectbox(
-                        "Peak profile",
-                        ["Gaussian", "Lorentzian", "Pseudo-Voigt", "Voigt"],
-                        key="pk_profile",
-                    )
-                with c2:
-                    bg_pk = st.selectbox(
-                        "Background",
-                        ["linear", "constant", "none"],
-                        key="pk_bg",
-                    )
-
-                n_peaks_pk = int(
-                    st.number_input(
-                        "Number of peaks",
-                        min_value=1,
-                        max_value=8,
-                        value=1,
-                        step=1,
-                        key="pk_n",
-                    )
-                )
-
-                # Pre-read for default guesses
-                x_pk_raw = _to_1d(data, x_col_pk)
-                y_pk_raw = _to_1d(data, y_col_pk)
-                x_range_pk = float(x_pk_raw.max() - x_pk_raw.min())
-                default_centers = [
-                    float(x_pk_raw.min() + (i + 1) * x_range_pk / (n_peaks_pk + 1))
-                    for i in range(n_peaks_pk)
-                ]
-
-                st.markdown("**Initial guesses** — one row per peak:")
-                guess_rows = []
-                for i in range(n_peaks_pk):
-                    c1, c2, c3 = st.columns(3)
-                    with c1:
-                        ctr = st.number_input(
-                            f"Peak {i + 1} — center",
-                            value=default_centers[i],
-                            key=f"pk_ctr_{i}",
-                        )
-                    with c2:
-                        amp = st.number_input(
-                            f"Peak {i + 1} — amplitude",
-                            value=float(y_pk_raw.max()),
-                            key=f"pk_amp_{i}",
-                        )
-                    with c3:
-                        wid = st.number_input(
-                            f"Peak {i + 1} — width (σ / Γ)",
-                            value=float(x_range_pk / max(n_peaks_pk * 4, 1)),
-                            min_value=1e-9,
-                            key=f"pk_wid_{i}",
-                        )
-                    guess_rows.append((float(ctr), float(amp), float(wid)))
-
-                if st.button("Fit Peaks", type="primary", key="pk_fit_run"):
-                    try:
-                        x_pk = x_pk_raw.copy()
-                        y_pk = y_pk_raw.copy()
-                        model_name = profile_pk.lower().replace("-", "_")
-
-                        fit_result = fit_multipeak(
-                            y_pk,
-                            x_pk,
-                            n_peaks=n_peaks_pk,
-                            model=model_name,
-                            background=bg_pk,
-                            initial_guesses=guess_rows,
-                        )
-
-                        r2_pk = fit_result["r_squared"]
-                        x_lbl_pk = str(x_col_pk) if x_col_pk is not None else "x"
-                        y_lbl_pk = str(y_col_pk) if y_col_pk is not None else "y"
-
-                        # ── Plot ──────────────────────────────────────────────
-                        fig, (ax_fit, ax_res) = plt.subplots(
-                            2,
-                            1,
-                            figsize=(8, 6),
-                            gridspec_kw={"height_ratios": [3, 1]},
-                            sharex=True,
-                        )
-                        ax_fit.scatter(x_pk, y_pk, s=10, alpha=0.5, color="#333333", label="Data")
-                        ax_fit.plot(
-                            x_pk,
-                            fit_result["fitted_y"],
-                            "r-",
-                            linewidth=2,
-                            label=f"{profile_pk} fit",
-                        )
-                        if n_peaks_pk > 1:
-                            x_dense = np.linspace(float(x_pk.min()), float(x_pk.max()), 600)
-                            for k, y_ind in enumerate(fit_result["individual_y"]):
-                                ax_fit.plot(x_pk, y_ind, "--", alpha=0.6, label=f"Peak {k + 1}")
-                        ax_fit.set_ylabel(y_lbl_pk)
-                        ax_fit.set_title(f"{profile_pk} Fit  |  R² = {r2_pk:.5f}")
-                        ax_fit.legend()
-                        ax_fit.grid(True, alpha=0.3)
-
-                        ax_res.scatter(
-                            x_pk,
-                            fit_result["residuals"],
-                            s=8,
-                            alpha=0.5,
-                            color="#555555",
-                        )
-                        ax_res.axhline(0, color="red", linewidth=1)
-                        ax_res.set_xlabel(x_lbl_pk)
-                        ax_res.set_ylabel("Residuals")
-                        ax_res.grid(True, alpha=0.3)
-
-                        fig.tight_layout()
-                        st.pyplot(fig)
-                        plt.close(fig)
-
-                        # ── Parameter table ───────────────────────────────────
-                        st.markdown("#### Fitted Parameters")
-                        st.metric(f"R² {_r2_color(r2_pk)}", f"{r2_pk:.6f}")
-                        st.dataframe(
-                            pd.DataFrame(
-                                {
-                                    "Parameter": fit_result["param_names"],
-                                    "Value": [f"{v:.6g}" for v in fit_result["params"]],
-                                    "Std Error": [f"{e:.4g}" for e in fit_result["std_errors"]],
-                                }
-                            ),
-                            width="stretch",
-                        )
-
-                        # ── Peak summary ──────────────────────────────────────
-                        st.markdown("#### Peak Summary")
-                        st.dataframe(
-                            pd.DataFrame(
-                                [
-                                    {
-                                        "Peak": k + 1,
-                                        "Center": f"{s['center']:.4g}",
-                                        "Amplitude": f"{s['amplitude']:.4g}",
-                                        "Width": f"{s['width']:.4g}",
-                                        "FWHM": f"{s['fwhm']:.4g}",
-                                    }
-                                    for k, s in enumerate(fit_result["peak_summaries"])
-                                ]
-                            ),
-                            width="stretch",
-                        )
-
-                        add_analysis_result(
-                            {
-                                "type": "peak_fitting",
-                                "dataset": dataset_name,
-                                "x_col": str(x_col_pk),
-                                "y_col": str(y_col_pk),
-                                "profile": profile_pk,
-                                "n_peaks": n_peaks_pk,
-                                "results": {
-                                    "parameters": [float(v) for v in fit_result["params"]],
-                                    "std_errors": [float(e) for e in fit_result["std_errors"]],
-                                    "r_squared": r2_pk,
-                                },
-                            }
-                        )
-                        st.success("Results saved to analysis history.")
-
-                    except Exception as exc:
-                        st.error(f"Error: {exc}")
-                        with st.expander("Details"):
-                            st.code(traceback.format_exc())
+                _peak_fit_panel(data, dataset_name, x_col_pk, y_col_pk)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 8 — Statistical Tests
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_tests:
+
+
+@st.fragment
+def _statistical_tests_panel(data, dataset_name: str) -> None:
     st.markdown("### Statistical Tests")
     st.markdown(
         "Hypothesis tests, correlation analysis, and multiple-comparison "
@@ -1981,55 +2135,6 @@ with tab_tests:
     )
 
     st.markdown("---")
-
-    # ── helpers ───────────────────────────────────────────────────────────────
-
-    def _result_table(result: dict) -> None:
-        """Render a test result dict as a two-column Streamlit table."""
-        rows = []
-        for k, v in result.items():
-            if isinstance(v, list):
-                display = ", ".join(str(x) for x in v)
-            elif isinstance(v, float):
-                display = f"{v:.6g}"
-            else:
-                display = str(v)
-            rows.append({"Parameter": k, "Value": display})
-        import pandas as _pd
-
-        st.dataframe(_pd.DataFrame(rows), width="stretch", hide_index=True)
-
-        # Effect size display (Cohen's d or similar)
-        if "effect_size" in result:
-            d = result["effect_size"]
-            label = result.get("effect_size_label", "Effect size")
-            abs_d = abs(d)
-            if abs_d < 0.2:
-                magnitude = "Negligible"
-                color = "gray"
-            elif abs_d < 0.5:
-                magnitude = "Small"
-                color = "blue"
-            elif abs_d < 0.8:
-                magnitude = "Medium"
-                color = "orange"
-            else:
-                magnitude = "Large"
-                color = "red"
-            st.markdown(
-                f"**{label}:** `{d:.4f}` — "
-                f":{color}[**{magnitude}**] "
-                f"(|d| < 0.2 negligible · 0.2–0.5 small · 0.5–0.8 medium · ≥ 0.8 large)"
-            )
-
-    def _verdict(result: dict) -> None:
-        """Show a coloured reject / fail-to-reject banner."""
-        if result.get("reject_null"):
-            st.success(f"**Reject H₀** (p = {result['p_value']:.4g} < α = {result['alpha']:.3g})")
-        else:
-            st.info(
-                f"**Fail to reject H₀** (p = {result['p_value']:.4g} ≥ α = {result['alpha']:.3g})"
-            )
 
     # ── One-sample t-test ─────────────────────────────────────────────────────
     if test_choice == "One-Sample t-Test":
@@ -2508,3 +2613,7 @@ with tab_tests:
                 st.error(f"Error: {exc}")
                 with st.expander("Details"):
                     st.code(traceback.format_exc())
+
+
+with tab_tests:
+    _statistical_tests_panel(data, dataset_name)
