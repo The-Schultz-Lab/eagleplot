@@ -283,6 +283,9 @@ def app_css(theme: Optional[Dict[str, str]] = None) -> str:
        small screens and at high browser zoom (A-29). */
     header[data-testid="stHeader"] {{ background: transparent !important; }}
     [data-testid="stDecoration"]   {{ display: none !important; }}
+    /* Streamlit's default 6rem of space above each page pushed plots below the fold
+       on a 768 px laptop screen; 3rem still clears the sidebar toggle. */
+    [data-testid="stMainBlockContainer"] {{ padding-top: 3rem !important; }}
     [data-testid="stToolbar"]      {{ display: none !important; }}
     #MainMenu                      {{ display: none !important; }}
     footer                         {{ display: none !important; }}

@@ -1161,9 +1161,7 @@ def _render_annotation_panel() -> None:
 # ── Page layout ──────────────────────────────────────────────────────────────
 
 st.title("Quick Plot")
-st.caption(
-    "Choose a dataset, select a plot type, configure parameters, and generate your visualization."
-)
+st.caption("Pick a dataset and a plot type; the plot updates as you change its settings.")
 
 # ── Style Presets panel ───────────────────────────────────────────────────────
 # Helpers to move values between _shared_* widget keys and config.json presets.
@@ -1221,72 +1219,13 @@ def _apply_preset_to_widgets(settings: dict) -> None:
         st.session_state["qp_config"] = merged
 
 
-with st.expander("Style Presets", expanded=False):
-    _tab_save, _tab_load, _tab_delete = st.tabs(["Save", "Load", "Delete"])
-
-    with _tab_save:
-        st.caption(
-            "Snapshot the current appearance settings under a name.  "
-            "Existing presets with the same name are overwritten."
-        )
-        _save_name = st.text_input(
-            "Preset name",
-            placeholder="e.g. Publication, Poster, Dark BG",
-            key="qp_preset_save_name",
-        )
-        if st.button("Save preset", type="primary", key="qp_preset_save_btn"):
-            _name = _save_name.strip()
-            if not _name:
-                st.warning("Enter a preset name first.")
-            else:
-                save_preset(_name, _collect_preset_settings())
-                st.success(f"Preset **{_name}** saved.")
-
-    with _tab_load:
-        _presets = list_presets()
-        if not _presets:
-            st.info("No presets saved yet — use the **Save** tab to create one.")
-        else:
-            _sel_preset = st.selectbox(
-                "Choose preset",
-                _presets,
-                key="qp_preset_sel",
-            )
-            if st.button("Apply preset", type="primary", key="qp_preset_apply"):
-                _apply_preset_to_widgets(load_preset(_sel_preset))
-                _regen_with_overlays()  # redraw existing figure with new style
-                st.success(f"Preset **{_sel_preset}** applied.")
-                st.rerun()
-            with st.expander("Preview values"):
-                st.json(load_preset(_sel_preset))
-
-    with _tab_delete:
-        _presets_del = list_presets()
-        if not _presets_del:
-            st.info("No presets saved yet.")
-        else:
-            _del_preset = st.selectbox(
-                "Choose preset to delete",
-                _presets_del,
-                key="qp_preset_del_sel",
-            )
-            if st.button("Delete preset", type="primary", key="qp_preset_del_btn"):
-                if delete_preset(_del_preset):
-                    st.success(f"Preset **{_del_preset}** deleted.")
-                    st.rerun()
-                else:
-                    st.error("Preset not found.")
-
 # Guard: need at least one dataset
 summary = get_session_summary()
 if summary["num_datasets"] == 0:
-    st.warning("No datasets loaded. Go to **Data Upload** first.")
+    st.warning("No datasets loaded. Go to **Data Upload** first, or load an example on Home.")
     st.stop()
 
-# ── Dataset selector ─────────────────────────────────────────────────────────
-st.markdown("---")
-st.markdown("## 1. Dataset")
-
+# ── Dataset, plot type and presets: one row, so the plot fits on the first screen ──
 dataset_names = list(st.session_state.datasets.keys())
 default_idx = (
     dataset_names.index(summary["current_dataset"])
@@ -1294,39 +1233,25 @@ default_idx = (
     else 0
 )
 
-col1, col2 = st.columns([3, 1])
-with col1:
-    dataset_name = st.selectbox(
-        "Select dataset",
-        dataset_names,
-        index=default_idx,
-        key="qp_dataset",
-    )
-with col2:
-    st.write("")
-    st.write("")
-    st.metric("Loaded", summary["num_datasets"])
-
-if dataset_name:
-    st.session_state.current_dataset = dataset_name
-
-data = get_dataset(dataset_name)
-
-# Data type summary
-if isinstance(data, pd.DataFrame):
-    st.caption(f"DataFrame — {data.shape[0]} rows × {data.shape[1]} cols")
-elif isinstance(data, np.ndarray):
-    st.caption(f"NumPy array — shape {data.shape}, dtype {data.dtype}")
-
-# ── Plot type selector ────────────────────────────────────────────────────────
-st.markdown("---")
-st.markdown("## 2. Plot Type")
-
 # Group by category for a two-step selector
 categories: dict = {}
 for key, info in PLOT_TYPES.items():
     cat = info["category"]
     categories.setdefault(cat, {})[info["label"]] = key
+
+_ds_col, _lib_col, _type_col, _preset_col = st.columns([3, 2, 3, 2], vertical_alignment="bottom")
+with _ds_col:
+    dataset_name = st.selectbox(
+        "Dataset",
+        dataset_names,
+        index=default_idx,
+        key="qp_dataset",
+    )
+
+if dataset_name:
+    st.session_state.current_dataset = dataset_name
+
+data = get_dataset(dataset_name)
 
 # Auto-suggest a sensible default when the selected dataset changes
 if dataset_name and dataset_name != st.session_state.qp_last_smart_default_for:
@@ -1335,15 +1260,70 @@ if dataset_name and dataset_name != st.session_state.qp_last_smart_default_for:
     st.session_state.qp_plottype = _sug_label
     st.session_state.qp_last_smart_default_for = dataset_name
 
-col1, col2 = st.columns(2)
-with col1:
+with _lib_col:
     category = st.selectbox("Library", list(categories.keys()), key="qp_category")
-with col2:
+with _type_col:
     label_to_key = categories[category]
     # Guard: if stored label doesn't exist in this category, fall back to first
     if st.session_state.get("qp_plottype") not in label_to_key:
         st.session_state.qp_plottype = next(iter(label_to_key))
     plot_label = st.selectbox("Plot type", list(label_to_key.keys()), key="qp_plottype")
+with _preset_col:
+    with st.popover("Style presets", width="stretch"):
+        _tab_save, _tab_load, _tab_delete = st.tabs(["Save", "Load", "Delete"])
+
+        with _tab_save:
+            st.caption(
+                "Snapshot the current appearance settings under a name.  "
+                "Existing presets with the same name are overwritten."
+            )
+            _save_name = st.text_input(
+                "Preset name",
+                placeholder="e.g. Publication, Poster, Dark BG",
+                key="qp_preset_save_name",
+            )
+            if st.button("Save preset", type="primary", key="qp_preset_save_btn"):
+                _name = _save_name.strip()
+                if not _name:
+                    st.warning("Enter a preset name first.")
+                else:
+                    save_preset(_name, _collect_preset_settings())
+                    st.success(f"Preset **{_name}** saved.")
+
+        with _tab_load:
+            _presets = list_presets()
+            if not _presets:
+                st.info("No presets saved yet — use the **Save** tab to create one.")
+            else:
+                _sel_preset = st.selectbox(
+                    "Choose preset",
+                    _presets,
+                    key="qp_preset_sel",
+                )
+                if st.button("Apply preset", type="primary", key="qp_preset_apply"):
+                    _apply_preset_to_widgets(load_preset(_sel_preset))
+                    _regen_with_overlays()  # redraw existing figure with new style
+                    st.success(f"Preset **{_sel_preset}** applied.")
+                    st.rerun()
+                with st.expander("Preview values"):
+                    st.json(load_preset(_sel_preset))
+
+        with _tab_delete:
+            _presets_del = list_presets()
+            if not _presets_del:
+                st.info("No presets saved yet.")
+            else:
+                _del_preset = st.selectbox(
+                    "Choose preset to delete",
+                    _presets_del,
+                    key="qp_preset_del_sel",
+                )
+                if st.button("Delete preset", type="primary", key="qp_preset_del_btn"):
+                    if delete_preset(_del_preset):
+                        st.success(f"Preset **{_del_preset}** deleted.")
+                        st.rerun()
+                    else:
+                        st.error("Preset not found.")
 
 plot_type = label_to_key[plot_label]
 
@@ -1363,7 +1343,13 @@ _DESCRIPTIONS = {
     "interactive_heatmap": "Plotly interactive heatmap (hover values).",
     "interactive_3d_surface": "Plotly 3-D surface (rotate / zoom).",
 }
-st.caption(_DESCRIPTIONS.get(plot_type, ""))
+if isinstance(data, pd.DataFrame):
+    _shape = f"{data.shape[0]} rows × {data.shape[1]} columns"
+elif isinstance(data, np.ndarray):
+    _shape = f"array {data.shape}, {data.dtype}"
+else:
+    _shape = ""
+st.caption(" · ".join(t for t in (_shape, _DESCRIPTIONS.get(plot_type, "")) if t))
 
 # ── Plot workspace ───────────────────────────────────────────────────────────
 # Everything from "3. Configuration" down runs as one st.fragment: changing a setting
@@ -1495,12 +1481,11 @@ st.markdown(
 
 @st.fragment
 def _plot_workspace(plot_type: str, data, dataset_name: str) -> None:
-    st.markdown("---")
     # Settings on the left, plot on the right: every change is visible without
     # scrolling. The plot column stays in view while the settings scroll.
     cfg_col, plot_col = st.columns([2, 3], gap="large")
     with cfg_col:
-        st.markdown("## 3. Configuration")
+        st.markdown("### Settings")
 
         config = get_plot_config_widgets(plot_type, data)
 
@@ -1628,10 +1613,11 @@ def _plot_workspace(plot_type: str, data, dataset_name: str) -> None:
             _export_panel_plotly(_fig, data, dataset_name)
 
         elif st.session_state.qp_mpl_fig is not None:
-            st.markdown("### Plot")
-
-            # ── Convert to Plotly (zoom/pan) toggle ───────────────────────────────
-            _ctp_col1, _ctp_col2 = st.columns([3, 1])
+            # Heading and the Convert to Plotly (zoom/pan) toggle share one row, so the
+            # plot starts higher on the screen.
+            _ctp_title, _ctp_col1 = st.columns([1, 2], vertical_alignment="center")
+            with _ctp_title:
+                st.markdown("### Plot")
             with _ctp_col1:
                 if not st.session_state.qp_show_plotly_version:
                     if st.button(

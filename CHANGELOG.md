@@ -24,6 +24,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- **A "Get started" Home page.** With no data loaded, Home offers three example datasets,
+  each a single click away from a plot in Quick Plot, plus buttons to upload a file or
+  browse all examples, instead of "Datasets 0 · Plots 0 · Analyses 0".
+- **Quick Plot shows the plot on the first screen.** Dataset, library and plot type sit in
+  one row with a **Style presets** button, and the dataset size and plot description share
+  one line. On a 1366×768 laptop the plot used to start below the bottom of the screen.
+  All pages have less empty space at the top.
+- **Clearer menu names:** *Basic* is now **Quick Plot**, *Multiplot* **Dashboard**, *Single*
+  **Analysis Tools** and *Batch* **Batch Analysis**. Page addresses are unchanged, so
+  bookmarks still work.
+- The sidebar's **About** box starts closed, and on phones the sidebar starts closed.
 - **Quick Plot is much faster and easier to use.**
   - Settings sit on the left and the plot on the right, so you see each change as you
     make it. The plot stays in view while the settings scroll.
