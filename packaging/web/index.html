@@ -7,34 +7,181 @@
     <link rel="icon" href="./eagleplot-icon.png" />
     <link rel="stylesheet" href="./stlite/stlite.css" />
     <style>
-      :root { --bg: #1b1b1b; --fg: #f4f4f4; --muted: #b9b9b9; --accent: #e0a3a3; }
+      :root { --bg: #1b1b1b; --fg: #f4f4f4; --muted: #b9b9b9; --rose: #e0a3a3; --track: #333; }
       html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+      /* Loading splash. Above stlite's own loading skeleton, which is drawn into #root meanwhile. */
       #loading {
-        position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
-        justify-content: center; gap: 14px; padding: 16px; text-align: center;
-        /* Above stlite's own loading skeleton, which is drawn into #root meanwhile. */
-        background: var(--bg); z-index: 100000;
+        position: fixed; inset: 0; z-index: 100000; overflow: hidden; background: var(--bg);
+        display: grid; grid-template-rows: 1fr auto; justify-items: center; text-align: center;
         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        transition: opacity 450ms ease;
       }
-      #loading img { width: 72px; height: 72px; }
-      #loading small { color: var(--muted); max-width: 32rem; }
-      #loading .bar { width: min(320px, 80vw); height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
-      #loading .bar i { display: block; width: 30%; height: 100%; background: var(--accent); animation: slide 1.2s ease-in-out infinite; }
-      @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(330%); } }
-      @media (prefers-reduced-motion: reduce) { #loading .bar i { animation: none; width: 100%; } }
+      #loading.ep-gone { opacity: 0; pointer-events: none; }
+      #loading .ep-center { display: grid; justify-items: center; align-content: center; gap: 10px; padding: 16px; }
+      #loading .ep-logo { width: min(46vw, 210px); height: auto; overflow: visible; }
+      #loading .ep-name { font-size: 30px; font-weight: 700; letter-spacing: -0.01em; opacity: 0; transform: translateY(6px); }
+      #loading.ep-landed .ep-name { opacity: 1; transform: none; transition: opacity 500ms ease, transform 500ms ease; }
+      #loading .ep-status { display: grid; justify-items: center; gap: 9px; min-height: 76px; }
+      #loading .ep-step small { color: var(--muted); margin-left: 8px; font-variant-numeric: tabular-nums; }
+      #loading .ep-segs { display: grid; grid-template-columns: repeat(4, 52px); gap: 6px; }
+      #loading .ep-segs i { height: 3px; border-radius: 2px; background: var(--track); position: relative; overflow: hidden; }
+      #loading .ep-segs i.done { background: var(--rose); }
+      #loading .ep-segs i.now::after {
+        content: ""; position: absolute; inset: 0; background: var(--rose); transform-origin: left;
+        animation: ep-seg 1.6s ease-in-out infinite;
+      }
+      #loading .ep-note { font-size: 13px; color: var(--muted); max-width: 34rem; }
+      #loading .ep-foot { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #8d8d8d; padding: 0 16px 20px; }
+      #loading .ep-err { display: grid; gap: 8px; justify-items: center; max-width: 34rem; }
+      #loading .ep-err span { color: var(--muted); font-size: 14px; }
+      #loading .ep-err button {
+        font: 600 14px/1 inherit; background: var(--rose); color: #2a0b10; border: 0; border-radius: 6px;
+        padding: 9px 16px; cursor: pointer;
+      }
+      #loading .ep-pc, #loading .ep-whole, #loading .ep-dot { transform-box: fill-box; transform-origin: center; }
+      #loading .ep-shine { opacity: 0; }
+      #loading.ep-idle .ep-shine { animation: ep-shine 2.8s ease-in-out infinite; }
+      #loading.ep-idle .ep-dot { animation: ep-pulse 2.8s ease-in-out infinite; animation-delay: calc(0.9s + var(--i) * 0.16s); }
+      @keyframes ep-seg { 0% { transform: scaleX(0); opacity: 1; } 70% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+      @keyframes ep-shine { 0% { transform: translateX(-200px); opacity: 0; } 8% { opacity: 1; } 42% { transform: translateX(1150px); opacity: 1; } 43%, 100% { transform: translateX(1150px); opacity: 0; } }
+      @keyframes ep-pulse { 0%, 24%, 100% { transform: scale(1); } 10% { transform: scale(1.45); } }
+      @media (prefers-reduced-motion: reduce) {
+        #loading.ep-idle .ep-shine, #loading.ep-idle .ep-dot, #loading .ep-segs i.now::after { animation: none; }
+        #loading .ep-segs i.now { background: var(--rose); opacity: 0.6; }
+      }
     </style>
   </head>
   <body>
+    <!-- Loading splash. The EaglePlot logo (eagleplot/assets/logo.svg) in pieces: the three
+         rings, the axes, the four bars, the line and the four points each fly in from their own
+         side and lock together. It then waits while Python loads. Steps come from stlite's kernel events (wired up in
+         the module script below). Everything here is inline: the smoke test fails on requests
+         to other origins, and the splash must draw before anything else downloads. -->
     <div id="loading" role="status" aria-live="polite">
-      <img src="./eagleplot-icon.png" alt="" />
-      <div>Starting EaglePlot…</div>
-      <div class="bar" aria-hidden="true"><i></i></div>
-      <small>
-        EaglePlot runs entirely in your browser: your data never leaves this computer.
-        The first visit downloads Python and the scientific libraries (tens of MB);
-        later visits start from the browser cache.
-      </small>
+      <div class="ep-center">
+        <svg class="ep-logo" viewBox="0 0 960 960" aria-hidden="true">
+          <defs>
+            <clipPath id="ep-disk-clip"><circle cx="476" cy="471" r="317"/></clipPath>
+            <linearGradient id="ep-shine-g" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".7"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+          </defs>
+          <g class="ep-whole">
+            <g class="ep-pc" data-order="0" data-from="-2600 120 -35 1"><circle cx="476" cy="471" r="434" fill="#8b2233"/></g>
+            <g class="ep-pc" data-order="1" data-from="2600 -160 40 1"><circle cx="476" cy="471" r="382" fill="#d7dbde"/></g>
+            <g class="ep-pc" data-order="2" data-from="240 2300 30 1"><circle cx="476" cy="471" r="317" fill="#f4f5f6"/></g>
+            <g class="ep-pc" data-order="3" data-from="-2300 -1800 -50 1"><path d="M218 213V729H746" fill="none" stroke="#5b6771" stroke-opacity=".45" stroke-width="5"/></g>
+            <g class="ep-pc" data-order="4" data-from="-2300 1900 -70 1"><path d="M353 724H285A317 317 0 0 1 265 707.6V563Q265 553 275 553H343Q353 553 353 563Z" fill="#5b6771"/></g>
+            <g class="ep-pc" data-order="5" data-from="-300 -2400 -40 1"><path d="M389 724V445Q389 435 399 435H467Q477 435 477 445V724Z" fill="#8b2233"/></g>
+            <g class="ep-pc" data-order="6" data-from="2300 1900 60 1"><path d="M512 724V504Q512 494 522 494H590Q600 494 600 504V724Z" fill="#6d2b3d"/></g>
+            <g class="ep-pc" data-order="7" data-from="2500 -1500 80 1"><path d="M636 724V621Q636 611 646 611H714Q724 611 724 621V668.4A317 317 0 0 1 667 724Z" fill="#a2a9ad"/></g>
+            <g class="ep-pc" data-order="8" data-from="-2500 -800 -30 1"><path d="M309 547L433 430L556 489L680 606" fill="none" stroke="#24090f" stroke-width="8" stroke-linejoin="round"/></g>
+            <g class="ep-pc" data-order="9.0" data-from="2100 -2200 200 3" data-ease="cubic-bezier(.2,.7,.25,1)"><circle class="ep-dot" style="--i:0" cx="309" cy="547" r="15.5" fill="#24090f"/></g>
+            <g class="ep-pc" data-order="9.4" data-from="2250 -2080 200 3" data-ease="cubic-bezier(.2,.7,.25,1)"><circle class="ep-dot" style="--i:1" cx="433" cy="430" r="15.5" fill="#24090f"/></g>
+            <g class="ep-pc" data-order="9.8" data-from="2400 -1960 200 3" data-ease="cubic-bezier(.2,.7,.25,1)"><circle class="ep-dot" style="--i:2" cx="556" cy="489" r="15.5" fill="#24090f"/></g>
+            <g class="ep-pc" data-order="10.2" data-from="2550 -1840 200 3" data-ease="cubic-bezier(.2,.7,.25,1)"><circle class="ep-dot" style="--i:3" cx="680" cy="606" r="15.5" fill="#24090f"/></g>
+            <g class="ep-gloss" fill="none" stroke="#fff" stroke-linecap="round">
+              <path d="M240 280A310 310 0 0 1 445 152" stroke-opacity=".55" stroke-width="14"/>
+              <path d="M270 318A265 265 0 0 1 415 202" stroke-opacity=".45" stroke-width="9"/>
+            </g>
+            <g clip-path="url(#ep-disk-clip)"><g transform="skewX(-18)"><rect class="ep-shine" x="-60" y="0" width="150" height="960" fill="url(#ep-shine-g)"/></g></g>
+          </g>
+        </svg>
+        <div class="ep-name">EaglePlot</div>
+        <div class="ep-status" id="ep-status">
+          <div class="ep-step" id="ep-step">Starting EaglePlot…</div>
+          <div class="ep-segs" aria-hidden="true"><i class="now"></i><i></i><i></i><i></i></div>
+          <div class="ep-note" id="ep-note">Runs entirely in your browser. Your data stays on this computer.</div>
+        </div>
+      </div>
+      <div class="ep-foot">Schultz Lab · North Carolina Central University</div>
     </div>
+    <script>
+      // Splash controller: window.eaglePlotSplash.setStage(i) / .ready() / .fail(message).
+      // A classic script, so the logo starts flying in before stlite.js is even fetched.
+      (function () {
+        var el = document.getElementById("loading");
+        var STEPS = ["Downloading Python", "Installing the science libraries", "Starting EaglePlot", "Opening your workspace"];
+        var POP = "cubic-bezier(.33,.75,.36,1.12)"; // a slight overshoot
+        var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var stage = -1, landed = false, readyPending = false, done = false;
+        var whole = el.querySelector(".ep-whole");
+        var seen = false;
+        try { seen = localStorage.getItem("eagleplot.started") === "1"; } catch (e) {}
+        if (!seen) {
+          document.getElementById("ep-note").textContent =
+            "First visit: downloading Python and the science libraries (about 45 MB). " +
+            "Next time they load from your browser's cache.";
+        }
+
+        function render() {
+          var segs = "";
+          for (var i = 0; i < STEPS.length; i++) segs += '<i class="' + (i < stage ? "done" : i === stage ? "now" : "") + '"></i>';
+          var box = document.getElementById("ep-status");
+          if (!box.querySelector(".ep-segs")) return; // showing an error
+          box.querySelector(".ep-segs").innerHTML = segs;
+          document.getElementById("ep-step").innerHTML = STEPS[stage] + "<small>" + (stage + 1) + " of 4</small>";
+        }
+        function setStage(i) { if (done || i <= stage) return; stage = i; render(); }
+        function land() {
+          landed = true; el.classList.add("ep-landed");
+          if (!reduce) setTimeout(function () { if (!done) el.classList.add("ep-idle"); }, 300);
+          if (readyPending) setTimeout(ready, 400);
+        }
+        function ready() {
+          if (done) return;
+          if (!landed) { readyPending = true; return; }
+          done = true;
+          try { localStorage.setItem("eagleplot.started", "1"); } catch (e) {}
+          el.classList.remove("ep-idle");
+          if (!reduce && whole.animate) {
+            whole.animate(
+              [{ transform: "none" }, { transform: "translate(-40px, 12px) scale(0.97)", offset: 0.3 }, { transform: "translate(680px, -120px) scale(1.25)" }],
+              { duration: 620, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" });
+          }
+          setTimeout(function () { el.classList.add("ep-gone"); }, reduce ? 0 : 200);
+          setTimeout(function () { el.remove(); }, reduce ? 460 : 700);
+        }
+        function fail(message) {
+          if (done) return;
+          done = true;
+          el.classList.remove("ep-idle");
+          var box = document.getElementById("ep-status");
+          box.innerHTML = '<div class="ep-err"><b>EaglePlot couldn’t start</b><span></span><button type="button">Reload</button></div>';
+          box.querySelector("span").textContent = (message ? message + ". " : "") + "Check your connection and reload.";
+          box.querySelector("button").addEventListener("click", function () { location.reload(); });
+        }
+
+        // Fly-in: each piece starts off-screen at its own offset and spin (data-from, in logo
+        // units), leaves at data-order × 120 ms, overshoots slightly and lands. The points use
+        // data-ease and land exactly. fill: "backwards" keeps each piece hidden until it leaves.
+        var pieces = el.querySelectorAll(".ep-pc");
+        var gloss = el.querySelector(".ep-gloss");
+        if (reduce || !whole.animate) {
+          land();
+        } else {
+          var last, lastOrder = -1;
+          for (var k = 0; k < pieces.length; k++) {
+            var f = pieces[k].getAttribute("data-from").split(" ").map(Number);
+            var order = Number(pieces[k].getAttribute("data-order"));
+            var anim = pieces[k].animate([
+              { transform: "translate(" + f[0] + "px, " + f[1] + "px) rotate(" + f[2] + "deg) scale(" + f[3] + ")", opacity: 0 },
+              { opacity: 1, offset: 0.12 },
+              { transform: "none", opacity: 1 }
+            ], { duration: 950, delay: order * 120, easing: pieces[k].getAttribute("data-ease") || POP, fill: "backwards" });
+            if (order > lastOrder) { lastOrder = order; last = anim; }
+          }
+          gloss.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: lastOrder * 120 + 700, fill: "backwards" });
+          last.finished.then(function () {
+            whole.animate([{ transform: "scale(1)" }, { transform: "scale(1.08)" }, { transform: "scale(1)" }], { duration: 360, easing: "ease-out" });
+            land();
+          }, land);
+        }
+        setStage(0);
+        window.eaglePlotSplash = {
+          setStage: setStage, ready: ready, fail: fail,
+          get stage() { return stage; }, // read by scripts/web/smoke.js
+        };
+      })();
+    </script>
     <div id="root"></div>
     <script src="./site-config.js"></script>
     <script type="module">
@@ -110,11 +257,24 @@
         document.getElementById("root"),
       );
 
+      // Splash steps from stlite's kernel events (_kernel is stlite's unstable API: re-check
+      // these event names when upgrading @stlite/browser). Progress messages are matched by
+      // keyword and steps only move forward, so a reworded message leaves the step as it is.
+      const splash = window.eaglePlotSplash;
+      const kernel = window.eaglePlotApp._kernel;
+      const STEP_PATTERNS = [/pyodide/i, /install|package/i, /streamlit|server|boot/i];
+      kernel.addEventListener("loadProgress", (e) => {
+        const i = STEP_PATTERNS.findIndex((re) => re.test(String(e.detail)));
+        if (i >= 0) splash.setStage(i);
+      });
+      kernel.addEventListener("loadFinished", () => splash.setStage(3));
+      kernel.addEventListener("loadError", (e) => splash.fail(String(e.detail?.message ?? e.detail ?? "")));
+
       // Hide the splash once the app script has drawn its sidebar. Not on stMain: stlite
       // creates that within ~0.3 s for its own loading messages, ~15 s before the app runs.
       const obs = new MutationObserver(() => {
         if (document.querySelector('[data-testid="stSidebar"]')) {
-          document.getElementById("loading")?.remove();
+          splash.ready();
           window.eaglePlotReadyMs = performance.now() - t0;
           obs.disconnect();
         }
