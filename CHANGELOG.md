@@ -15,7 +15,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   install and no network. Installers are built for every release and need no admin
   rights. Settings are kept between sessions. Links open in your web browser. They are
   not code-signed yet: the first launch shows a warning (see `packaging/desktop/README.md`).
-  Loading whole folders is not available in the desktop app yet.
+  Data Upload → Batch Import reads folders on your computer: type the folder's path as
+  usual (`C:\Users\you\data`, `~/data`).
 
 ### Changed
 

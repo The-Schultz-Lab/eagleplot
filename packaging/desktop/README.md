@@ -57,13 +57,16 @@ The app recognises the desktop build from Electron (`eagleplot.utils.runtime`), 
   `https://stlite.invalid`, where they fail. Prepared downloads go through Python and work.
   Streamlit still checks each download button's URL at that origin once; the request
   can't resolve (`.invalid` is reserved) and nothing depends on it.
+- **Folders on the computer** (Data Upload → Batch Import): the folder the user types
+  (`C:\Users\you\data`, `/Users/you/data`, `~/data`, with or without quotes) is mounted
+  into the app when it's read (`eagleplot.utils.host_folders`, Emscripten's NODEFS). Only
+  folders the user names are mounted. On macOS the system may first ask to let EaglePlot
+  open Documents, Desktop or Downloads.
 - **Python runs in a Node.js worker** (`nodeJsWorker`), which is needed to mount host
   folders. It runs only EaglePlot's own code; keep it that way (no pickle loading, no
   user-supplied Python).
-- **Not yet:** loading a whole folder (Batch Import, Batch Analysis) needs the paths users
-  type (`C:\Users\…`) mapped onto mounted folders: roadmap D5.2. Fetching from NIST is off
-  (Pyodide's `requests` support needs the browser's XMLHttpRequest, which Node lacks); the
-  page links to NIST instead.
+- **Not available:** fetching from NIST (Pyodide's `requests` support needs the browser's
+  XMLHttpRequest, which Node lacks); the page links to NIST instead.
 
 ## Unsigned builds: what users see the first time
 

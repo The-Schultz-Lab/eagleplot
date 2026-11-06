@@ -13,6 +13,8 @@ on:
       - "packaging/desktop/**"
       - "scripts/desktop/**"
       - "eagleplot/utils/runtime.py"
+      - "eagleplot/utils/host_folders.py"
+      - "eagleplot/pages/1_Data_Upload.py"
       - ".github/workflows/desktop-builds.yml"
   workflow_dispatch:
 

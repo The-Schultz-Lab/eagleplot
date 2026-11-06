@@ -64,7 +64,8 @@ def folder_loading_allowed_here(environ: Optional[Mapping[str, str]] = None) -> 
     """:func:`folder_loading_allowed` for the current Streamlit session.
 
     Always ``False`` where the runtime has no local disk to read (the browser build,
-    see :mod:`eagleplot.utils.runtime`), whatever :data:`FOLDER_LOAD_ENV` says.
+    see :mod:`eagleplot.utils.runtime`), whatever :data:`FOLDER_LOAD_ENV` says, and
+    always ``True`` in the desktop build, which reads the user's own disk.
     """
     if environ is None:
         env: Mapping[str, str] = os.environ
@@ -74,6 +75,10 @@ def folder_loading_allowed_here(environ: Optional[Mapping[str, str]] = None) -> 
         caps = compute_capabilities(sys.platform, env)
     if not caps.local_folders:
         return False
+    if sys.platform == "emscripten":
+        # The desktop build: the app runs on the user's own computer and only they use
+        # it. There is no server whose disk a visitor could read.
+        return True
     return folder_loading_allowed(folder_load_setting(env), _client_ip())
 
 
