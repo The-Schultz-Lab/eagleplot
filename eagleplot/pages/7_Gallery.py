@@ -28,6 +28,7 @@ _MANIFEST_PATH = _GALLERY_DIR / "manifest.json"
 sys.path.insert(0, str(_APP_ROOT))
 
 from eagleplot.utils import initialize_session_state
+from eagleplot.utils.figures import show_png
 
 initialize_session_state()
 
@@ -169,7 +170,8 @@ for lib in _lib_order:
                 with st.container(border=True):
                     img_path = _GALLERY_DIR / entry.get("filename", f"{entry['key']}.png")
                     if img_path.exists():
-                        st.image(str(img_path), width="stretch")
+                        # Inline in the browser build (no media-file 404s): D2.3.
+                        show_png(img_path.read_bytes(), alt=entry["title"])
                     else:
                         st.caption("_(image not generated yet)_")
 

@@ -10,16 +10,20 @@ Rules these helpers enforce (roadmap D1.3):
 * **Figures are shown without media-file races in the browser build.** Under Pyodide
   (stlite) ``st.image`` PNGs are served by the single Python worker, and quick successive
   edits can lose intermediate images (404). There the PNG is embedded as a data URI.
+  Pages show figures with :func:`show_figure` (roadmap D2.3), never ``st.pyplot``.
 """
 
 from __future__ import annotations
 
 import base64
+import html
 import io
 import sys
 from typing import Any, Callable, Dict, Hashable, Optional, Tuple
 
 import streamlit as st
+
+from eagleplot.utils.runtime import capabilities
 
 #: Download formats offered for a Matplotlib figure: label -> (format, dpi, MIME, suffix).
 EXPORT_FORMATS: Dict[str, Tuple[str, Optional[int], str, str]] = {
@@ -32,6 +36,9 @@ EXPORT_FORMATS: Dict[str, Tuple[str, Optional[int], str, str]] = {
 
 #: Resolution of the PNG pages render for display; a download at this dpi can reuse it.
 DISPLAY_DPI = 150
+#: Display resolution where Python runs without native speed (WebAssembly): encoding a
+#: PNG costs about the square of the dpi, and the plot is scaled to the column anyway.
+SLOW_RUNTIME_DISPLAY_DPI = 110
 
 
 def lazy_download_supported(version: Optional[str] = None) -> bool:
@@ -135,8 +142,57 @@ def show_png(png: bytes, *, alt: str = "Plot") -> None:
     if sys.platform == "emscripten":
         b64 = base64.b64encode(png).decode("ascii")
         st.html(
-            f'<img data-eagleplot-plot="1" alt="{alt}" src="data:image/png;base64,{b64}" '
+            f'<img data-eagleplot-plot="1" alt="{html.escape(alt)}" '
+            f'src="data:image/png;base64,{b64}" '
             'style="width:100%;height:auto;border-radius:0.5rem;">'
         )
     else:
         st.image(png, width="stretch")
+
+
+def display_dpi() -> int:
+    """Resolution :func:`show_figure` renders at by default in this runtime."""
+    return DISPLAY_DPI if capabilities().native_speed else SLOW_RUNTIME_DISPLAY_DPI
+
+
+def _is_plotly(fig: Any) -> bool:
+    return hasattr(fig, "to_plotly_json")
+
+
+def show_figure(
+    fig: Any,
+    *,
+    alt: str = "Plot",
+    dpi: Optional[int] = None,
+    key: Optional[str] = None,
+    cache_key: Optional[Hashable] = None,
+    version: Hashable = None,
+) -> Optional[bytes]:
+    """Show a Matplotlib or Plotly figure. Use this instead of ``st.pyplot``.
+
+    A Matplotlib figure is rendered to PNG (``bbox_inches="tight"``, as ``st.pyplot``
+    does) at *dpi*, :func:`display_dpi` by default, and shown with :func:`show_png`.
+    A Plotly figure goes to ``st.plotly_chart`` at full width, with *key*.
+
+    With a *cache_key*, the PNG is encoded once per (*version*, dpi) and reused on later
+    reruns. The caller owns *version*: it must change whenever the figure would draw
+    differently (a rebuilt figure, new axis limits …). Leave *cache_key* out for a
+    figure that is rebuilt on every run.
+
+    Returns the PNG bytes (for a download at the same dpi), or ``None`` for Plotly.
+    The figure is not closed; that stays with the caller.
+    """
+    if _is_plotly(fig):
+        st.plotly_chart(fig, width="stretch", key=key)
+        return None
+    res = display_dpi() if dpi is None else dpi
+
+    def make() -> bytes:
+        return figure_bytes(fig, "png", res)
+
+    if cache_key is None:
+        png = make()
+    else:
+        png = cached_for(f"_eagleplot_png::{cache_key}", (version, res), "png", make)
+    show_png(png, alt=alt)
+    return png

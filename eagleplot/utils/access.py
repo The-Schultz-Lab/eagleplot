@@ -8,8 +8,11 @@ same feature lets any visitor list and read files on the *server*. See audit A-1
 from __future__ import annotations
 
 import os
+import sys
 import warnings
 from typing import Mapping, Optional
+
+from eagleplot.utils.runtime import capabilities, compute_capabilities
 
 #: Environment variable that overrides the folder-loading default.
 #: ``1``/``true``/``yes``/``on`` always allow; ``0``/``false``/``no``/``off`` always deny.
@@ -58,8 +61,19 @@ def _client_ip() -> Optional[str]:
 
 
 def folder_loading_allowed_here(environ: Optional[Mapping[str, str]] = None) -> bool:
-    """:func:`folder_loading_allowed` for the current Streamlit session."""
-    env = os.environ if environ is None else environ
+    """:func:`folder_loading_allowed` for the current Streamlit session.
+
+    Always ``False`` where the runtime has no local disk to read (the browser build,
+    see :mod:`eagleplot.utils.runtime`), whatever :data:`FOLDER_LOAD_ENV` says.
+    """
+    if environ is None:
+        env: Mapping[str, str] = os.environ
+        caps = capabilities()
+    else:
+        env = environ
+        caps = compute_capabilities(sys.platform, env)
+    if not caps.local_folders:
+        return False
     return folder_loading_allowed(folder_load_setting(env), _client_ip())
 
 

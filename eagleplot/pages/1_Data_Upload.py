@@ -97,6 +97,7 @@ from eagleplot.utils import (  # noqa: E402
 from eagleplot.batch import scan_directory, batch_load_files  # noqa: E402
 from eagleplot.io import downsample_for_preview  # noqa: E402
 from eagleplot.utils.access import folder_loading_allowed_here  # noqa: E402
+from eagleplot.utils.runtime import capabilities  # noqa: E402
 
 _LARGE_FILE_BYTES = 50 * 1024 * 1024  # 50 MB — warn above this
 _PREVIEW_MAX_ROWS = 10_000  # downsample preview above this
@@ -280,7 +281,13 @@ with tab3:
     # Reading a typed folder path is the point when EaglePlot runs on your own
     # machine, and a way to read the server's disk on a shared deployment.
     # See audit A-15 and eagleplot/utils/access.py.
-    if not folder_loading_allowed_here():
+    if not capabilities().local_folders:
+        st.info(
+            "Batch import from a folder needs files on a local disk, which this "
+            "version of EaglePlot (running in your browser) cannot read. Upload files "
+            "individually on the **Upload File** tab instead."
+        )
+    elif not folder_loading_allowed_here():
         st.info(
             "Batch import from a folder is turned off on this server, because "
             "the path would be read on the server, not your computer. Upload files "

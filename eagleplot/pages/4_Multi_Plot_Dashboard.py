@@ -352,6 +352,7 @@ def _build_entry(cfg: dict, data, key: tuple) -> dict:
         "trace": None,
         "base": None,  # the figure's own (unshared) axis limits
         "shown": None,  # the limits it was last displayed with
+        "serial": None,  # unique per built entry: keys the cached display PNG
     }
     if data is None:
         entry["error"] = f"Dataset '{cfg['dataset']}' not found."
@@ -396,6 +397,7 @@ def _cell_entry(i: int, cfg: dict):
     _release(old)
     cells[i] = entry
     _bump_version()
+    entry["serial"] = st.session_state[_VERSION]  # never reused within the session
     return entry, True
 
 
@@ -445,7 +447,7 @@ def _show_cell(i: int, entry: dict, nrows: int, ncols: int, sharex: bool, sharey
             with st.expander("Details"):
                 st.code(entry["trace"])
     elif entry["is_plotly"]:
-        st.plotly_chart(entry["fig"], width="stretch", key=f"dash_plotly_{i}")
+        _figures.show_figure(entry["fig"], key=f"dash_plotly_{i}")
     else:
         fig = entry["fig"]
         lims = _target_limits(i, nrows, ncols, sharex, sharey)
@@ -455,7 +457,14 @@ def _show_cell(i: int, entry: dict, nrows: int, ncols: int, sharex: bool, sharey
             if lims != entry["shown"]:
                 entry["shown"] = lims
                 _bump_version()
-        st.pyplot(fig, clear_figure=False)
+        # The display PNG is encoded once per built figure and axis limits, so a page
+        # rerun does not re-encode unchanged panels (D2.3). New limits invalidate it.
+        _figures.show_figure(
+            fig,
+            alt=entry["label"],
+            cache_key=f"dash_cell_{i}",
+            version=(entry["serial"], entry["shown"]),
+        )
 
 
 # ── Combined export (M16) ─────────────────────────────────────────────────────

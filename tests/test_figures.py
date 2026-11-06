@@ -135,3 +135,104 @@ class TestShowPng:
         assert kind == "html"
         assert 'src="data:image/png;base64,iVBORy4uLg=="' in body
         assert 'alt="My plot"' in body
+
+
+class TestShowFigure:
+    @pytest.fixture
+    def recorder(self, fake_st, monkeypatch):
+        monkeypatch.setattr(figures.sys, "platform", "linux")
+        fake_st.plotly_chart = lambda fig, **kw: fake_st.calls.append(("plotly", fig, kw))
+        encoded = []
+        real = figures.figure_bytes
+
+        def counting(fig, fmt, dpi=None):
+            encoded.append((fmt, dpi))
+            return real(fig, fmt, dpi)
+
+        monkeypatch.setattr(figures, "figure_bytes", counting)
+        fake_st.encoded = encoded
+        return fake_st
+
+    def test_matplotlib_figure_is_shown_as_a_png(self, recorder, fig):
+        png = figures.show_figure(fig)
+        assert png[:4] == b"\x89PNG"
+        assert recorder.calls == [("image", png)]
+        assert recorder.encoded == [("png", figures.DISPLAY_DPI)]
+
+    def test_explicit_dpi(self, recorder, fig):
+        figures.show_figure(fig, dpi=72)
+        assert recorder.encoded == [("png", 72)]
+
+    def test_png_matches_a_tight_bbox_render(self, recorder, fig):
+        import io
+
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=figures.DISPLAY_DPI, bbox_inches="tight")
+        assert figures.show_figure(fig) == buf.getvalue()
+
+    def test_plotly_figure_goes_to_plotly_chart(self, recorder):
+        go = pytest.importorskip("plotly.graph_objects")
+        pfig = go.Figure(go.Scatter(x=[0, 1], y=[1, 0]))
+        assert figures.show_figure(pfig, key="k") is None
+        assert recorder.calls == [("plotly", pfig, {"width": "stretch", "key": "k"})]
+        assert recorder.encoded == []
+
+    def test_without_cache_key_every_call_encodes(self, recorder, fig):
+        figures.show_figure(fig)
+        figures.show_figure(fig)
+        assert len(recorder.encoded) == 2
+
+    def test_cached_png_is_encoded_once_per_version(self, recorder, fig):
+        first = figures.show_figure(fig, cache_key="cell", version=1)
+        assert figures.show_figure(fig, cache_key="cell", version=1) is first
+        assert len(recorder.encoded) == 1
+        assert [c[0] for c in recorder.calls] == ["image", "image"]
+        fig.axes[0].set_xlim(0, 10)  # the owner bumps the version on a change like this
+        second = figures.show_figure(fig, cache_key="cell", version=2)
+        assert len(recorder.encoded) == 2
+        assert second != first
+
+    def test_cache_keys_are_independent(self, recorder, fig):
+        figures.show_figure(fig, cache_key="a", version=1)
+        figures.show_figure(fig, cache_key="b", version=1)
+        figures.show_figure(fig, cache_key="a", version=1)
+        assert len(recorder.encoded) == 2
+
+    def test_a_different_dpi_is_a_cache_miss(self, recorder, fig):
+        figures.show_figure(fig, cache_key="a", version=1, dpi=72)
+        figures.show_figure(fig, cache_key="a", version=1, dpi=100)
+        assert recorder.encoded == [("png", 72), ("png", 100)]
+
+    def test_slow_runtime_uses_a_lower_display_dpi(self, recorder, fig, monkeypatch):
+        from eagleplot.utils import runtime
+
+        browser = runtime.compute_capabilities("emscripten", {})
+        monkeypatch.setattr(figures, "capabilities", lambda: browser)
+        assert figures.display_dpi() == figures.SLOW_RUNTIME_DISPLAY_DPI
+        figures.show_figure(fig)
+        assert recorder.encoded == [("png", figures.SLOW_RUNTIME_DISPLAY_DPI)]
+
+    def test_figure_is_left_open(self, recorder, fig):
+        figures.show_figure(fig)
+        assert plt.fignum_exists(fig.number)
+
+    def test_alt_text_is_escaped_in_the_browser_build(self, fake_st, monkeypatch):
+        monkeypatch.setattr(figures.sys, "platform", "emscripten")
+        figures.show_png(b"x", alt='a "quoted" <b>')
+        assert 'alt="a &quot;quoted&quot; &lt;b&gt;"' in fake_st.calls[0][1]
+
+
+def test_no_page_calls_st_pyplot():
+    """Pages show figures with show_figure / show_png, never st.pyplot (D2.3)."""
+    from pathlib import Path
+
+    pkg = Path(figures.__file__).resolve().parent.parent
+    sources = [pkg / "Home.py", *sorted((pkg / "pages").glob("*.py"))]
+    offenders = [
+        f"{path.name}:{n}"
+        for path in sources
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1)
+        if "st.pyplot(" in line
+    ]
+    assert len(sources) > 10
+    assert offenders == []
