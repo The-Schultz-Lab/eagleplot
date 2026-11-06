@@ -216,13 +216,13 @@ save_figure(fig, "plot.pdf")  # vector, publication-ready
 | --- | --- |
 | **Home** | Dashboard overview and help tabs |
 | **Data Upload** | Load files in 18 formats; preview shape, types, and statistics; batch folder import |
-| **Plot → Basic** | 27 plot types with live style controls and an annotation panel |
-| **Plot → Multiplot** | Up to 4×4 grid layouts with axis sharing and combined export |
+| **Plot → Quick Plot** | 27 plot types with live style controls and an annotation panel |
+| **Plot → Dashboard** | Up to 4×4 grid layouts with axis sharing and combined export |
 | **Plot → Advanced Plotting** | Seaborn statistical plots and Plotly interactive charts |
 | **Plot → Spectroscopy** | IR/Raman, NMR, UV-Vis, Mass Spec; NIST WebBook lookup by CAS |
 | **Plot → Molecular Viz** | Gaussian/ORCA/Molden output; 3D structure and vibrational modes |
-| **Analyze → Single** | Statistics, distributions, curve fitting, signal processing, peaks |
-| **Analyze → Batch** | Batch statistics, curve fitting, and peak analysis with presets |
+| **Analyze → Analysis Tools** | Statistics, distributions, curve fitting, signal processing, peaks |
+| **Analyze → Batch Analysis** | Batch statistics, curve fitting, and peak analysis with presets |
 | **Analyze → Data Tools** | 12 non-destructive DataFrame operations |
 | **Export** | Export plots, data, and analyses; save/load sessions; PDF reports |
 | **Gallery** | Pre-rendered examples with "Use this config" buttons |

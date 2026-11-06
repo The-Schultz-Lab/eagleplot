@@ -52,12 +52,17 @@ jobs:
           cache-dependency-path: pyproject.toml
 
       - name: Install docs build dependencies
-        run: pip install markdown
+        run: pip install markdown pytest
 
       # build_docs.py renders each guide into a styled page and wires them together
       # (audit A-13).
       - name: Build documentation site
         run: python build_docs.py
+
+      # The test matrix doesn't install markdown, so these tests skip there; this is
+      # where they run (broken links, raw .md links, nav on every page).
+      - name: Test the documentation build
+        run: python -m pytest tests/test_docs_site.py -q -p no:cacheprovider
 
       # The app runs entirely in the browser (stlite: Streamlit on Pyodide). Pyodide comes
       # from the jsDelivr CDN; everything else is in the site. See packaging/web/README.md.

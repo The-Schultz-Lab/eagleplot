@@ -140,12 +140,18 @@ class TestFullBuild:
         actual = {p.name for p in built_site.iterdir()}
         assert expected <= actual, f"missing from build: {sorted(expected - actual)}"
 
+    # Added to the site by .github/workflows/docs.yml after build_docs.py runs: the
+    # in-browser app (packaging/web/build_site.py) is built into _site/app/.
+    DEPLOY_ADDED = {"app/"}
+
     def test_no_broken_internal_links(self, built_site: Path):
         broken = []
         for page in sorted(built_site.glob("*.html")):
             html = page.read_text(encoding="utf-8")
             for href in re.findall(r'href="([^"#?]+)"', html):
                 if href.startswith(("http://", "https://", "mailto:")):
+                    continue
+                if href in self.DEPLOY_ADDED:
                     continue
                 if not (built_site / href).exists():
                     broken.append(f"{page.name} -> {href}")
@@ -179,3 +185,12 @@ class TestFullBuild:
             external = re.findall(r'(?:src|href)="(https?://[^"]+)"', html)
             non_repo = [u for u in external if "github.com/The-Schultz-Lab" not in u]
             assert not non_repo, f"{page.name} loads external resources: {non_repo}"
+
+
+def test_the_docs_workflow_builds_what_the_docs_link_to():
+    """The landing page links app/; the Pages workflow must build it there."""
+    workflow = (Path(__file__).resolve().parent.parent / ".github/workflows/docs.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "build_site.py docs/_site/app" in workflow
+    assert TestFullBuild.DEPLOY_ADDED == {"app/"}

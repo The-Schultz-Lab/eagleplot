@@ -9,15 +9,15 @@ Navigation Structure
 Home
 Data Upload
 Plot
-  Basic         — Quick Plot (27 plot types, Matplotlib/Seaborn/Plotly)
-  Multiplot     — Multi-Plot Dashboard (grid layouts, axis sharing)
+  Quick Plot    — 27 plot types, Matplotlib/Seaborn/Plotly
+  Dashboard     — Multi-Plot Dashboard (grid layouts, axis sharing)
   Advanced
     ↳ Advanced Plotting  — Seaborn statistical + Plotly interactive
     ↳ Spectroscopy       — IR/Raman, NMR, UV-Vis, Mass Spec + NIST
     ↳ Molecular Viz      — 3D structure and vibrational modes
 Analyze
-  Single        — Analysis Tools (stats, curve fit, signal, peaks, …)
-  Batch         — Batch Analysis + workflow presets
+  Analysis Tools — stats, curve fit, signal, peaks, …
+  Batch Analysis — the same across several datasets, + workflow presets
 Export
 Gallery
 Help
@@ -89,6 +89,56 @@ initialize_session_state()
 # ── Home page content ─────────────────────────────────────────────────────────
 
 
+# Examples offered on the first screen: one click loads the data and opens Quick Plot.
+_EXAMPLE_DIR = Path(__file__).resolve().parent / "example-data" / "Artificial"
+_STARTERS = [
+    ("sine_cosine_waves.csv", "Sine & cosine waves", "Line plot of three series"),
+    ("ir_spectrum.csv", "IR spectrum", "A spectrum from 4000 to 400 cm⁻¹"),
+    ("scatter_correlation.csv", "Scatter correlation", "Yield vs reaction time"),
+]
+
+
+def _get_started() -> None:
+    """First screen for a session without data: one-click examples, or upload."""
+    st.markdown("### Get started")
+    st.caption("Try EaglePlot with an example dataset, or bring your own data.")
+    cols = st.columns(len(_STARTERS))
+    for col, (fname, title, desc) in zip(cols, _STARTERS):
+        path = _EXAMPLE_DIR / fname
+        if not path.exists():
+            continue
+        with col, st.container(border=True):
+            st.markdown(f"**{title}**")
+            st.caption(desc)
+            if st.button(
+                "Plot this example",
+                key=f"home_try_{fname}",
+                type="primary" if fname == _STARTERS[0][0] else "secondary",
+                width="stretch",
+            ):
+                from eagleplot.io import load_data
+                from eagleplot.utils import add_dataset
+
+                add_dataset(
+                    fname,
+                    load_data(path),
+                    metadata={"source": "example", "file_type": path.suffix},
+                )
+                st.switch_page(basic_pg)
+    with st.container(border=True):
+        _up_col, _ex_col = st.columns(2)
+        with _up_col:
+            st.markdown("**Your own data**")
+            st.caption("CSV, Excel, JSON, NumPy, spectra (JCAMP-DX) and more.")
+            if st.button("Upload a file", key="home_upload", width="stretch"):
+                st.switch_page(data_pg)
+        with _ex_col:
+            st.markdown("**More examples**")
+            st.caption("Distributions, kinetics, molecular properties, 2-D arrays.")
+            if st.button("Browse all examples", key="home_examples", width="stretch"):
+                st.switch_page(data_pg)
+
+
 def _home_page() -> None:
     """Render the Dashboard / Help landing page."""
     tab_dash, tab_help = st.tabs(["Dashboard", "Help"])
@@ -119,29 +169,32 @@ def _home_page() -> None:
 
         st.divider()
 
-        # ── Session metrics ───────────────────────────────────────────────────
         summary = get_session_summary()
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Datasets", summary["num_datasets"])
-        col2.metric("Plots", summary["num_plots"])
-        col3.metric("Analyses", summary["num_analyses"])
-
-        if summary["current_dataset"]:
-            st.success(f"Active dataset: **{summary['current_dataset']}**")
-            st.page_link(basic_pg, label="Go to Quick Plot →")
+        if summary["num_datasets"] == 0:
+            _get_started()
         else:
-            st.info("No dataset loaded.")
-            st.page_link(data_pg, label="Upload Data →")
+            # ── Session metrics ───────────────────────────────────────────────
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Datasets", summary["num_datasets"])
+            col2.metric("Plots", summary["num_plots"])
+            col3.metric("Analyses", summary["num_analyses"])
+            if summary["current_dataset"]:
+                st.success(f"Active dataset: **{summary['current_dataset']}**")
+            _go_col, _more_col, _ = st.columns([1, 1, 2])
+            with _go_col:
+                st.page_link(basic_pg, label="Go to Quick Plot →")
+            with _more_col:
+                st.page_link(data_pg, label="Load more data →")
 
     with tab_help:
         st.markdown("## Quick Start")
         st.markdown("""
         1. **Upload Data** — Go to *Data Upload* to load a CSV, Excel, NumPy, or other file.
            Or load a built-in example dataset.
-        2. **Plot** — *Plot → Basic* lets you choose from 27 plot types and configure them
-           interactively.
-        3. **Analyse** — *Analyze → Single* has curve fitting, statistics, signal processing,
-           peak analysis, and more.
+        2. **Plot** — *Plot → Quick Plot* lets you choose from 27 plot types and configure
+           them interactively.
+        3. **Analyse** — *Analyze → Analysis Tools* has curve fitting, statistics, signal
+           processing, peak analysis, and more.
         4. **Export** — *Export* saves plots as PNG/PDF/SVG and data in multiple formats.
         """)
 
@@ -209,12 +262,12 @@ data_pg = st.Page(
 # Plot group
 basic_pg = st.Page(
     str(_PAGES_DIR / "2_Quick_Plot.py"),
-    title="Basic",
+    title="Quick Plot",
     url_path="plot-basic",
 )
 multi_pg = st.Page(
     str(_PAGES_DIR / "4_Multi_Plot_Dashboard.py"),
-    title="Multiplot",
+    title="Dashboard",
     url_path="plot-multiplot",
 )
 adv_plt_pg = st.Page(
@@ -236,12 +289,12 @@ molvis_pg = st.Page(
 # Analyze group
 single_pg = st.Page(
     str(_PAGES_DIR / "3_Analysis_Tools.py"),
-    title="Single",
+    title="Analysis Tools",
     url_path="analyze-single",
 )
 batch_pg = st.Page(
     str(_PAGES_DIR / "11_Batch_Analysis.py"),
-    title="Batch",
+    title="Batch Analysis",
     url_path="analyze-batch",
 )
 
@@ -315,16 +368,16 @@ with st.sidebar:
     st.page_link(data_pg, label="Data Upload")
 
     with st.expander("**Plot**", expanded=pg in _PLOT_PAGES):
-        st.page_link(basic_pg, label="Basic")
-        st.page_link(multi_pg, label="Multiplot")
+        st.page_link(basic_pg, label="Quick Plot")
+        st.page_link(multi_pg, label="Dashboard")
         st.markdown(_ADV_HEADER, unsafe_allow_html=True)
         st.page_link(adv_plt_pg, label="↳ Advanced Plotting")
         st.page_link(spec_pg, label="↳ Spectroscopy")
         st.page_link(molvis_pg, label="↳ Molecular Viz")
 
     with st.expander("**Analyze**", expanded=pg in _ANALYZE_PAGES):
-        st.page_link(single_pg, label="Single")
-        st.page_link(batch_pg, label="Batch")
+        st.page_link(single_pg, label="Analysis Tools")
+        st.page_link(batch_pg, label="Batch Analysis")
         st.page_link(datatools_pg, label="Data Tools")
 
     st.divider()
@@ -334,7 +387,7 @@ with st.sidebar:
     st.page_link(settings_pg, label="Settings")
 
     st.divider()
-    with st.expander("About", expanded=True):
+    with st.expander("About", expanded=False):
         if _NCCU_HORIZ.exists():
             _horiz_b64 = base64.b64encode(_NCCU_HORIZ.read_bytes()).decode()
             st.markdown(
