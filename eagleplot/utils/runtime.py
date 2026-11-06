@@ -15,6 +15,7 @@ build this is*, so a capability can change in one build without touching the pag
 from __future__ import annotations
 
 import os
+import re
 import sys
 from dataclasses import dataclass
 from functools import lru_cache
@@ -22,6 +23,9 @@ from typing import Mapping
 
 #: Set to ``1`` by the Electron desktop build.
 DESKTOP_ENV = "EAGLEPLOT_DESKTOP"
+#: Directory for ``config.json`` (defaults, presets, workflows). The browser build sets it
+#: to a folder it mounts on browser storage (IndexedDB), so settings survive a reload.
+CONFIG_DIR_ENV = "EAGLEPLOT_CONFIG_DIR"
 
 #: Running under Pyodide (stlite, in a browser or in Electron).
 IS_PYODIDE = sys.platform == "emscripten"
@@ -43,15 +47,22 @@ class Capabilities:
     #: Native CPython speed. ``False`` under WebAssembly: pages may lower display dpi
     #: or skip expensive previews.
     native_speed: bool
+    #: Streamlit reads a ``.streamlit/config.toml`` the app writes, at its next start
+    #: (Settings → Theme). Under stlite the theme comes from the site's configuration.
+    app_config_file: bool = True
+    #: The user can add a missing optional package with ``pip install``. Not in the
+    #: browser or desktop builds, whose packages are fixed when the site is built.
+    pip_install: bool = True
 
 
 def _browser_storage_is_persistent(environ: Mapping[str, str]) -> bool:
-    """Hook for D3: return ``True`` once the browser build mounts IDBFS for user data.
+    """Whether the browser build keeps user settings across a reload.
 
-    Until then everything the browser build writes lives in the in-memory Emscripten
-    file system and is gone on reload.
+    The site build (``packaging/web``) mounts a folder on browser storage (IndexedDB) and
+    points :data:`CONFIG_DIR_ENV` at it. Without that, everything the browser build
+    writes lives in the in-memory Emscripten file system and is gone on reload.
     """
-    return False
+    return bool(environ.get(CONFIG_DIR_ENV))
 
 
 def compute_capabilities(platform: str, environ: Mapping[str, str]) -> Capabilities:
@@ -71,12 +82,16 @@ def compute_capabilities(platform: str, environ: Mapping[str, str]) -> Capabilit
             outbound_http=True,
             persistent_storage=True,
             native_speed=False,
+            app_config_file=False,
+            pip_install=False,
         )
     return Capabilities(  # browser
         local_folders=False,
         outbound_http=False,
         persistent_storage=_browser_storage_is_persistent(environ),
         native_speed=False,
+        app_config_file=False,
+        pip_install=False,
     )
 
 
@@ -84,3 +99,30 @@ def compute_capabilities(platform: str, environ: Mapping[str, str]) -> Capabilit
 def capabilities() -> Capabilities:
     """The capabilities of this process (computed once)."""
     return compute_capabilities(sys.platform, os.environ)
+
+
+_PIP_HINT = re.compile(
+    r"\s*(?:Install it with|Install with)?:?\s*`*pip install ([^`\n]*?)`*\.?$", re.I
+)
+
+
+def missing_package_message(message: str, caps: Capabilities | None = None) -> str:
+    """*message* (an ``ImportError`` text ending in a ``pip install`` hint) for this runtime.
+
+    Where packages can't be installed (the browser and desktop builds ship a fixed set),
+    the hint is replaced by one the user can act on.
+    """
+    caps = capabilities() if caps is None else caps
+    if caps.pip_install:
+        return message
+    match = _PIP_HINT.search(message)
+    if match is None:
+        return message
+    packages = match.group(1).strip()
+    reason = message[: match.start()].rstrip(" .:")
+    reason = f"{reason}. " if reason else f"This needs {packages}. "
+    return (
+        f"{reason}It isn't available in this version of EaglePlot. To use this feature, "
+        f"install EaglePlot on your computer (`pip install eagleplot`), then `pip install "
+        f"{packages}`."
+    )

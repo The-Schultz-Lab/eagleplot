@@ -61,13 +61,22 @@ delete_workflow(name: str) -> bool
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Dict, List
 
+from eagleplot.utils.runtime import CONFIG_DIR_ENV
+
 # ── Location ──────────────────────────────────────────────────────────────
-# Stored next to gui.py (two directories up from this file).
+# Stored in the repository root (two directories up from this file), unless
+# EAGLEPLOT_CONFIG_DIR names another folder. The browser build sets it to a folder kept
+# in browser storage, so settings survive a reload (roadmap D2.2).
 _APP_ROOT = Path(__file__).parent.parent.parent
-_CONFIG_PATH = _APP_ROOT / "config.json"
+_CONFIG_PATH = (
+    Path(os.environ[CONFIG_DIR_ENV]) / "config.json"
+    if os.environ.get(CONFIG_DIR_ENV)
+    else _APP_ROOT / "config.json"
+)
 
 _EMPTY: Dict = {
     "version": "1.0",

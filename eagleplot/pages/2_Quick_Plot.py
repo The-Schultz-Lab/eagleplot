@@ -1453,7 +1453,7 @@ def _export_panel_plotly(fig, data, dataset_name: str) -> None:
                 st.download_button(
                     "Download CSV",
                     data=dataset_csv_cached(data, dataset_name),
-                    file_name=f"{dataset_name}.csv",
+                    file_name=f"{Path(dataset_name).stem}.csv",
                     mime="text/csv",
                     key="qp_dl_csv_plotly",
                 )
@@ -1471,7 +1471,7 @@ def _export_panel_mpl(data, dataset_name: str) -> None:
             st.download_button(
                 "Download dataset as CSV",
                 data=dataset_csv_cached(data, dataset_name),
-                file_name=f"{dataset_name}.csv",
+                file_name=f"{Path(dataset_name).stem}.csv",
                 mime="text/csv",
                 key="qp_dl_csv_mpl",
             )
