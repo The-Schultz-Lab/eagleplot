@@ -65,18 +65,20 @@ import os
 from pathlib import Path
 from typing import Dict, List
 
-from eagleplot.utils.runtime import CONFIG_DIR_ENV
+from eagleplot.utils.runtime import CONFIG_DIR_ENV, DESKTOP_CONFIG_DIR, IS_DESKTOP
 
 # ── Location ──────────────────────────────────────────────────────────────
 # Stored in the repository root (two directories up from this file), unless
 # EAGLEPLOT_CONFIG_DIR names another folder. The browser build sets it to a folder kept
-# in browser storage, so settings survive a reload (roadmap D2.2).
+# in browser storage, so settings survive a reload (roadmap D2.2). The desktop build
+# mounts the user's app-data folder at DESKTOP_CONFIG_DIR (roadmap D5).
 _APP_ROOT = Path(__file__).parent.parent.parent
-_CONFIG_PATH = (
-    Path(os.environ[CONFIG_DIR_ENV]) / "config.json"
-    if os.environ.get(CONFIG_DIR_ENV)
-    else _APP_ROOT / "config.json"
-)
+if os.environ.get(CONFIG_DIR_ENV):
+    _CONFIG_PATH = Path(os.environ[CONFIG_DIR_ENV]) / "config.json"
+elif IS_DESKTOP:
+    _CONFIG_PATH = Path(DESKTOP_CONFIG_DIR) / "config.json"
+else:
+    _CONFIG_PATH = _APP_ROOT / "config.json"
 
 _EMPTY: Dict = {
     "version": "1.0",

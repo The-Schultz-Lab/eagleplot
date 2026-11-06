@@ -1,0 +1,97 @@
+name: Desktop builds
+
+# EaglePlot desktop app (roadmap D5): Electron + @stlite/desktop, Pyodide and every package
+# bundled, fully offline. Builds the installers on each OS; on Linux it also launches the
+# built app and runs scripts/desktop/smoke.js. Installers are uploaded as artifacts, and
+# attached to the GitHub Release when one is published. Builds are unsigned (see
+# packaging/desktop/README.md for what users see on first launch).
+on:
+  release:
+    types: [published]
+  pull_request:
+    paths:
+      - "packaging/desktop/**"
+      - "scripts/desktop/**"
+      - "eagleplot/utils/runtime.py"
+      - ".github/workflows/desktop-builds.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Desktop app (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    permissions:
+      contents: write  # attach the installers to a published release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            builder_args: "--linux AppImage"
+          - os: windows-2025
+            builder_args: "--win nsis"
+          - os: macos-15
+            builder_args: "--mac dmg --x64 --arm64"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: packaging/desktop/package-lock.json
+
+      - name: Build the app
+        shell: bash
+        env:
+          # No signing certificates: don't let electron-builder look for one.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: python packaging/desktop/build_desktop.py -- ${{ matrix.builder_args }} --publish never
+
+      - name: Installer size
+        shell: bash
+        run: ls -la packaging/desktop/dist/ | grep -E 'EaglePlot-.*\.(exe|dmg|AppImage)$'
+
+      # Launch the built app and check it works offline, keeps settings and opens links in
+      # the system browser. Ubuntu 24.04 blocks the unprivileged user namespaces Electron's
+      # sandbox needs unless this AppArmor restriction is lifted.
+      - name: Smoke-test the app (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb
+          npm install --no-save --prefix build/desktop-smoke-tools playwright@1
+          NODE_PATH=build/desktop-smoke-tools/node_modules xvfb-run -a \
+            node scripts/desktop/smoke.js packaging/desktop/dist/linux-unpacked/eagleplot --out build/desktop-smoke
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: eagleplot-desktop-${{ runner.os }}
+          path: |
+            packaging/desktop/dist/EaglePlot-*
+            build/desktop-smoke/
+          if-no-files-found: warn
+
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          files=(packaging/desktop/dist/EaglePlot-*.exe packaging/desktop/dist/EaglePlot-*.dmg packaging/desktop/dist/EaglePlot-*.AppImage)
+          gh release upload "${{ github.event.release.tag_name }}" "${files[@]}" --clobber

@@ -1,6 +1,7 @@
 """eagleplot.utils.runtime: capabilities of the server, browser and desktop builds (D2.1)."""
 
 import dataclasses
+from pathlib import Path
 
 import pytest
 
@@ -33,13 +34,16 @@ class TestComputeCapabilities:
         )
 
     def test_desktop(self):
+        # Folder import comes with D5.2 (path mapping); NIST needs browser XHR, not in Node.
         assert DESKTOP == runtime.Capabilities(
-            local_folders=True,
-            outbound_http=True,
+            local_folders=False,
+            outbound_http=False,
             persistent_storage=True,
             native_speed=False,
             app_config_file=False,
             pip_install=False,
+            # stlite's own page (no index.html workaround) can't fetch on-click downloads.
+            on_click_downloads=False,
         )
 
     def test_browser_settings_persist_when_the_site_mounts_a_config_dir(self):
@@ -89,10 +93,11 @@ class TestFolderLoading:
         self._with_platform(monkeypatch, "emscripten")
         assert access.folder_loading_allowed_here({"PLOTTLE_ALLOW_FOLDER_LOAD": "1"}) is False
 
-    def test_desktop_follows_the_usual_rules(self, monkeypatch):
+    def test_desktop_does_not_load_folders_yet(self, monkeypatch):
+        """Until D5.2 maps the user's paths onto the mounted folders."""
         self._with_platform(monkeypatch, "emscripten")
-        assert access.folder_loading_allowed_here({"EAGLEPLOT_DESKTOP": "1"}) is True
-        env = {"EAGLEPLOT_DESKTOP": "1", "EAGLEPLOT_ALLOW_FOLDER_LOAD": "0"}
+        assert access.folder_loading_allowed_here({"EAGLEPLOT_DESKTOP": "1"}) is False
+        env = {"EAGLEPLOT_DESKTOP": "1", "EAGLEPLOT_ALLOW_FOLDER_LOAD": "1"}
         assert access.folder_loading_allowed_here(env) is False
 
     def test_server_follows_the_usual_rules(self, monkeypatch):
@@ -254,3 +259,59 @@ def test_home_says_when_it_runs_in_the_browser(monkeypatch, pyodide, desktop, sh
     assert not at.exception
     found = any("running in your browser" in c.value for c in at.sidebar.caption)
     assert found is shown
+
+
+class TestElectronDetection:
+    """@stlite/desktop can't set environment variables: Electron is recognised instead."""
+
+    def _fake_js(self, monkeypatch, versions):
+        import sys
+        import types
+
+        monkeypatch.setattr(runtime.sys, "platform", "emscripten")
+        js = types.SimpleNamespace(process=types.SimpleNamespace(versions=versions))
+        monkeypatch.setitem(sys.modules, "js", js)
+
+    def test_electron_in_node_is_the_desktop_build(self, monkeypatch):
+        import types
+
+        self._fake_js(monkeypatch, types.SimpleNamespace(node="22", electron="45.0.0"))
+        assert runtime._running_in_electron() is True
+
+    def test_plain_node_or_browser_is_not(self, monkeypatch):
+        import types
+
+        self._fake_js(monkeypatch, types.SimpleNamespace(node="22"))
+        assert runtime._running_in_electron() is False
+
+    def test_a_browser_without_process_is_not(self, monkeypatch):
+        import sys
+        import types
+
+        monkeypatch.setattr(runtime.sys, "platform", "emscripten")
+        monkeypatch.setitem(sys.modules, "js", types.SimpleNamespace())
+        assert runtime._running_in_electron() is False
+
+    def test_never_on_a_server(self):
+        assert runtime._running_in_electron() is False
+
+    def test_desktop_builds_skip_the_deferred_package_load(self, monkeypatch):
+        monkeypatch.setattr(runtime, "IS_PYODIDE", True)
+        monkeypatch.setattr(runtime, "IS_DESKTOP", True)
+        monkeypatch.setattr(runtime, "_deferred_load_started", False)
+        assert runtime.start_deferred_loads() is False  # everything is bundled
+
+
+def test_desktop_settings_live_in_the_mounted_app_data_folder():
+    import subprocess
+    import sys
+
+    code = (
+        "import eagleplot.utils.runtime as r; r.IS_DESKTOP = True; "
+        "import eagleplot.utils.user_settings as us; print(us.get_config_path())"
+    )
+    out = subprocess.run(
+        [sys.executable, "-c", code], capture_output=True, text=True, check=True
+    ).stdout.strip()
+    # Compare as paths: on Windows the same location prints with backslashes.
+    assert Path(out.splitlines()[-1]) == Path(runtime.DESKTOP_CONFIG_DIR) / "config.json"

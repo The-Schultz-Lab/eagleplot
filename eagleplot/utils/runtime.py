@@ -27,10 +27,31 @@ DESKTOP_ENV = "EAGLEPLOT_DESKTOP"
 #: to a folder it mounts on browser storage (IndexedDB), so settings survive a reload.
 CONFIG_DIR_ENV = "EAGLEPLOT_CONFIG_DIR"
 
+#: Where the desktop build (packaging/desktop) mounts the user's app-data folder
+#: (Electron's ``userData``): ``config.json`` goes there and survives restarts.
+DESKTOP_CONFIG_DIR = "/home/pyodide/.eagleplot"
+
+
+def _running_in_electron() -> bool:
+    """Under Pyodide in the desktop build: Python runs in a Node.js worker inside Electron.
+
+    @stlite/desktop can't pass environment variables to Python, so the desktop build is
+    recognised from Node's ``process.versions.electron``.
+    """
+    if sys.platform != "emscripten":
+        return False
+    try:
+        import js  # type: ignore[import-not-found]  # only exists under Pyodide
+
+        return bool(getattr(js.process.versions, "electron", None))
+    except Exception:  # noqa: BLE001 - a browser has no ``process``
+        return False
+
+
 #: Running under Pyodide (stlite, in a browser or in Electron).
 IS_PYODIDE = sys.platform == "emscripten"
 #: Running in the Electron desktop build (always Pyodide as well).
-IS_DESKTOP = IS_PYODIDE and os.environ.get(DESKTOP_ENV) == "1"
+IS_DESKTOP = IS_PYODIDE and (os.environ.get(DESKTOP_ENV) == "1" or _running_in_electron())
 
 
 @dataclass(frozen=True)
@@ -53,6 +74,11 @@ class Capabilities:
     #: The user can add a missing optional package with ``pip install``. Not in the
     #: browser or desktop builds, whose packages are fixed when the site is built.
     pip_install: bool = True
+    #: ``st.download_button(data=callable)`` works (the file is built on click). Under
+    #: stlite these requests go to the placeholder origin https://stlite.invalid; the
+    #: browser build routes them to Python (packaging/web/index.html), but the desktop
+    #: build uses stlite's own page, where they fail, so files are prepared in advance.
+    on_click_downloads: bool = True
 
 
 def _browser_storage_is_persistent(environ: Mapping[str, str]) -> bool:
@@ -78,12 +104,17 @@ def compute_capabilities(platform: str, environ: Mapping[str, str]) -> Capabilit
         )
     if desktop:
         return Capabilities(
-            local_folders=True,
-            outbound_http=True,
+            # Folder import needs the user's typed paths (C:\Users\…) mapped onto the
+            # folders the desktop build mounts: roadmap D5.2. Off until then.
+            local_folders=False,
+            # Python runs in a Node.js worker, where Pyodide's requests support (built on
+            # the browser's XMLHttpRequest) doesn't work; NIST links out instead.
+            outbound_http=False,
             persistent_storage=True,
             native_speed=False,
             app_config_file=False,
             pip_install=False,
+            on_click_downloads=False,
         )
     return Capabilities(  # browser
         local_folders=False,
@@ -98,7 +129,10 @@ def compute_capabilities(platform: str, environ: Mapping[str, str]) -> Capabilit
 @lru_cache(maxsize=1)
 def capabilities() -> Capabilities:
     """The capabilities of this process (computed once)."""
-    return compute_capabilities(sys.platform, os.environ)
+    environ: Mapping[str, str] = os.environ
+    if IS_DESKTOP:
+        environ = {**os.environ, DESKTOP_ENV: "1"}
+    return compute_capabilities(sys.platform, environ)
 
 
 _PIP_HINT = re.compile(
@@ -155,7 +189,8 @@ def start_deferred_loads(packages: tuple = DEFERRED_PACKAGES) -> bool:
     server every package is installed already.
     """
     global _deferred_load_started
-    if not IS_PYODIDE or _deferred_load_started:
+    # The desktop build bundles every package (nothing to fetch, and no network needed).
+    if not IS_PYODIDE or IS_DESKTOP or _deferred_load_started:
         return False
     import pyodide_js  # type: ignore[import-not-found]  # only exists under Pyodide
     from pyodide.ffi import create_once_callable  # type: ignore[import-not-found]
