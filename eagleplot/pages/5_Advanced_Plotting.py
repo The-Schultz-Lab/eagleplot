@@ -10,6 +10,9 @@ Tabs
 - Grouped Categorical:    box / violin / swarm with optional hue grouping
 - 3D Scatter:             Plotly interactive 3-D scatter with color encoding
 - HTML Export:            generate any interactive Plotly chart + download HTML
+
+Each tab is an ``st.fragment`` (roadmap D1.2): its widgets and Generate button rerun
+only that tab. The standalone HTML downloads are built when clicked, not up front.
 """
 
 import traceback
@@ -37,6 +40,7 @@ from eagleplot.utils import (
     get_dataset,
     get_session_summary,
 )
+from eagleplot.utils.figures import download_payload
 
 initialize_session_state()
 
@@ -96,15 +100,27 @@ def _df_required(data) -> bool:
     return True
 
 
-def _html_download(fig, filename: str = "interactive_plot.html") -> None:
-    """Render an HTML download button for a Plotly figure."""
-    html_str = fig.to_html(full_html=True, include_plotlyjs=True)
+def _html_download(fig, filename: str, key: str) -> None:
+    """Render an HTML download button for a freshly generated Plotly figure.
+
+    The standalone HTML embeds plotly.js (several MB), so it is built only when the
+    button is clicked (Streamlit >= 1.52), or once per figure on older versions.
+    """
+    version = st.session_state.get("adv_html_version", 0) + 1
+    st.session_state.adv_html_version = version
     st.download_button(
         label="Download as HTML",
-        data=html_str,
+        data=download_payload(
+            lambda: fig.to_html(full_html=True, include_plotlyjs=True),
+            cache_name="_adv_html_cache",
+            version=version,
+            key=key,
+        ),
         file_name=filename,
         mime="text/html",
         help="Standalone HTML file — opens in any browser without Python.",
+        key=key,
+        on_click="ignore",
     )
 
 
@@ -156,23 +172,13 @@ if isinstance(data, pd.DataFrame):
 elif isinstance(data, np.ndarray):
     st.caption(f"NumPy array — shape {data.shape}, dtype {data.dtype}")
 
-# ── Tabs ──────────────────────────────────────────────────────────────────────
-st.markdown("---")
-
-tab_corr, tab_dist, tab_cat, tab_3d, tab_export = st.tabs(
-    [
-        "Correlation Heatmap",
-        "Overlaid Distributions",
-        "Grouped Categorical",
-        "3D Scatter",
-        "HTML Export",
-    ]
-)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 1 — Correlation Heatmap
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_corr:
+@st.fragment
+def _corr_tab(data, dataset_name) -> None:
+    """Annotated correlation heatmap. Reruns on its own."""
     st.markdown("### Annotated Correlation Heatmap")
 
     if _df_required(data):
@@ -237,10 +243,13 @@ with tab_corr:
                         with st.expander("Details"):
                             st.code(traceback.format_exc())
 
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 2 — Overlaid Distributions
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_dist:
+@st.fragment
+def _dist_tab(data, dataset_name) -> None:
+    """Overlaid histograms / KDEs. Reruns on its own."""
     st.markdown("### Overlaid Distributions")
     st.markdown("Compare multiple variables on the same axes.")
 
@@ -325,10 +334,13 @@ with tab_dist:
                     with st.expander("Details"):
                         st.code(traceback.format_exc())
 
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 3 — Grouped Categorical Plot
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_cat:
+@st.fragment
+def _cat_tab(data, dataset_name) -> None:
+    """Box / violin / swarm with optional hue. Reruns on its own."""
     st.markdown("### Grouped Categorical Plot")
     st.markdown(
         "Box, violin, or swarm plot with optional colour grouping (hue). Requires a **DataFrame**."
@@ -413,10 +425,13 @@ with tab_cat:
                     with st.expander("Details"):
                         st.code(traceback.format_exc())
 
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 4 — 3D Scatter (Plotly)
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_3d:
+@st.fragment
+def _scatter3d_tab(data, dataset_name) -> None:
+    """Plotly 3-D scatter. Reruns on its own."""
     st.markdown("### Interactive 3D Scatter Plot")
 
     # Build column options
@@ -540,17 +555,20 @@ with tab_3d:
                     margin=dict(l=0, r=0, t=40, b=0),
                 )
                 st.plotly_chart(fig, width="stretch")
-                _html_download(fig, filename="3d_scatter.html")
+                _html_download(fig, filename="3d_scatter.html", key="s3d_dl_html")
 
             except Exception as exc:
                 st.error(f"Error: {exc}")
                 with st.expander("Details"):
                     st.code(traceback.format_exc())
 
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Tab 5 — HTML Export
 # ══════════════════════════════════════════════════════════════════════════════
-with tab_export:
+@st.fragment
+def _html_export_tab(data, dataset_name) -> None:
+    """Any interactive Plotly chart, downloadable as HTML. Reruns on its own."""
     st.markdown("### Export Interactive Plot as HTML")
     st.markdown(
         "Generate any Plotly interactive chart and download it as a "
@@ -660,20 +678,20 @@ with tab_export:
                         mat = np.asarray(data, dtype=float)
                     if mat.ndim != 2:
                         st.error("Heatmap requires a 2-D array.")
-                        st.stop()
+                        return
                     fig = interactive_heatmap(mat, title=title)
 
                 else:  # interactive_3d_surface
                     Z = np.asarray(data, dtype=float)
                     if Z.ndim != 2:
                         st.error("3D surface requires a 2-D array.")
-                        st.stop()
+                        return
                     nr, nc = Z.shape
                     X, Y = np.meshgrid(np.arange(nc), np.arange(nr))
                     fig = interactive_3d_surface(X, Y, Z, title=title)
 
                 st.plotly_chart(fig, width="stretch")
-                _html_download(fig, filename=f"{exp_type}.html")
+                _html_download(fig, filename=f"{exp_type}.html", key="exp_dl_html")
                 st.success("Plot ready — click the button above to download.")
 
             except Exception as exc:
@@ -689,3 +707,30 @@ The downloaded HTML file:
 - Can be embedded in HTML reports or shared with collaborators who don't have Python
 - Opens in Chrome, Firefox, Safari, and Edge
 """)
+
+
+# ── Tabs ─────────────────────────────────────────────────────────────────────
+# Each tab is an st.fragment: a widget or Generate button in one tab reruns only that
+# tab, and the other tabs keep what they show. Roadmap D1.2.
+st.markdown("---")
+
+tab_corr, tab_dist, tab_cat, tab_3d, tab_export = st.tabs(
+    [
+        "Correlation Heatmap",
+        "Overlaid Distributions",
+        "Grouped Categorical",
+        "3D Scatter",
+        "HTML Export",
+    ]
+)
+
+with tab_corr:
+    _corr_tab(data, dataset_name)
+with tab_dist:
+    _dist_tab(data, dataset_name)
+with tab_cat:
+    _cat_tab(data, dataset_name)
+with tab_3d:
+    _scatter3d_tab(data, dataset_name)
+with tab_export:
+    _html_export_tab(data, dataset_name)
