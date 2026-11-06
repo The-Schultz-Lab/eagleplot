@@ -63,7 +63,8 @@ st.set_page_config(
     page_title="EaglePlot",
     page_icon=_page_icon,
     layout="wide",
-    initial_sidebar_state="expanded",
+    # "auto": open on wide screens, closed on phones (where it would cover the page).
+    initial_sidebar_state="auto",
     menu_items={
         "About": (
             f"**EaglePlot** v{__version__}\n\n"
