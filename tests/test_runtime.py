@@ -1,6 +1,7 @@
 """eagleplot.utils.runtime: capabilities of the server, browser and desktop builds (D2.1)."""
 
 import dataclasses
+from pathlib import Path
 
 import pytest
 
@@ -312,4 +313,5 @@ def test_desktop_settings_live_in_the_mounted_app_data_folder():
     out = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     ).stdout.strip()
-    assert out.splitlines()[-1] == f"{runtime.DESKTOP_CONFIG_DIR}/config.json"
+    # Compare as paths: on Windows the same location prints with backslashes.
+    assert Path(out.splitlines()[-1]) == Path(runtime.DESKTOP_CONFIG_DIR) / "config.json"

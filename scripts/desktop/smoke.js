@@ -73,6 +73,9 @@ async function nav(page, slug) {
 }
 
 const mainText = (page) => page.locator('[data-testid="stMain"]').innerText();
+// A page's first visit can take a while on a slow runner: wait for something it always shows.
+const waitForText = (page, text) => page.locator('[data-testid="stMain"]').getByText(text).first()
+  .waitFor({ timeout: 60000 }).catch(() => {});
 const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if (!ok) problems.push(what); };
 
 (async () => {
@@ -94,6 +97,8 @@ const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if
   check(!page.url().startsWith('https://'), 'the app window stays on the app');
 
   await nav(page, 'settings');
+  await page.getByRole('button', { name: 'Save defaults' }).waitFor({ timeout: 60000 }).catch(() => {});
+  await waitForText(page, 'theme is set by the app');
   let t = await mainText(page);
   check(t.includes('theme is set by the app'), 'Settings: runs as the desktop build (theme note)');
   check(!t.includes('until you close or reload'), 'Settings: settings are persistent');
@@ -151,6 +156,7 @@ const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if
   // ── Restart: settings persist ──
   ({ app, page, run } = await launch('restart'));
   await nav(page, 'settings');
+  await waitForText(page, 'View raw config.json');
   t = await mainText(page);
   check(t.includes('View raw config.json'), 'after a restart, the saved config.json is still there');
   await app.close();
