@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+---
+
+## [3.1.0] - 2026-11-06
+
+**EaglePlot now also runs in your browser**, with nothing to install:
+<https://the-schultz-lab.github.io/eagleplot/app/>. This release also makes the GUI much
+faster, gives it a simpler first screen, and fixes JCAMP-DX loading, which was broken in
+3.0.0 for anyone with the current `jcamp` package.
+
 ### Added
 
 - **EaglePlot runs in your browser:
@@ -70,7 +79,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **Advanced Plotting:** each tab updates on its own, so a change in one tab no longer
   clears the plot in another. The interactive HTML file (about 5 MB) is created only when
   you download it, and the plot stays on screen afterwards.
-
 - **Plots are drawn at 150 dpi**, as Quick Plot already was (other pages used 200), at
   about half the cost to draw. Unchanged Multi-Plot Dashboard panels are no longer
   redrawn when the page refreshes: a refresh of a 2×2 dashboard takes about 0.4 s instead
@@ -430,7 +438,8 @@ Initial development release. Stages 0–6 complete (foundation, I/O, math, basic
 
 ---
 
-[Unreleased]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.0.0...v2.0.1
