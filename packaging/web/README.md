@@ -45,7 +45,7 @@ Streamlit exception, uncaught page error, failed download or request to another 
 
 | File | Content |
 | --- | --- |
-| `index.html` | Loading splash, the stlite mount call, and a download workaround (below) |
+| `index.html` | Loading splash (below), the stlite mount call, and a download workaround (below) |
 | `404.html` | A copy of `index.html`, for hosts that serve the nearest `404.html` (below) |
 | `site-config.js` | Written by the build: entrypoint, packages, wheels, Pyodide URL, Streamlit flags, storage mount, environment |
 | `eagleplot-app.zip` | `eagleplot/` (code, assets, gallery, example data) and `.streamlit/config.toml`; entrypoint `eagleplot/Home.py` |
@@ -72,6 +72,31 @@ stlite's worker is an ES module and cannot load the classic `pyodide.js`.
 Opening `index.html` from disk fails: the app runs in a module Web Worker and loads the
 app zip, wheels and Pyodide with `fetch()`, and browsers block both for `file://` pages.
 Serve the directory over HTTP (`python -m http.server`, GitHub Pages, any static host).
+
+## Loading splash
+
+`index.html` draws the splash before anything else loads: a classic inline script, inline
+CSS and SVG, and no other files, so it is on screen while `stlite.js` and Pyodide download.
+
+- **The head.** The six pieces of the EaglePlot head (see `brand/` and
+  `scripts/brand/build_brand.py`) are inlined as separate `<g class="ep-pc">` groups. Each
+  one carries `data-from="x y rotate scale"` (its off-screen start) and `data-order` (when
+  it leaves), and flies in with the Web Animations API. The wordmark is outlined paths: the
+  smoke test fails on requests to other origins, so the splash may not load a web font.
+- **Steps.** `window.eaglePlotSplash` exposes `setStage(i)`, `ready()` and `fail(message)`.
+  The module script calls them from stlite's kernel events: `loadProgress` messages are
+  matched by keyword (`/pyodide/`, `/install|package/`, `/streamlit|server|boot/`),
+  `loadFinished` is the last step, and `loadError` shows the message and a Reload button.
+  Steps only move forward, so a reworded stlite message leaves the step where it is. The
+  events come from `_kernel`, which stlite calls unstable: re-check them when upgrading.
+- **Leaving.** The existing sidebar observer calls `ready()`, which waits for the head to
+  finish assembling, fades the splash out over 450 ms and removes `#loading`. It also sets
+  `localStorage["eagleplot.started"]`, which hides the first-visit download note next time.
+- **Reduced motion.** With `prefers-reduced-motion`, the head is drawn assembled and nothing
+  moves.
+
+The smoke test checks that the splash shows a step, reaches the last one and is gone once
+the app is up.
 
 ## Browser-specific behaviour
 

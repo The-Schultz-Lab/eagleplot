@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6.25 -11.00 136 136" width="1024" height="1024" role="img" aria-label="EaglePlot">
+  <title>EaglePlot</title>
+  <path data-piece="head" d="M10 36C34 22 60 18 82 25C100 29 112 38 116 52C119 62 115 72 108 80C108 72 104 66 96 64L82 64C72 76 58 88 40 96L54 84L20 92L40 76L8 76L32 62L4 56L30 48Z" fill="#fff" stroke="#24090f" stroke-width="9" stroke-linejoin="round" paint-order="stroke"/>
+  <path data-piece="gray" d="M30 48L58 46C66 46 72 50 76 56C66 58 54 62 40 70L60 60L24 66Z" fill="#a2a9ad" stroke="#24090f" stroke-width="5.5" stroke-linejoin="round" paint-order="stroke"/>
+  <path data-piece="maroon" d="M82 64C72 76 58 88 40 96L54 84L36 86C52 78 66 70 76 62Z" fill="#8b2233" stroke="#24090f" stroke-width="5.5" stroke-linejoin="round" paint-order="stroke"/>
+  <path data-piece="beak" d="M84 26C100 29 112 38 116 52C119 62 115 72 108 80C108 72 104 66 96 64L84 64C88 58 90 50 88 42C87 36 86 30 84 26Z" fill="#d7dbde" stroke="#24090f" stroke-width="5.5" stroke-linejoin="round" paint-order="stroke"/>
+  <path data-piece="brow" d="M54 36L84 32L80 40C72 40 62 40 54 36Z" fill="#24090f" stroke="#24090f" stroke-width="5" stroke-linejoin="round" paint-order="stroke"/>
+  <path data-piece="eye" d="M64 42C70 40 76 40 80 42C76 46 70 47 64 45Z" fill="#8b2233" stroke="#24090f" stroke-width="4.5" stroke-linejoin="round" paint-order="stroke"/>
+</svg>

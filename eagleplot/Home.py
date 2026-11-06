@@ -42,7 +42,8 @@ _PAGES_DIR = Path(__file__).resolve().parent / "pages"
 # `pip install` -- see audit A-09. Resolving them relative to the repo root meant
 # a pip-installed GUI came up with no logo and no NCCU branding.
 _ASSETS_DIR = Path(__file__).resolve().parent / "assets"
-_LOGO_PNG = _ASSETS_DIR / "logo.png"
+_LOGO_PNG = _ASSETS_DIR / "logo.png"  # the eagle head, transparent
+_ICON_PNG = _ASSETS_DIR / "icon.png"  # the head on a maroon tile: reads better in a browser tab
 _NCCU_HORIZ = _ASSETS_DIR / "nccu-horiz-logo.png"
 _NCCU_WINGS = _ASSETS_DIR / "nccu-wings.png"
 
@@ -54,7 +55,8 @@ from eagleplot.utils.theming import app_css  # noqa: E402
 try:
     from PIL import Image as _PILImage
 
-    _page_icon = _PILImage.open(_LOGO_PNG) if _LOGO_PNG.exists() else "📊"
+    _icon = _ICON_PNG if _ICON_PNG.exists() else _LOGO_PNG
+    _page_icon = _PILImage.open(_icon) if _icon.exists() else "📊"
 except ImportError:
     _page_icon = "📊"
 

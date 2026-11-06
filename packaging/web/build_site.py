@@ -205,7 +205,8 @@ def main(argv: Optional[List[str]] = None) -> None:
     # the static host for a file that doesn't exist; GitHub Pages then serves 404.html,
     # so make that the app too (it opens on Home).
     shutil.copy(HERE / "index.html", out / "404.html")
-    shutil.copy(REPO / APP_PACKAGE / "assets" / "logo.png", out / "eagleplot-icon.png")
+    # Favicon: the app icon (the eagle head on a maroon tile).
+    shutil.copy(REPO / APP_PACKAGE / "assets" / "icon.png", out / "eagleplot-icon.png")
 
     pyodide_url: str = args.pyodide_url or PYODIDE_CDN_URL
     if args.pyodide_url and args.pyodide_url.endswith("pyodide.js"):
