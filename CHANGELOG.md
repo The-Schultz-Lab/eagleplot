@@ -21,6 +21,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   only on a first visit. If loading fails, the screen says why and offers **Reload**
   instead of sliding forever. With reduced motion turned on in the system settings, the
   logo appears complete and nothing moves.
+- **The web app starts faster:** ready in about 7 s instead of 11 s (measured on a fast
+  local connection), and the first plot from Home ("Plot this example") appears about 4 s
+  sooner. scipy is loaded in the background after the app appears, and pandas and the
+  plotting libraries are imported while you read the Home page. A page that needs scipy
+  says so for a moment if you open it within the first seconds.
+- Importing `eagleplot.plotting` no longer imports seaborn, plotly or scipy (they load when
+  a plot type needs them), and importing `eagleplot.utils` no longer imports pandas. This
+  also makes the installed GUI start a little faster.
 
 ---
 

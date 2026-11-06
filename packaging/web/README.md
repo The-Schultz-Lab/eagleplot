@@ -124,5 +124,29 @@ the app is up.
   build also writes `app/404.html` (a copy of `index.html`) for hosts that use the
   nearest `404.html`, such as Cloudflare Pages. `python -m http.server` has neither:
   reload from the app root when testing locally.
-- **Startup** takes about 15 s on every visit (Python start-up and imports), longer on
-  the first visit over a slow network.
+- **Start-up** (roadmap D4.1). Measured locally (self-hosted Pyodide, no network), the
+  app is ready in about 7 s:
+
+  | Stage | Time |
+  | --- | --- |
+  | Loading Pyodide | ~1.5 s |
+  | Installing packages (numpy, pandas, matplotlib, Pillow, PyYAML, the wheels) | ~3.2 s |
+  | Loading Streamlit | ~1.0 s |
+  | Home.py | ~0.5 s |
+
+  What keeps it there:
+  - **scipy is not loaded at start-up** (it alone added ~2 s). Home starts loading it in
+    the background (`eagleplot.utils.runtime.DEFERRED_PACKAGES`); a page that imports it
+    shows "Loading the science libraries…" until it is there. Home and Quick Plot don't
+    wait.
+  - **Home doesn't import pandas** (~2.3 s under Pyodide): `eagleplot.utils` loads its
+    submodules on first use. After Home is drawn, pandas, matplotlib and the plotting
+    modules are imported in the background (`runtime.WARM_IMPORTS`), one per event-loop
+    turn, so a click is handled between two imports.
+  - **`eagleplot.plotting` imports seaborn and plotly when a plot type needs them**, not
+    at import.
+
+  Keep it that way: `tests/test_web_build.py` checks that Home doesn't import pandas and
+  that `eagleplot.plotting` doesn't import seaborn, plotly or scipy.
+  `node scripts/web/boot_timing.js URL` prints the start-up timeline (cold and warm), and
+  the docs workflow reports it with the real CDN on every run.

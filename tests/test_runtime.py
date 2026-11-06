@@ -244,6 +244,11 @@ def test_home_says_when_it_runs_in_the_browser(monkeypatch, pyodide, desktop, sh
     AppTest = pytest.importorskip("streamlit.testing.v1").AppTest
     monkeypatch.setattr(runtime, "IS_PYODIDE", pyodide)
     monkeypatch.setattr(runtime, "IS_DESKTOP", desktop)
+    # Home.py starts the deferred package loads in the browser build (D4.1); that is
+    # covered in tests/test_web_build.py.
+    monkeypatch.setattr(runtime, "start_deferred_loads", lambda *a: False)
+    monkeypatch.setattr(runtime, "missing_deferred_packages", lambda *a: [])
+    monkeypatch.setattr(runtime, "warm_imports_in_background", lambda *a: False)
     home = Path(__file__).resolve().parent.parent / "eagleplot" / "Home.py"
     at = AppTest.from_file(str(home), default_timeout=30).run()
     assert not at.exception

@@ -421,4 +421,28 @@ with st.sidebar:
 
 # ── Execute the active page ───────────────────────────────────────────────────
 
+
+def _wait_for_deferred_packages() -> None:
+    """Browser build: tell the user the page is waiting, and rerun once it can load."""
+    st.info("Loading the science libraries for this page (only once per visit)…")
+
+    @st.fragment(run_every=0.5)
+    def _poll() -> None:
+        if not runtime.missing_deferred_packages():
+            st.rerun(scope="app")
+
+    _poll()
+
+
+if runtime.IS_PYODIDE:
+    # The browser build starts without scipy (roadmap D4.1): load it now, while the
+    # student looks at Home, and hold other pages until it is there.
+    runtime.start_deferred_loads()
+    # …and import pandas and the plotting stack while the student reads Home.
+    runtime.warm_imports_in_background()
+    # Home and Quick Plot don't import them; scipy-based plot types import it when used.
+    if pg not in (home_pg, basic_pg) and runtime.missing_deferred_packages():
+        _wait_for_deferred_packages()
+        st.stop()
+
 pg.run()

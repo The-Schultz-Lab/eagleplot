@@ -126,3 +126,105 @@ def missing_package_message(message: str, caps: Capabilities | None = None) -> s
         f"install EaglePlot on your computer (`pip install eagleplot`), then `pip install "
         f"{packages}`."
     )
+
+
+# ── Packages loaded after start-up (browser build, roadmap D4.1) ───────────────
+#: Not loaded when the browser build starts: scipy alone added ~2 s to every start, and
+#: the Home page doesn't need it. The build (packaging/web/build_site.py) leaves these
+#: out; Home.py starts loading them in the background as soon as the app is up, and other
+#: pages wait for them (see ``missing_deferred_packages``).
+DEFERRED_PACKAGES = ("scipy",)
+
+_deferred_load_started = False
+#: Set when Pyodide's loadPackage promise settles. Until then a deferred package can be
+#: half there: its files unpacked (so ``find_spec`` finds it) but its compiled modules not
+#: loaded yet, and importing it fails with "dynamic module does not define module export
+#: function" (seen with scipy.spatial).
+_deferred_load_settled = False
+
+
+def _mark_deferred_load_settled(*_args) -> None:
+    global _deferred_load_settled
+    _deferred_load_settled = True
+
+
+def start_deferred_loads(packages: tuple = DEFERRED_PACKAGES) -> bool:
+    """Under Pyodide, start loading *packages* in the background (once per process).
+
+    Returns ``True`` if this call started the load. Elsewhere it does nothing: on a
+    server every package is installed already.
+    """
+    global _deferred_load_started
+    if not IS_PYODIDE or _deferred_load_started:
+        return False
+    import pyodide_js  # type: ignore[import-not-found]  # only exists under Pyodide
+    from pyodide.ffi import create_once_callable  # type: ignore[import-not-found]
+
+    # A JS promise, not awaited, so the page carries on while the packages load. Both
+    # outcomes settle it: after a failed load, pages report the import error instead of
+    # waiting for ever.
+    promise = pyodide_js.loadPackage(list(packages))
+    promise.then(
+        create_once_callable(_mark_deferred_load_settled),
+        create_once_callable(_mark_deferred_load_settled),
+    )
+    _deferred_load_started = True
+    return True
+
+
+def missing_deferred_packages(packages: tuple = DEFERRED_PACKAGES) -> list:
+    """The *packages* that pages can't import yet (always empty on a server).
+
+    Under Pyodide that is all of them until their load has finished.
+    """
+    if IS_PYODIDE and _deferred_load_started and not _deferred_load_settled:
+        return list(packages)
+    import importlib
+    import importlib.util
+
+    importlib.invalidate_caches()
+    return [p for p in packages if importlib.util.find_spec(p) is None]
+
+
+#: Imported in the background after Home is drawn (browser build), in this order, so the
+#: first visit to a data page doesn't pay for them: pandas alone takes ~2.3 s to import
+#: under Pyodide, and the plotting stack (matplotlib, seaborn, plotly) several more.
+#: The ``eagleplot.*`` entries need the deferred packages, so they wait for those.
+WARM_IMPORTS = ("pandas", "matplotlib.pyplot", "eagleplot.plotting", "eagleplot.math")
+
+_warm_imports_started = False
+
+
+def warm_imports_in_background(modules: tuple = WARM_IMPORTS, delay: float = 0.5) -> bool:
+    """Under Pyodide, import *modules* one by one once the event loop is idle.
+
+    Python runs on one thread in the browser, so each import still blocks while it runs;
+    doing them one per loop turn lets a click be handled between two imports. A module
+    that fails to import is skipped (the page that needs it reports the error).
+    Returns ``True`` if this call scheduled the imports; elsewhere it does nothing.
+    """
+    global _warm_imports_started
+    if not IS_PYODIDE or _warm_imports_started:
+        return False
+    import asyncio
+    import importlib
+
+    loop = asyncio.get_event_loop()
+    queue = list(modules)
+
+    def step() -> None:
+        if not queue:
+            return
+        if queue[0].startswith("eagleplot.") and missing_deferred_packages():
+            loop.call_later(0.25, step)  # wait for scipy & co.
+            return
+        name = queue.pop(0)
+        try:
+            importlib.import_module(name)
+        except Exception:  # noqa: BLE001 - reported by the page that imports it
+            pass
+        loop.call_later(0.05, step)
+
+    loop.call_later(delay, step)
+    _warm_imports_started = True
+    return True

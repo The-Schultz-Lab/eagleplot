@@ -89,6 +89,12 @@ jobs:
           for i in $(seq 1 30); do curl -sf localhost:8000/app/ >/dev/null && break; sleep 1; done
           node scripts/web/smoke.js http://127.0.0.1:8000/app/ --out build/web-smoke
 
+      # Start-up time with the real Pyodide CDN (roadmap D4): a fresh profile (first visit),
+      # then a reload with the cache kept. Reported in the summary; it doesn't gate.
+      - name: Measure start-up
+        continue-on-error: true
+        run: node scripts/web/boot_timing.js http://127.0.0.1:8000/app/ --runs 3 --out build/web-smoke/boot.json | tee build/web-smoke/boot.txt
+
       - name: Summary
         if: always()
         run: |
@@ -112,6 +118,11 @@ jobs:
               print()
               print("Requests by origin: " + ", ".join(f"{o} ({n})" for o, n in s["origins"].items()))
           PY
+            echo
+            echo "## Start-up time (Pyodide from the CDN)"
+            echo '```'
+            cat build/web-smoke/boot.txt 2>/dev/null || echo "(not measured)"
+            echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v7
