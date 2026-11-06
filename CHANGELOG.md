@@ -32,6 +32,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   at the next click, including when you clicked **Download CSV**.
 - **Molecular Viz:** the HTML and frequency-table exports are one click (Streamlit 1.52+),
   instead of "Export", then "Download", with the button disappearing afterwards.
+- **Analysis Tools is faster.** Each tool now updates on its own, so changing a setting or
+  running a tool no longer reloads the whole page. A setting change takes about 0.23 s
+  instead of about 0.38 s. A result from one tool stays on screen while you use another, and
+  downloading the peak report no longer clears it.
+- **Multi-Plot Dashboard:**
+  - Each panel has its own settings, shown above its plot. Editing a panel redraws only that
+    panel, and the dashboard updates live after **Generate Dashboard**: a title edit shows up
+    in about 0.4 s, where before you had to press Generate again.
+  - The dashboard stays on screen when you change something or download it.
+  - Turning shared axes off restores each panel's own axis limits.
+- **Advanced Plotting:** each tab updates on its own, so a change in one tab no longer
+  clears the plot in another. The interactive HTML file (about 5 MB) is created only when
+  you download it, and the plot stays on screen afterwards.
+
+### Fixed
+
+- **Multi-Plot Dashboard:** the combined PNG and PDF downloads work. Before, pressing either
+  button made the dashboard disappear without downloading anything.
 
 ---
 
