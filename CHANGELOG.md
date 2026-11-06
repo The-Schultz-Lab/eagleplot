@@ -8,6 +8,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **A build of EaglePlot that runs entirely in the browser** (no install, nothing
+  uploaded), in `packaging/web/`, with a test that opens every page in it. It is not
+  published yet; that is the next step. In that version, features that can't work in a
+  browser are turned off with an explanation instead of failing: loading a folder,
+  downloading from NIST (the page links to NIST instead), and changing the theme.
+  Settings, presets and workflows are kept in the browser.
+- **`EAGLEPLOT_CONFIG_DIR`** sets the folder that holds `config.json` (saved defaults,
+  presets and workflows). Unset, it stays where it was.
+
 ### Changed
 
 - **Quick Plot is much faster and easier to use.**
@@ -46,8 +57,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   clears the plot in another. The interactive HTML file (about 5 MB) is created only when
   you download it, and the plot stays on screen afterwards.
 
+- **Plots are drawn at 150 dpi**, as Quick Plot already was (other pages used 200), at
+  about half the cost to draw. Unchanged Multi-Plot Dashboard panels are no longer
+  redrawn when the page refreshes: a refresh of a 2×2 dashboard takes about 0.4 s instead
+  of 1 s.
+- A missing optional package (for example h5py for HDF5 files) is reported with what to
+  install, and where installing isn't possible, says so.
+
 ### Fixed
 
+- **JCAMP-DX files (`.jdx`, `.dx`) load again.** With jcamp 1.3 installed, every such file
+  failed with "the jcamp package is required". jcamp is now part of the `formats` extra
+  (`pip install "eagleplot[formats]"`).
+- Quick Plot's dataset CSV download was named `name.csv.csv`.
 - **Multi-Plot Dashboard:** the combined PNG and PDF downloads work. Before, pressing either
   button made the dashboard disappear without downloading anything.
 
