@@ -12,6 +12,8 @@
       #loading {
         position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center;
         justify-content: center; gap: 14px; padding: 16px; text-align: center;
+        /* Above stlite's own loading skeleton, which is drawn into #root meanwhile. */
+        background: var(--bg); z-index: 100000;
         font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       }
       #loading img { width: 72px; height: 72px; }
@@ -101,6 +103,9 @@
           // Browser storage (IndexedDB) that survives a reload, for user settings.
           idbfsMountpoints: cfg.idbfsMountpoints,
           env: cfg.env,
+          // The splash covers start-up; stlite's own "Loading Pyodide." / "Installing
+          // packages." notes would sit on top of it. Error notes stay on.
+          disableProgressToasts: true,
         },
         document.getElementById("root"),
       );
