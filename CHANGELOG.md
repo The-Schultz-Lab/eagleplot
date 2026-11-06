@@ -26,6 +26,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   sooner. scipy is loaded in the background after the app appears, and pandas and the
   plotting libraries are imported while you read the Home page. A page that needs scipy
   says so for a moment if you open it within the first seconds.
+- **Install the web app like a program.** Chrome and Edge offer **Install EaglePlot**:
+  it then opens in its own window from a desktop icon, with no admin rights, and after one
+  online visit it also works offline. Later visits load from the computer instead of the
+  network.
 - Importing `eagleplot.plotting` no longer imports seaborn, plotly or scipy (they load when
   a plot type needs them), and importing `eagleplot.utils` no longer imports pandas. This
   also makes the installed GUI start a little faster.

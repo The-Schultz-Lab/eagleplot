@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>EaglePlot in the browser</title>
     <link rel="icon" href="./eagleplot-icon.png" />
+    <!-- Installable app (roadmap D4.2): manifest + service worker (sw.js). -->
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#1b1b1b" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
     <link rel="stylesheet" href="./stlite/stlite.css" />
     <style>
       :root { --bg: #1b1b1b; --fg: #f4f4f4; --muted: #b9b9b9; --rose: #e0a3a3; --track: #333; }
@@ -234,6 +238,35 @@
       };
 
       const t0 = performance.now();
+
+      // Service worker (sw.js): makes the app installable and lets it open offline. On a
+      // first visit, wait (at most 3 s) until it controls this page before starting Python,
+      // so the downloads of this visit, the Python worker's included, are cached too.
+      // Only over https or on localhost; a failure just means no offline copy.
+      window.eaglePlotOffline = "unsupported";
+      if ("serviceWorker" in navigator && window.isSecureContext) {
+        try {
+          await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+          if (!navigator.serviceWorker.controller) {
+            await Promise.race([
+              new Promise((resolve) =>
+                navigator.serviceWorker.addEventListener("controllerchange", resolve, { once: true }),
+              ),
+              new Promise((resolve) => setTimeout(resolve, 3000)),
+            ]);
+          }
+          window.eaglePlotOffline = navigator.serviceWorker.controller ? "ready" : "next-visit";
+          // This page and what it loaded before the worker took over didn't pass through
+          // it: hand it their URLs to cache.
+          navigator.serviceWorker.controller?.postMessage({
+            type: "cache-urls",
+            urls: [location.href.split("#")[0], ...performance.getEntriesByType("resource").map((e) => e.name)],
+          });
+        } catch (err) {
+          window.eaglePlotOffline = "failed";
+          console.warn("EaglePlot: offline support unavailable", err);
+        }
+      }
 
       // The controller is kept on window so browser tests (scripts/web/smoke.js) can wait
       // for the app and inspect the in-browser file system.

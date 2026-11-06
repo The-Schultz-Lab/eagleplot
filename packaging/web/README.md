@@ -47,6 +47,8 @@ Streamlit exception, uncaught page error, failed download or request to another 
 | --- | --- |
 | `index.html` | Loading splash (below), the stlite mount call, and a download workaround (below) |
 | `404.html` | A copy of `index.html`, for hosts that serve the nearest `404.html` (below) |
+| `manifest.webmanifest`, `icons/` | Web app manifest and icons: the app can be installed (below) |
+| `sw.js` | Service worker: caches the app and Pyodide, so it opens offline (below) |
 | `site-config.js` | Written by the build: entrypoint, packages, wheels, Pyodide URL, Streamlit flags, storage mount, environment |
 | `eagleplot-app.zip` | `eagleplot/` (code, assets, gallery, example data) and `.streamlit/config.toml`; entrypoint `eagleplot/Home.py` |
 | `wheels/` | Pure-Python packages not in Pyodide: seaborn, plotly, narwhals, openpyxl, et-xmlfile, jcamp (`.jdx` uploads), and Streamlit's python-multipart and itsdangerous |
@@ -72,6 +74,29 @@ stlite's worker is an ES module and cannot load the classic `pyodide.js`.
 Opening `index.html` from disk fails: the app runs in a module Web Worker and loads the
 app zip, wheels and Pyodide with `fetch()`, and browsers block both for `file://` pages.
 Serve the directory over HTTP (`python -m http.server`, GitHub Pages, any static host).
+
+## Installable app and offline use
+
+`manifest.webmanifest` (written by the build, icons in `icons/`) and the service worker
+`sw.js` make the app installable: Chrome and Edge show **Install EaglePlot** in the
+address bar or menu. It then opens in its own window from a desktop or Start-menu icon,
+with no admin rights. After one online visit it also opens offline.
+
+- **First visit:** `index.html` registers `sw.js` and waits (at most 3 s) until it
+  controls the page before starting Python, so this visit's downloads, the Python
+  worker's included, pass through it and are cached. The page and the stlite runtime load
+  before that; the page sends their URLs to the worker to cache.
+- **Site files:** network first (a new deploy shows up at once), the cached copy offline.
+  The cache is per build (`build_site.py` stamps `sw.js` with a hash of the build), and
+  older builds' caches are removed when a new one activates.
+- **Pyodide from the CDN:** cache first; its URLs contain the version and never change.
+- `window.eaglePlotOffline` says what happened: `ready`, `next-visit` (the worker didn't
+  take over within 3 s), `failed`, or `unsupported` (no service workers, or not https).
+- `scripts/web/smoke.js` checks both: Chromium's installability check, then a reload
+  with the network off.
+- The icons are PNGs made from `eagleplot/assets/logo.png` (192 and 512 px, maskable
+  versions on the dark background, a 180 px Apple touch icon). Regenerate them if the
+  logo changes.
 
 ## Loading splash
 

@@ -18,6 +18,8 @@
 //   loadFinished event) and is gone once the app is up.
 // - An on-click download (Quick Plot, PNG 300 dpi, built by a callable) arrives and leaves
 //   the app running. Under stlite these go through a workaround in index.html.
+// - The app is installable (Chromium's installability check passes) and, after this one
+//   online visit, opens offline (service worker, roadmap D4.2).
 // - Data never leaves the browser: every request goes to the site's own origin, or to an
 //   origin allowed with --allow-origin (the Pyodide CDN, https://cdn.jsdelivr.net, is
 //   allowed by default).
@@ -176,6 +178,34 @@ async function checkSplash(page, firstStep, results) {
   console.log(`${errors.length ? 'FAIL' : 'ok  '} splash    first step "${firstStep}", last step ${state.stage + 1} of 4, ${gone ? 'removed' : 'STILL SHOWN'}`);
 }
 
+// Installable, and opens offline after this visit: reload with the network off.
+async function checkOffline(page, events, results) {
+  const r = { phase: 'offline', page: '-', label: 'Installable + offline reload', exceptions: [], errorAlerts: [],
+    consoleErrors: [], failedRequests: [], pageErrors: [] };
+  const cdp = await page.context().newCDPSession(page);
+  const { installabilityErrors } = await cdp.send('Page.getInstallabilityErrors');
+  const state = await page.evaluate(() => window.eaglePlotOffline);
+  if (installabilityErrors.length) r.pageErrors.push(`not installable: ${installabilityErrors.map((e) => e.errorId).join(', ')}`);
+  if (state !== 'ready') r.pageErrors.push(`service worker not controlling the page (${state})`);
+  const t0 = Date.now();
+  await page.context().setOffline(true);
+  try {
+    await page.reload();
+    await page.waitForFunction(() => (window.eaglePlotBootLog || []).some((e) => e.event === 'ready'), null, { timeout: 180000, polling: 200 });
+    const exc = await page.locator('[data-testid="stException"]').count();
+    if (exc) r.pageErrors.push(`${exc} exception(s) after the offline reload`);
+  } catch (e) {
+    r.pageErrors.push(`offline reload: ${e.message.split('\n')[0]}`);
+  } finally {
+    await page.context().setOffline(false);
+  }
+  r.ms = Date.now() - t0;
+  events.failedRequests.splice(0); // requests failing while offline are expected
+  results.push(r);
+  console.log(`${r.pageErrors.length ? 'FAIL' : 'ok  '} offline   installable ${installabilityErrors.length ? 'NO' : 'yes'}, ` +
+    `service worker ${state}, offline reload ${r.pageErrors.length ? 'failed' : `ready in ${(r.ms / 1000).toFixed(1)} s`}`);
+}
+
 async function loadExample(page, base, example, events, results) {
   const dataPath = new URL('data-upload', base).pathname;
   const ms = await openPage(page, dataPath);
@@ -272,6 +302,7 @@ function exampleLabel(file) {
   await loadExample(page, base, opts.example, events, results);
   await visitAll('with-data');
   await checkDownload(page, base, events, results);
+  await checkOffline(page, events, results);
 
   await browser.close();
   const allowed = new Set([new URL(base).origin, ...opts.allowOrigins]);
