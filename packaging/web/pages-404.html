@@ -1,0 +1,49 @@
+<!doctype html>
+<!--
+  Site-wide 404 page for GitHub Pages (copied to the site root as 404.html by
+  .github/workflows/docs.yml). GitHub Pages serves only the root 404.html for a missing
+  path anywhere in the site.
+
+  The web app lives under …/app/, and each Streamlit page has its own URL there
+  (…/app/settings). Those are not files, so a reload or bookmark lands here: send it to the
+  app, which opens on Home. Any other missing path gets a plain "not found" page.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page not found · EaglePlot</title>
+    <script>
+      (function () {
+        var p = window.location.pathname;
+        var i = p.indexOf("/app/");
+        if (i >= 0 && p.length > i + 5) {
+          window.location.replace(p.slice(0, i + 5));
+        }
+      })();
+    </script>
+    <style>
+      html, body { margin: 0; height: 100%; background: #1b1b1b; color: #f4f4f4; }
+      main {
+        min-height: 100%; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 12px; padding: 16px; text-align: center;
+        font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+      a { color: #e0a3a3; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Page not found</h1>
+      <p>This page doesn't exist.</p>
+      <p><a id="home" href="/">EaglePlot documentation</a></p>
+    </main>
+    <script>
+      // Project sites live under /<repo>/: point "home" at that, not the user site root.
+      var seg = window.location.pathname.split("/")[1];
+      if (seg && window.location.hostname.endsWith("github.io")) {
+        document.getElementById("home").href = "/" + seg + "/";
+      }
+    </script>
+  </body>
+</html>

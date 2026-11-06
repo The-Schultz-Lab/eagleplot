@@ -10,12 +10,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-- **A build of EaglePlot that runs entirely in the browser** (no install, nothing
-  uploaded), in `packaging/web/`, with a test that opens every page in it. It is not
-  published yet; that is the next step. In that version, features that can't work in a
-  browser are turned off with an explanation instead of failing: loading a folder,
-  downloading from NIST (the page links to NIST instead), and changing the theme.
-  Settings, presets and workflows are kept in the browser.
+- **EaglePlot runs in your browser:
+  [the-schultz-lab.github.io/eagleplot/app/](https://the-schultz-lab.github.io/eagleplot/app/)**.
+  Nothing to install and nothing uploaded: your data stays on your computer, which makes it
+  usable on laptops where you can't install software. It takes 15–30 seconds to start.
+  Features that can't work in a browser are turned off with an explanation instead of
+  failing: loading a whole folder, downloading from NIST (the page links to NIST instead),
+  and changing the theme. Settings, presets and workflows are kept in the browser. The
+  documentation site and README link to it. Every change to the app is tested in a real
+  browser before it is published (`packaging/web/`, `scripts/web/smoke.js`).
 - **`EAGLEPLOT_CONFIG_DIR`** sets the folder that holds `config.json` (saved defaults,
   presets and workflows). Unset, it stays where it was.
 

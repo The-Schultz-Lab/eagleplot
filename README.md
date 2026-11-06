@@ -4,6 +4,10 @@
 [![PyPI](https://img.shields.io/pypi/v/eagleplot)](https://pypi.org/project/eagleplot/)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/The-Schultz-Lab/eagleplot/main)
 
+**[Open EaglePlot in your browser](https://the-schultz-lab.github.io/eagleplot/app/)**: nothing
+to install, and your data never leaves your computer. Good for laptops where you can't
+install software. To install it instead, see [Quick Start](#quick-start).
+
 A general-purpose Python toolkit for scientific data visualization and analysis, developed for research and teaching in computational science at North Carolina Central University.
 
 > **EaglePlot was called Plottle until version 3.0.** If you used Plottle, change

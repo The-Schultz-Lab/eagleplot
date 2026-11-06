@@ -47,6 +47,7 @@ _NCCU_HORIZ = _ASSETS_DIR / "nccu-horiz-logo.png"
 _NCCU_WINGS = _ASSETS_DIR / "nccu-wings.png"
 
 from eagleplot import __version__  # noqa: E402
+from eagleplot.utils import runtime  # noqa: E402
 from eagleplot.utils import initialize_session_state, get_session_summary  # noqa: E402
 from eagleplot.utils.theming import app_css  # noqa: E402
 
@@ -355,6 +356,13 @@ with st.sidebar:
             "science at North Carolina Central University."
         )
         st.markdown("[NCCU Schultz Lab on GitHub](https://github.com/The-Schultz-Lab)")
+        if runtime.IS_PYODIDE and not runtime.IS_DESKTOP:
+            st.caption(
+                f"EaglePlot v{__version__}, running in your browser: your data stays on "
+                "this computer. To load whole folders, fetch spectra from NIST or work "
+                "faster, [install EaglePlot]"
+                "(https://the-schultz-lab.github.io/eagleplot/#install)."
+            )
 
 
 # ── Execute the active page ───────────────────────────────────────────────────

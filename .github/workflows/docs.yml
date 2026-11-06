@@ -1,63 +1,141 @@
 name: Deploy GitHub Pages
 
+# Builds the documentation site and the in-browser EaglePlot app (served at …/app/),
+# smoke-tests the app in Chromium, and deploys both together (roadmap D3).
+# Pull requests that touch the app or the site build and test it, but don't deploy.
 on:
   push:
     branches: [main]
     paths:
       - "docs/**"
       - "build_docs.py"
+      - "eagleplot/**"
+      - "packaging/web/**"
+      - "scripts/web/**"
+      - ".streamlit/**"
+      - "pyproject.toml"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "build_docs.py"
+      - "eagleplot/**"
+      - "packaging/web/**"
+      - "scripts/web/**"
+      - ".streamlit/**"
+      - "pyproject.toml"
       - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
-# Only one deployment at a time; don't cancel in-progress runs.
+# One deployment at a time (never cancelled); a newer push to the same PR cancels the
+# older test run.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.ref) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
-    name: Build site
-    runs-on: ubuntu-latest
+    name: Build and test site
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           cache: pip
           cache-dependency-path: pyproject.toml
 
       - name: Install docs build dependencies
         run: pip install markdown
 
-      # Previously this workflow uploaded ./docs/ raw, which published the markdown
-      # sources as downloads and the Sphinx sources as dead files, while the API
-      # reference was never built at all. build_docs.py renders each guide into a
-      # styled page and wires them together. See audit A-13.
+      # build_docs.py renders each guide into a styled page and wires them together
+      # (audit A-13).
       - name: Build documentation site
         run: python build_docs.py
 
+      # The app runs entirely in the browser (stlite: Streamlit on Pyodide). Pyodide comes
+      # from the jsDelivr CDN; everything else is in the site. See packaging/web/README.md.
+      - name: Build the web app into the site
+        run: |
+          python packaging/web/build_site.py docs/_site/app
+          cp packaging/web/pages-404.html docs/_site/404.html
+          du -sh docs/_site docs/_site/app
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Install Playwright + Chromium
+        run: |
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+
+      # Every page, empty and with example data; an on-click download; and no request to
+      # any origin but the site and the Pyodide CDN.
+      - name: Smoke-test the web app
+        run: |
+          nohup python -m http.server -d docs/_site 8000 > http.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:8000/app/ >/dev/null && break; sleep 1; done
+          node scripts/web/smoke.js http://127.0.0.1:8000/app/ --out build/web-smoke
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "## Web app smoke test"
+            python - <<'PY'
+          import json, pathlib
+          p = pathlib.Path("build/web-smoke/smoke.json")
+          if not p.exists():
+              print("(no result)")
+          else:
+              s = json.loads(p.read_text())
+              print(f"Boot {s['bootMs'] / 1000:.1f} s, {s['pages']} pages, failures: {s['failures']}")
+              print()
+              print("| Phase | Page | Time | Problems |")
+              print("| --- | --- | --- | --- |")
+              for r in s["results"]:
+                  t = "-" if r.get("ms") is None else f"{r['ms'] / 1000:.1f} s"
+                  bad = len(r["exceptions"]) + len(r["pageErrors"])
+                  print(f"| {r['phase']} | {r['label']} | {t} | {bad or ''} |")
+              print()
+              print("Requests by origin: " + ", ".join(f"{o} ({n})" for o, n in s["origins"].items()))
+          PY
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: web-smoke
+          path: build/web-smoke/
+
       - name: Configure Pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./docs/_site/
 
   deploy:
     name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

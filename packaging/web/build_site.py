@@ -87,6 +87,9 @@ STREAMLIT_CONFIG = {
     "theme.secondaryBackgroundColor": "#240000",
     "theme.textColor": "#ffffff",
     "client.toolbarMode": "viewer",
+    # As on the server (.streamlit/config.toml). In the browser the real limit is the
+    # tab's memory (WebAssembly heap, ~2-4 GB), so this keeps uploads well inside it.
+    "server.maxUploadSize": 200,
 }
 
 

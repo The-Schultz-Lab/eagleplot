@@ -4,6 +4,13 @@
 browser, on [stlite](https://github.com/whitphx/stlite) (Streamlit on Pyodide/WebAssembly).
 Nothing is installed and no data leaves the computer.
 
+## Where it is published
+
+`.github/workflows/docs.yml` builds the documentation site and this app into one GitHub
+Pages site: the app is at **https://the-schultz-lab.github.io/eagleplot/app/**. Every pull
+request that touches `eagleplot/`, the site or this folder builds it with CDN Pyodide and
+runs the smoke test (below) in Chromium; pushes to `main` also deploy it.
+
 ## Build and serve
 
 ```bash
@@ -29,15 +36,17 @@ Smoke test (Node with `playwright`, against a served site):
 node scripts/web/smoke.js http://localhost:8000/
 ```
 
-It opens every sidebar page with an empty session and again with an example dataset, and
-fails on any Streamlit exception or uncaught page error.
+It opens every sidebar page with an empty session and again with an example dataset,
+downloads a Quick Plot PNG built on click (this exercises the download workaround below),
+and checks that no request goes anywhere but the site and the Pyodide CDN. It fails on any
+Streamlit exception, uncaught page error, failed download or request to another origin.
 
 ## What goes into the site
 
 | File | Content |
 | --- | --- |
 | `index.html` | Loading splash, the stlite mount call, and a download workaround (below) |
-| `404.html` | A copy of `index.html`, so reloading a page's own URL starts the app (below) |
+| `404.html` | A copy of `index.html`, for hosts that serve the nearest `404.html` (below) |
 | `site-config.js` | Written by the build: entrypoint, packages, wheels, Pyodide URL, Streamlit flags, storage mount, environment |
 | `eagleplot-app.zip` | `eagleplot/` (code, assets, gallery, example data) and `.streamlit/config.toml`; entrypoint `eagleplot/Home.py` |
 | `wheels/` | Pure-Python packages not in Pyodide: seaborn, plotly, narwhals, openpyxl, et-xmlfile, jcamp (`.jdx` uploads), and Streamlit's python-multipart and itsdangerous |
@@ -81,9 +90,12 @@ Serve the directory over HTTP (`python -m http.server`, GitHub Pages, any static
   Errors about a missing optional package say it isn't in this version instead of
   suggesting `pip install`.
 - **Reloading a page other than Home.** Each Streamlit page has its own path
-  (`…/settings`), which is not a file in the site. The build writes `404.html` as a copy
-  of `index.html`, so on GitHub Pages a reload or bookmark starts the app (on Home)
-  instead of showing a 404. `python -m http.server` has no such fallback: reload from
-  the site root when testing locally.
+  (`…/app/settings`), which is not a file in the site. GitHub Pages answers a missing
+  path with the `404.html` at the root of the *whole* site, so
+  `.github/workflows/docs.yml` copies `pages-404.html` there: under `…/app/` it sends the
+  browser to the app (which opens on Home); anywhere else it shows "page not found". The
+  build also writes `app/404.html` (a copy of `index.html`) for hosts that use the
+  nearest `404.html`, such as Cloudflare Pages. `python -m http.server` has neither:
+  reload from the app root when testing locally.
 - **Startup** takes about 15 s on every visit (Python start-up and imports), longer on
   the first visit over a slow network.
