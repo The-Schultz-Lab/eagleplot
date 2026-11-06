@@ -23,6 +23,7 @@ Pins that move together: @stlite/browser 1.12.0 <-> Streamlit 1.65 <-> Pyodide 3
 from __future__ import annotations
 
 import argparse
+import hashlib
 import io
 import json
 import shutil
@@ -238,6 +239,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         "window.EAGLEPLOT_STLITE = " + json.dumps(config, indent=2) + ";\n", encoding="utf-8"
     )
     (out / ".nojekyll").write_text("")
+    write_pwa_files(out)
 
     pyodide_dir = out / "pyodide"
     size = site_size_mb(out, exclude=pyodide_dir)
@@ -247,6 +249,55 @@ def main(argv: Optional[List[str]] = None) -> None:
     if pyodide_dir.exists():
         msg += f" (+{site_size_mb(pyodide_dir):.0f} MB Pyodide)"
     print(msg)
+
+
+#: Web app manifest (roadmap D4.2): with sw.js, Chrome and Edge offer "Install EaglePlot".
+MANIFEST = {
+    "name": "EaglePlot",
+    "short_name": "EaglePlot",
+    "description": "Scientific data visualization and analysis, running in your browser.",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#1b1b1b",
+    "theme_color": "#1b1b1b",
+    "icons": [
+        {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+        {
+            "src": "icons/maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable",
+        },
+        {
+            "src": "icons/maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable",
+        },
+    ],
+}
+
+
+def build_id(out: Path) -> str:
+    """A hash of the files that change between deploys (app, config, page, wheel names)."""
+    h = hashlib.sha256()
+    for name in ("index.html", "site-config.js", "eagleplot-app.zip"):
+        h.update((out / name).read_bytes())
+    for wheel in sorted((out / "wheels").glob("*.whl")):
+        h.update(wheel.name.encode())
+    return h.hexdigest()[:12]
+
+
+def write_pwa_files(out: Path) -> None:
+    """Manifest, icons and the service worker (stamped with this build's id)."""
+    (out / "manifest.webmanifest").write_text(json.dumps(MANIFEST, indent=2), encoding="utf-8")
+    shutil.copytree(HERE / "icons", out / "icons")
+    sw = (HERE / "sw.js").read_text(encoding="utf-8")
+    if "__EAGLEPLOT_BUILD__" not in sw:
+        sys.exit("packaging/web/sw.js has lost its __EAGLEPLOT_BUILD__ placeholder")
+    (out / "sw.js").write_text(sw.replace("__EAGLEPLOT_BUILD__", build_id(out)), encoding="utf-8")
 
 
 if __name__ == "__main__":
