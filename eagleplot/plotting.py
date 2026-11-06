@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
+import importlib.util as _importlib_util
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
@@ -35,20 +36,37 @@ COLORBLIND_PALETTE: List[str] = [
     "#000000",  # black
 ]
 
-# Optional imports for advanced features
-try:
-    import seaborn as sns
+# Optional imports for advanced features. Checked here, imported on first use: seaborn
+# (which pulls in scipy) and plotly take seconds to import in the browser build, and a
+# Matplotlib line plot needs neither (roadmap D4.1).
 
-    HAS_SEABORN = True
-except ImportError:
-    HAS_SEABORN = False
 
-try:
-    import plotly.graph_objects as go
+class _LazyModule:
+    """Imports *name* the first time one of its attributes is used."""
 
-    HAS_PLOTLY = True
-except ImportError:
-    HAS_PLOTLY = False
+    def __init__(self, name: str) -> None:
+        self._name = name
+        self._module: Any = None
+
+    def __getattr__(self, attr: str) -> Any:
+        if self._module is None:
+            import importlib
+
+            self._module = importlib.import_module(self._name)
+        return getattr(self._module, attr)
+
+
+def _installed(name: str) -> bool:
+    try:
+        return _importlib_util.find_spec(name) is not None
+    except (ImportError, ValueError):
+        return False
+
+
+HAS_SEABORN = _installed("seaborn")
+HAS_PLOTLY = _installed("plotly")
+sns: Any = _LazyModule("seaborn")
+go: Any = _LazyModule("plotly.graph_objects")
 
 
 # ============================================================================

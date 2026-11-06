@@ -263,11 +263,20 @@
       const splash = window.eaglePlotSplash;
       const kernel = window.eaglePlotApp._kernel;
       const STEP_PATTERNS = [/pyodide/i, /install|package/i, /streamlit|server|boot/i];
+      // Start-up timeline (ms since page start), for scripts/web/boot_timing.js and the CI
+      // summary: every kernel progress message, loadFinished and the app being ready.
+      const bootLog = (window.eaglePlotBootLog = []);
+      const logBoot = (event, detail) =>
+        bootLog.push({ t: Math.round(performance.now()), event, detail: String(detail ?? "") });
       kernel.addEventListener("loadProgress", (e) => {
+        logBoot("progress", e.detail);
         const i = STEP_PATTERNS.findIndex((re) => re.test(String(e.detail)));
         if (i >= 0) splash.setStage(i);
       });
-      kernel.addEventListener("loadFinished", () => splash.setStage(3));
+      kernel.addEventListener("loadFinished", () => {
+        logBoot("loadFinished");
+        splash.setStage(3);
+      });
       kernel.addEventListener("loadError", (e) => splash.fail(String(e.detail?.message ?? e.detail ?? "")));
 
       // Hide the splash once the app script has drawn its sidebar. Not on stMain: stlite
@@ -276,6 +285,7 @@
         if (document.querySelector('[data-testid="stSidebar"]')) {
           splash.ready();
           window.eaglePlotReadyMs = performance.now() - t0;
+          logBoot("ready");
           obs.disconnect();
         }
       });

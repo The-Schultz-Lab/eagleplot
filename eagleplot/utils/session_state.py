@@ -38,15 +38,20 @@ Examples
 >>> dataset = get_current_dataset()
 """
 
+from __future__ import annotations
+
 import io
 import streamlit as st
 import json
 import base64
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
-import numpy as np
-import pandas as pd
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+# numpy and pandas are imported inside the functions that use them: Home.py imports this
+# module, and pandas alone takes ~2.3 s to import in the browser build (roadmap D4.1).
+if TYPE_CHECKING:
+    import numpy as np
 
 
 def initialize_session_state():
@@ -102,6 +107,9 @@ def add_dataset(name: str, data: Any, metadata: Optional[Dict] = None):
     metadata : dict, optional
         Additional metadata (file size, upload time, etc.)
     """
+    import numpy as np
+    import pandas as pd
+
     st.session_state.datasets[name] = data
 
     # Store metadata
@@ -275,6 +283,9 @@ def _serialize_data(data: Any) -> Any:
     deliberately not used here.  Object-dtype arrays are also refused, since
     their contents cannot be represented without pickling.
     """
+    import numpy as np
+    import pandas as pd
+
     if isinstance(data, pd.DataFrame):
         return {"__type__": "DataFrame", "__data__": data.to_json(orient="split")}
     elif isinstance(data, np.ndarray):
@@ -324,6 +335,8 @@ def _decode_ndarray(data: Dict) -> np.ndarray:
         If the dtype is absent, is an object dtype, or if the decoded buffer
         length does not match ``dtype.itemsize * prod(shape)``.
     """
+    import numpy as np
+
     dtype_str = data.get("__dtype__")
     if not dtype_str:
         raise ValueError("ndarray entry is missing '__dtype__'")
@@ -373,6 +386,8 @@ def _deserialize_data(data: Any, skipped: Optional[List[str]] = None) -> Any:
     (``__type__`` of ``"pickled"``, and ``"ndarray"`` without a ``__dtype__``).
     Those are refused rather than unpickled — see :func:`_serialize_data`.
     """
+    import pandas as pd
+
     if isinstance(data, dict):
         kind = data.get("__type__")
         if kind is None:

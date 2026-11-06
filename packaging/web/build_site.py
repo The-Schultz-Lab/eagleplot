@@ -44,11 +44,14 @@ HERE = Path(__file__).resolve().parent
 APP_PACKAGE = "eagleplot"
 ENTRYPOINT = f"{APP_PACKAGE}/Home.py"
 
-# Provided by the Pyodide distribution (compiled for WebAssembly). Covers the runtime
-# dependencies in pyproject.toml that Pyodide ships: numpy, scipy, pandas, matplotlib,
+# Provided by the Pyodide distribution (compiled for WebAssembly) and loaded at start-up:
+# the runtime dependencies in pyproject.toml that Pyodide ships, numpy, pandas, matplotlib,
 # PyYAML and Pillow (Home.py's page icon). tomli is not needed: Pyodide is Python 3.14.
+# scipy is NOT loaded at start-up: it alone added ~2 s to every start. It is in
+# eagleplot.utils.runtime.DEFERRED_PACKAGES, which Home.py loads in the background once
+# the app is up (tests/test_web_build.py keeps the two lists apart).
 # Optional extras (h5py, xarray, netCDF4, statsmodels) are deliberately not preloaded.
-PYODIDE_PACKAGES = ["numpy", "scipy", "pandas", "matplotlib", "pyyaml", "pillow"]
+PYODIDE_PACKAGES = ["numpy", "pandas", "matplotlib", "pyyaml", "pillow"]
 
 # Pure-Python packages bundled with the site as wheels: the remaining pyproject.toml
 # dependencies (seaborn, plotly + narwhals, openpyxl + et-xmlfile), and two Streamlit
