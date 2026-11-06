@@ -414,10 +414,13 @@
           figures in minutes.
         </p>
         <div class="hero__actions">
-          <a class="btn btn--primary" href="https://github.com/The-Schultz-Lab/eagleplot">
-            View on GitHub
+          <a class="btn btn--primary" href="app/">
+            Open EaglePlot in your browser
           </a>
-          <a class="btn btn--outline" href="#install">Get started</a>
+          <a class="btn btn--outline" href="#install">Install it</a>
+          <a class="btn btn--outline" href="https://github.com/The-Schultz-Lab/eagleplot">
+            GitHub
+          </a>
         </div>
         <div class="hero__meta">
           <span class="hero__stat">Python 3.9&ndash;3.12</span>
@@ -728,13 +731,16 @@ python -m venv .venv
 source .venv/bin/activate  <span class="c"># macOS/Linux</span>
 <span class="c"># .venv\Scripts\activate  # Windows</span>
 pip install -r requirements.txt
-streamlit run modules/Home.py</code></pre>
+streamlit run eagleplot/Home.py</code></pre>
     </div>
 
     <div class="callout callout--info" style="margin-top:1.25rem;">
-      <strong>Try it instantly:</strong>
-      launch EaglePlot in your browser with no installation via
-      <a href="https://mybinder.org/v2/gh/The-Schultz-Lab/eagleplot/main" target="_blank" rel="noopener">Binder</a>.
+      <strong>No install needed:</strong>
+      <a href="app/">open EaglePlot in your browser</a>. It runs entirely on your computer
+      (your data is never uploaded) and works on laptops where you can't install software.
+      The first visit downloads several tens of MB, and it takes 15&ndash;30 seconds to start each time.
+      The installed version is faster, and can also load whole folders of files and fetch
+      spectra from NIST.
     </div>
 
   </div>

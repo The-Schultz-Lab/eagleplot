@@ -233,3 +233,19 @@ def test_batch_workflows_are_not_promised_to_persist_in_the_browser(monkeypatch)
     texts = [i.value for i in at.info]
     assert not any("persist across app restarts" in t for t in texts)
     assert any("until you close or reload" in t for t in texts)
+
+
+@pytest.mark.parametrize(
+    "pyodide, desktop, shown", [(False, False, False), (True, False, True), (True, True, False)]
+)
+def test_home_says_when_it_runs_in_the_browser(monkeypatch, pyodide, desktop, shown):
+    from pathlib import Path
+
+    AppTest = pytest.importorskip("streamlit.testing.v1").AppTest
+    monkeypatch.setattr(runtime, "IS_PYODIDE", pyodide)
+    monkeypatch.setattr(runtime, "IS_DESKTOP", desktop)
+    home = Path(__file__).resolve().parent.parent / "eagleplot" / "Home.py"
+    at = AppTest.from_file(str(home), default_timeout=30).run()
+    assert not at.exception
+    found = any("running in your browser" in c.value for c in at.sidebar.caption)
+    assert found is shown
