@@ -8,6 +8,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- **The EaglePlot logo is now in NCCU maroon and gray** (it was blue): the same disc, bars
+  and line, on the Home page, in the sidebar, as the browser-tab icon and in `logo.ico`.
+  `eagleplot/assets/logo.svg` is the master.
+- **A new loading screen for the web app.** The logo's pieces (the rings, the axes, the
+  bars, the line and the points) fly in from all sides of the screen and lock together,
+  then a highlight sweeps across while Python loads. Below it, four real steps
+  (downloading Python, installing the science libraries, starting EaglePlot, opening your
+  workspace) replace the endlessly sliding bar. The note about the 45 MB download appears
+  only on a first visit. If loading fails, the screen says why and offers **Reload**
+  instead of sliding forever. With reduced motion turned on in the system settings, the
+  logo appears complete and nothing moves.
+
 ---
 
 ## [3.1.0] - 2026-11-06
@@ -33,13 +47,6 @@ faster, gives it a simpler first screen, and fixes JCAMP-DX loading, which was b
 
 ### Changed
 
-- **A new loading screen for the web app.** The EaglePlot logo builds itself (the bars grow,
-  then the line draws through the points) and a pulse runs along the points while Python
-  loads. Below it, four real steps (downloading Python, installing the science libraries,
-  starting EaglePlot, opening your workspace) replace the endlessly sliding bar. The note
-  about the 45 MB download appears only on a first visit. If loading fails, the screen says
-  why and offers **Reload** instead of sliding forever. With reduced motion turned on in
-  the system settings, the logo appears complete and nothing moves.
 - **A "Get started" Home page.** With no data loaded, Home offers three example datasets,
   each a single click away from a plot in Quick Plot, plus buttons to upload a file or
   browse all examples, instead of "Datasets 0 · Plots 0 · Analyses 0".

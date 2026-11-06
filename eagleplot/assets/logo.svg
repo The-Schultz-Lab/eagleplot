@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 960" width="960" height="960" role="img" aria-label="EaglePlot">
+  <title>EaglePlot</title>
+  <!-- Master for logo.png and logo.ico (render at 960 px and 16-256 px, transparent). -->
+  <circle cx="476" cy="471" r="434" fill="#8b2233"/>
+  <circle cx="476" cy="471" r="382" fill="#d7dbde"/>
+  <circle cx="476" cy="471" r="317" fill="#f4f5f6"/>
+  <g class="gloss" fill="none" stroke="#fff" stroke-linecap="round"><path d="M240 280A310 310 0 0 1 445 152" stroke-opacity=".55" stroke-width="14"/><path d="M270 318A265 265 0 0 1 415 202" stroke-opacity=".45" stroke-width="9"/></g>
+  <path d="M353 724H285A317 317 0 0 1 265 707.6V563Q265 553 275 553H343Q353 553 353 563Z" fill="#5b6771"/>
+  <path d="M389 724V445Q389 435 399 435H467Q477 435 477 445V724Z" fill="#8b2233"/>
+  <path d="M512 724V504Q512 494 522 494H590Q600 494 600 504V724Z" fill="#6d2b3d"/>
+  <path d="M636 724V621Q636 611 646 611H714Q724 611 724 621V668.4A317 317 0 0 1 667 724Z" fill="#a2a9ad"/>
+  <path d="M218 213V729H746" fill="none" stroke="#5b6771" stroke-opacity=".45" stroke-width="5"/>
+  <path d="M309 547L433 430L556 489L680 606" fill="none" stroke="#24090f" stroke-width="8" stroke-linejoin="round"/>
+  <g fill="#24090f"><circle cx="309" cy="547" r="15.5"/><circle cx="433" cy="430" r="15.5"/><circle cx="556" cy="489" r="15.5"/><circle cx="680" cy="606" r="15.5"/></g>
+</svg>

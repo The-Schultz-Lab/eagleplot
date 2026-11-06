@@ -78,11 +78,13 @@ Serve the directory over HTTP (`python -m http.server`, GitHub Pages, any static
 `index.html` draws the splash before anything else loads: a classic inline script, inline
 CSS and SVG, and no other files, so it is on screen while `stlite.js` and Pyodide download.
 
-- **The logo.** `eagleplot/assets/logo.png` is redrawn as inline SVG (960 × 960, the PNG's
-  own coordinates) so its parts can move: the disc pops in, the axes draw, the bars grow one
-  by one, then the red line draws and each point pops as the line reaches it (Web Animations
-  API). While Python loads, a pulse runs along the points. If the logo changes, redraw it
-  here too. No web fonts: the smoke test fails on requests to other origins.
+- **The logo.** The pieces of `eagleplot/assets/logo.svg` (three rings, the axes, four bars,
+  the line, four points) are inlined as separate `<g class="ep-pc">` groups. Each carries
+  `data-from="x y rotate scale"` (its off-screen start, in logo units) and `data-order`
+  (it leaves at order × 120 ms), and flies in with the Web Animations API; the points land
+  without overshoot (`data-ease`). While Python loads, a highlight sweeps across the disc
+  and a pulse runs along the points. If the logo changes, update the pieces here too. No
+  web fonts: the smoke test fails on requests to other origins.
 - **Steps.** `window.eaglePlotSplash` exposes `setStage(i)`, `ready()` and `fail(message)`.
   The module script calls them from stlite's kernel events: `loadProgress` messages are
   matched by keyword (`/pyodide/`, `/install|package/`, `/streamlit|server|boot/`),
