@@ -8,13 +8,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+---
+
+## [3.2.0] - 2026-11-07
+
+**EaglePlot is now also a desktop app** for Windows, macOS and Linux, with Python and every
+package included: download it from the release page, install it without admin rights, and
+use it offline. The web app starts faster, can be installed from Chrome or Edge, and works
+offline too. EaglePlot has a new logo in NCCU colors and a new loading screen.
+
 ### Added
 
 - **A desktop app for Windows, macOS and Linux** (`packaging/desktop/`): the same app
   in its own window, with Python and every package included, so it needs no Python
   install and no network. Installers are built for every release and need no admin
   rights. Settings are kept between sessions. Links open in your web browser. They are
-  not code-signed yet: the first launch shows a warning (see `packaging/desktop/README.md`).
+  not code-signed yet: the first launch shows a warning (see the
+  [Download page](https://the-schultz-lab.github.io/eagleplot/download.html)).
   Data Upload → Batch Import reads folders on your computer: type the folder's path as
   usual (`C:\Users\you\data`, `~/data`).
 - **A Download page on the website** (`docs/download.md`): the web app, desktop app and
@@ -477,7 +487,8 @@ Initial development release. Stages 0–6 complete (foundation, I/O, math, basic
 
 ---
 
-[Unreleased]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/The-Schultz-Lab/eagleplot/compare/v2.0.1...v2.1.0

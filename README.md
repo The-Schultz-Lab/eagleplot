@@ -6,7 +6,9 @@
 
 **[Open EaglePlot in your browser](https://the-schultz-lab.github.io/eagleplot/app/)**: nothing
 to install, and your data never leaves your computer. Good for laptops where you can't
-install software. To install it instead, see [Quick Start](#quick-start).
+install software. Or get the **desktop app** for Windows, macOS or Linux (no Python
+needed, works offline) from the [Download page](https://the-schultz-lab.github.io/eagleplot/download.html).
+To install the Python package instead, see [Quick Start](#quick-start).
 
 A general-purpose Python toolkit for scientific data visualization and analysis, developed for research and teaching in computational science at North Carolina Central University.
 

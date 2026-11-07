@@ -6,7 +6,7 @@ There are three ways to use it. All three keep your data on your own computer.
 | | Best for | How |
 | --- | --- | --- |
 | **Web app** | Trying EaglePlot, or computers where you can't install software | [Open it in your browser](app/). Chrome and Edge can also install it as an app. |
-| **Desktop app** | Using EaglePlot offline, without installing Python | Windows, macOS and Linux installers on the [Releases page](https://github.com/The-Schultz-Lab/eagleplot/releases), starting with the next release |
+| **Desktop app** | Using EaglePlot offline, without installing Python | Windows, macOS and Linux installers on the [Releases page](https://github.com/The-Schultz-Lab/eagleplot/releases) (from version 3.2.0) |
 | **Python package** | Scripts, notebooks, and the full GUI | `pip install eagleplot` ([PyPI](https://pypi.org/project/eagleplot/)), then see [Getting Started](getting-started.html) |
 
 ## Desktop app
