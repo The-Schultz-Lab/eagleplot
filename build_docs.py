@@ -65,6 +65,12 @@ PAGES: List[Page] = [
         "Install EaglePlot, load your first dataset, and make your first plot.",
     ),
     Page(
+        _DOCS / "download.md",
+        "download",
+        "Download",
+        "Web app, desktop app or Python package; code signing and privacy policy.",
+    ),
+    Page(
         _DOCS / "tutorials" / "gui_guide.md",
         "gui-guide",
         "GUI Guide",

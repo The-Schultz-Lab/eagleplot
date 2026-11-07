@@ -17,6 +17,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   not code-signed yet: the first launch shows a warning (see `packaging/desktop/README.md`).
   Data Upload → Batch Import reads folders on your computer: type the folder's path as
   usual (`C:\Users\you\data`, `~/data`).
+- **A Download page on the website** (`docs/download.md`): the web app, desktop app and
+  Python package side by side, first-launch steps, the code signing policy and the
+  privacy policy (EaglePlot collects no data).
 
 ### Changed
 
