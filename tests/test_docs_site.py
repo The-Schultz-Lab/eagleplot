@@ -182,7 +182,10 @@ class TestFullBuild:
             if page.name == "index.html":
                 continue  # hand-written; checked separately if it ever gains assets
             html = page.read_text(encoding="utf-8")
-            external = re.findall(r'(?:src|href)="(https?://[^"]+)"', html)
+            # Loaded by the browser: src= (scripts, images, frames) and <link href> (styles,
+            # fonts). Ordinary <a href> links to other sites are only followed on a click.
+            external = re.findall(r'src="(https?://[^"]+)"', html)
+            external += re.findall(r'<link\b[^>]*\bhref="(https?://[^"]+)"', html)
             non_repo = [u for u in external if "github.com/The-Schultz-Lab" not in u]
             assert not non_repo, f"{page.name} loads external resources: {non_repo}"
 
