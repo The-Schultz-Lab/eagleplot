@@ -64,7 +64,10 @@ ask it to.
   your browser and never uploaded. GitHub and jsDelivr may log requests (such as IP
   addresses) as described in their own privacy policies.
 - **Python package:** contacts other servers only when you ask it to, for example to look
-  up a spectrum in the [NIST Chemistry WebBook](https://webbook.nist.gov/). Usage
-  statistics in the Streamlit interface are turned off.
+  up a spectrum in the [NIST Chemistry WebBook](https://webbook.nist.gov/). The GUI turns
+  off Streamlit's usage statistics in its settings file (`.streamlit/config.toml`), which
+  applies when you start it as described in [Getting Started](getting-started.html) (with
+  `launch.bat`, `launch.command` or `streamlit run eagleplot/Home.py` in the EaglePlot
+  folder).
 
 Questions: open an [issue](https://github.com/The-Schultz-Lab/eagleplot/issues).
