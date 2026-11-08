@@ -9,6 +9,26 @@ There are three ways to use it. All three keep your data on your own computer.
 | **Desktop app** | Using EaglePlot offline, without installing Python | Windows, macOS and Linux installers on the [Releases page](https://github.com/The-Schultz-Lab/eagleplot/releases) (from version 3.2.0) |
 | **Python package** | Scripts, notebooks, and the full GUI | `pip install eagleplot` ([PyPI](https://pypi.org/project/eagleplot/)), then see [Getting Started](getting-started.html) |
 
+## What each version can do
+
+All three are the same EaglePlot, with the same pages and plots, from the same release.
+
+| | Web app | Desktop app | Python package |
+| --- | --- | --- | --- |
+| Install | Nothing (or **Install** in Chrome/Edge) | Installer, no admin rights | Python 3.9+, `pip install eagleplot` |
+| Download | About 45 MB on the first visit | About 190 MB | A few MB, plus its Python packages |
+| Works offline | After one visit, once installed | Yes | Yes |
+| Start-up | About 8 s | About 12 s | A few seconds |
+| Speed of plots and fits | Slower (runs in WebAssembly) | Slower (runs in WebAssembly) | Full speed |
+| Load a whole folder (Batch Import) | No | Yes | Yes |
+| Fetch spectra from NIST | Links to NIST | Links to NIST | Yes (`pip install "eagleplot[nist]"`) |
+| Change the app's theme | No | No | Yes |
+| Python API, notebooks, `eagleplot` command | No | No | Yes |
+| Settings and presets kept | In the browser | Yes | Yes |
+| Data stays on your computer | Yes | Yes | Yes |
+
+The version number is shown on the Home page of all three.
+
 ## Desktop app
 
 Download the file for your system from the [latest release](https://github.com/The-Schultz-Lab/eagleplot/releases/latest):

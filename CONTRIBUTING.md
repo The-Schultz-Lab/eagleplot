@@ -52,6 +52,7 @@ MPLBACKEND=Agg pytest tests/
 - **Follow the conventions of the module you are editing**, and give public functions a
   NumPy-style docstring with Parameters and Returns sections.
 - **Update `CHANGELOG.md`** under `## [Unreleased]` for anything a user would notice.
+- Releases are made by the maintainers: see [RELEASING.md](RELEASING.md).
 
 ## Pull requests
 
