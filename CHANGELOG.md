@@ -8,6 +8,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- The Download page no longer has a code signing policy for the SignPath Foundation (the
+  application was not accepted). It says plainly that the installers are unsigned and
+  how they are built, and points users of locked-down laptops to the web app.
+
 ---
 
 ## [3.2.0] - 2026-11-07

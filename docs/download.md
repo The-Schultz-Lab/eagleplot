@@ -26,30 +26,19 @@ connection. Settings are kept between sessions.
 **The first time you open it:**
 
 - **Windows:** if Windows shows "Windows protected your PC", click **More info → Run anyway**.
-  Signed installers (see below) should not show this warning once they have built up a reputation with Microsoft.
+  Some managed (university or company) laptops block unsigned programs entirely: use the
+  [web app](app/) instead, which Chrome and Edge can also install.
 - **macOS:** if macOS says it "cannot check EaglePlot for malicious software", open
   **System Settings → Privacy & Security**, scroll down and click **Open Anyway** (once).
 - **Linux:** make the file executable (`chmod +x EaglePlot-*.AppImage`), then run it.
 
-## Code signing policy
+## Code signing
 
-Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
-[SignPath Foundation](https://signpath.org/).
-
-The Windows installers are signed with this certificate. Signing starts with the first
-release after the project's approval. Earlier installers are unsigned.
-
-Only files built from this repository's source by its GitHub Actions workflows are
-signed. Every change reaches the `main` branch through a reviewed pull request, and
-each signing request is approved by hand.
-
-**Team roles**
-
-- **Committers and reviewers:** members of the
-  [Schultz Lab](https://github.com/The-Schultz-Lab) at North Carolina Central University
-  and other [contributors](https://github.com/The-Schultz-Lab/eagleplot/graphs/contributors).
-  Changes are reviewed in pull requests before they are merged.
-- **Approvers:** Jonathan D. Schultz ([@NCCU-Schultz-Lab](https://github.com/NCCU-Schultz-Lab)).
+The desktop installers are **not code-signed yet**, which is why Windows and macOS warn
+the first time you open them (see above). Every installer is built from this
+repository's source by its GitHub Actions workflows and attached to the
+[release](https://github.com/The-Schultz-Lab/eagleplot/releases) by them, with no manual
+step in between. Download EaglePlot only from the Releases page or this website.
 
 ## Privacy policy
 
