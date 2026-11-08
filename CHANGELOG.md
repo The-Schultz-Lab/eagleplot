@@ -8,6 +8,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- **Releases are published by GitHub Actions** (`.github/workflows/release.yml`). Publishing
+  a GitHub Release builds the package from the tag, checks it, uploads it to PyPI (Trusted
+  Publishing, no stored token), attaches the files and installers to the release, and fills
+  in the release notes from this changelog. How to make a release: `RELEASING.md`.
+- **The Download page compares the three versions** (web app, desktop app, Python package):
+  install, download size, offline use, speed, folders, NIST and the Python API.
+
 ### Changed
 
 - The Download page no longer has a code signing policy for the SignPath Foundation (the
